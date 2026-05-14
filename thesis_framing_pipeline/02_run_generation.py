@@ -13,6 +13,28 @@ from config import DEFAULT_GEN_MODEL, DEFAULT_RESULTS_DIR, GENERATION_COLUMNS
 from hf_utils import apply_chat_template, resolve_local_model_path
 from io_utils import append_jsonl, existing_prompt_ids, read_csv, read_jsonl, write_csv
 
+try:
+    from tqdm.auto import tqdm
+except ImportError:  # pragma: no cover - tqdm is in the project requirements.
+    class tqdm:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def update(self, *args, **kwargs):
+            pass
+
+        def set_postfix(self, *args, **kwargs):
+            pass
+
+        def write(self, message: str):
+            print(message)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -21,7 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-csv", default=str(DEFAULT_RESULTS_DIR / "generations_pilot.csv"))
     parser.add_argument("--model", default=DEFAULT_GEN_MODEL)
     parser.add_argument("--device", default="cuda:0")
-    parser.add_argument("--max-new-tokens", type=int, default=700)
+    parser.add_argument("--max-new-tokens", type=int, default=1000)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top-p", type=float, default=0.8)
     parser.add_argument("--top-k", type=int, default=20)
@@ -40,6 +62,7 @@ def parse_args() -> argparse.Namespace:
         help="Delete existing JSONL/CSV outputs before running.",
     )
     parser.add_argument("--flush-every", type=int, default=100)
+    parser.add_argument("--no-progress", action="store_true")
     return parser.parse_args()
 
 
@@ -160,19 +183,29 @@ def main() -> int:
     tokenizer, model, torch = load_model(args.model, args.device)
 
     written = 0
-    for start in range(0, len(pending), args.batch_size):
-        batch_rows = pending[start : start + args.batch_size]
-        outputs = generate_batch_with_fallback(batch_rows, tokenizer, model, torch, args)
-        for row, (response, finish_reason) in zip(batch_rows, outputs):
-            out_row = dict(row)
-            out_row["generation_model"] = args.model
-            out_row["response_text"] = response
-            out_row["finish_reason"] = finish_reason
-            append_jsonl(args.out_jsonl, out_row)
-            written += 1
-        if written % args.flush_every == 0:
-            write_csv(args.out_csv, read_jsonl(args.out_jsonl), GENERATION_COLUMNS)
-            print(f"Wrote {written}/{len(pending)} pending generations.")
+    progress = tqdm(
+        total=len(pending),
+        desc="Generating",
+        unit="row",
+        dynamic_ncols=True,
+        disable=args.no_progress,
+    )
+    with progress:
+        for start in range(0, len(pending), args.batch_size):
+            batch_rows = pending[start : start + args.batch_size]
+            outputs = generate_batch_with_fallback(batch_rows, tokenizer, model, torch, args)
+            for row, (response, finish_reason) in zip(batch_rows, outputs):
+                out_row = dict(row)
+                out_row["generation_model"] = args.model
+                out_row["response_text"] = response
+                out_row["finish_reason"] = finish_reason
+                append_jsonl(args.out_jsonl, out_row)
+                written += 1
+            progress.update(len(batch_rows))
+            progress.set_postfix(batch_size=len(batch_rows), written=written)
+            if written % args.flush_every == 0:
+                write_csv(args.out_csv, read_jsonl(args.out_jsonl), GENERATION_COLUMNS)
+                progress.write(f"Wrote {written}/{len(pending)} pending generations.")
 
     write_csv(args.out_csv, read_jsonl(args.out_jsonl), GENERATION_COLUMNS)
     print(f"Saved generations to {args.out_jsonl} and {args.out_csv}")

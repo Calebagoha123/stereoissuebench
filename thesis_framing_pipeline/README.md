@@ -52,7 +52,7 @@ python3 stereoissuebench/thesis_framing_pipeline/02_run_generation.py \
   --out-csv stereoissuebench/thesis_framing_pipeline/results/generations_pilot.csv \
   --device cuda:0 \
   --batch-size 8 \
-  --max-new-tokens 700
+  --max-new-tokens 1000
 
 python3 stereoissuebench/thesis_framing_pipeline/03_run_stance_eval.py \
   --generations stereoissuebench/thesis_framing_pipeline/results/generations_pilot.csv \
@@ -69,6 +69,11 @@ The shell runner also accepts environment overrides:
 GEN_DEVICE=cuda:2 EVAL_DEVICE=cuda:2 GEN_BATCH_SIZE=4 EVAL_BATCH_SIZE=8 \
   bash stereoissuebench/thesis_framing_pipeline/run_prelim.sh pilot
 ```
+
+Generation and judging display row-level progress bars over pending rows.
+Use `--no-progress` on either model script if running in a log environment where
+progress bars are noisy. Set `GEN_MAX_NEW_TOKENS` when using `run_prelim.sh` to
+override the default 1000-token generation length.
 
 Batched stochastic generation is reproducible for the same prompt order and
 batch size. Use `--strict-row-seeds` if you need one-row-at-a-time sampling with

@@ -12,6 +12,28 @@ from hf_utils import apply_chat_template, resolve_local_model_path
 from io_utils import append_jsonl, existing_prompt_ids, read_jsonl, read_table, write_csv
 from stance import build_eval_prompt, collapsed_stance, liberal_score, parse_label, support_score
 
+try:
+    from tqdm.auto import tqdm
+except ImportError:  # pragma: no cover - tqdm is in the project requirements.
+    class tqdm:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def update(self, *args, **kwargs):
+            pass
+
+        def set_postfix(self, *args, **kwargs):
+            pass
+
+        def write(self, message: str):
+            print(message)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -31,6 +53,7 @@ def parse_args() -> argparse.Namespace:
         help="Delete existing JSONL/CSV outputs before running.",
     )
     parser.add_argument("--flush-every", type=int, default=100)
+    parser.add_argument("--no-progress", action="store_true")
     return parser.parse_args()
 
 
@@ -136,25 +159,35 @@ def main() -> int:
     tokenizer, model, torch = load_model(args.model, args.device)
 
     written = 0
-    for start in range(0, len(pending), args.batch_size):
-        batch_rows = pending[start : start + args.batch_size]
-        raw_outputs = eval_batch_with_fallback(batch_rows, tokenizer, model, torch, args)
-        for row, raw in zip(batch_rows, raw_outputs):
-            label = parse_label(raw)
-            s_score = support_score(label)
-            l_score = liberal_score(label, row["liberal_sign"])
-            out_row = dict(row)
-            out_row["judge_model"] = args.model
-            out_row["eval_text"] = raw
-            out_row["eval_label"] = label
-            out_row["collapsed_stance"] = collapsed_stance(label)
-            out_row["support_score"] = "" if s_score is None else str(s_score)
-            out_row["liberal_score"] = "" if l_score is None else str(l_score)
-            append_jsonl(args.out_jsonl, out_row)
-            written += 1
-        if written % args.flush_every == 0:
-            write_csv(args.out_csv, read_jsonl(args.out_jsonl), EVAL_COLUMNS)
-            print(f"Wrote {written}/{len(pending)} pending evaluations.")
+    progress = tqdm(
+        total=len(pending),
+        desc="Judging",
+        unit="row",
+        dynamic_ncols=True,
+        disable=args.no_progress,
+    )
+    with progress:
+        for start in range(0, len(pending), args.batch_size):
+            batch_rows = pending[start : start + args.batch_size]
+            raw_outputs = eval_batch_with_fallback(batch_rows, tokenizer, model, torch, args)
+            for row, raw in zip(batch_rows, raw_outputs):
+                label = parse_label(raw)
+                s_score = support_score(label)
+                l_score = liberal_score(label, row["liberal_sign"])
+                out_row = dict(row)
+                out_row["judge_model"] = args.model
+                out_row["eval_text"] = raw
+                out_row["eval_label"] = label
+                out_row["collapsed_stance"] = collapsed_stance(label)
+                out_row["support_score"] = "" if s_score is None else str(s_score)
+                out_row["liberal_score"] = "" if l_score is None else str(l_score)
+                append_jsonl(args.out_jsonl, out_row)
+                written += 1
+            progress.update(len(batch_rows))
+            progress.set_postfix(batch_size=len(batch_rows), written=written)
+            if written % args.flush_every == 0:
+                write_csv(args.out_csv, read_jsonl(args.out_jsonl), EVAL_COLUMNS)
+                progress.write(f"Wrote {written}/{len(pending)} pending evaluations.")
 
     rows = read_jsonl(args.out_jsonl)
     write_csv(args.out_csv, rows, EVAL_COLUMNS)
