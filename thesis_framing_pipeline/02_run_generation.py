@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-csv", default=str(DEFAULT_RESULTS_DIR / "generations_pilot.csv"))
     parser.add_argument("--model", default=DEFAULT_GEN_MODEL)
     parser.add_argument("--device", default="cuda:0")
-    parser.add_argument("--max-new-tokens", type=int, default=350)
+    parser.add_argument("--max-new-tokens", type=int, default=700)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top-p", type=float, default=0.8)
     parser.add_argument("--top-k", type=int, default=20)
@@ -34,6 +34,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Delete existing JSONL/CSV outputs before running.",
+    )
     parser.add_argument("--flush-every", type=int, default=100)
     return parser.parse_args()
 
@@ -130,6 +135,11 @@ def generate_batch_with_fallback(
 
 def main() -> int:
     args = parse_args()
+    if args.overwrite:
+        for path in [args.out_jsonl, args.out_csv]:
+            path_obj = Path(path)
+            if path_obj.exists():
+                path_obj.unlink()
     prompts = read_csv(args.prompts)
     if args.limit is not None:
         prompts = prompts[: args.limit]

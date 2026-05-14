@@ -21,10 +21,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--device", default="cuda:1")
     parser.add_argument("--max-new-tokens", type=int, default=10)
-    parser.add_argument("--max-input-tokens", type=int, default=2048)
+    parser.add_argument("--max-input-tokens", type=int, default=4096)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Delete existing JSONL/CSV outputs before running.",
+    )
     parser.add_argument("--flush-every", type=int, default=100)
     return parser.parse_args()
 
@@ -109,6 +114,11 @@ def eval_batch_with_fallback(
 
 def main() -> int:
     args = parse_args()
+    if args.overwrite:
+        for path in [args.out_jsonl, args.out_csv]:
+            path_obj = Path(path)
+            if path_obj.exists():
+                path_obj.unlink()
     generations = read_table(args.generations)
     if args.limit is not None:
         generations = generations[: args.limit]

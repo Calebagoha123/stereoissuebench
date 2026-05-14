@@ -51,7 +51,8 @@ python3 stereoissuebench/thesis_framing_pipeline/02_run_generation.py \
   --out-jsonl stereoissuebench/thesis_framing_pipeline/results/generations_pilot.jsonl \
   --out-csv stereoissuebench/thesis_framing_pipeline/results/generations_pilot.csv \
   --device cuda:0 \
-  --batch-size 8
+  --batch-size 8 \
+  --max-new-tokens 700
 
 python3 stereoissuebench/thesis_framing_pipeline/03_run_stance_eval.py \
   --generations stereoissuebench/thesis_framing_pipeline/results/generations_pilot.csv \
@@ -72,6 +73,8 @@ GEN_DEVICE=cuda:2 EVAL_DEVICE=cuda:2 GEN_BATCH_SIZE=4 EVAL_BATCH_SIZE=8 \
 Batched stochastic generation is reproducible for the same prompt order and
 batch size. Use `--strict-row-seeds` if you need one-row-at-a-time sampling with
 each row's stored seed applied independently.
+Use `--overwrite` when deliberately regenerating an output file after changing
+generation settings.
 
 Run preliminary summaries and figures:
 
