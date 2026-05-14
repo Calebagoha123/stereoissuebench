@@ -81,6 +81,46 @@ each row's stored seed applied independently.
 Use `--overwrite` when deliberately regenerating an output file after changing
 generation settings.
 
+For multi-GPU generation, run deterministic prompt shards with separate output
+files. Do not let multiple processes append to the same JSONL:
+
+```bash
+python3 stereoissuebench/thesis_framing_pipeline/02_run_generation.py \
+  --prompts /data/kell8360/thesis_framing_pipeline/results/prompts_pilot.csv \
+  --out-jsonl /data/kell8360/thesis_framing_pipeline/results/generations_pilot_shard0.jsonl \
+  --out-csv /data/kell8360/thesis_framing_pipeline/results/generations_pilot_shard0.csv \
+  --resume-from-jsonl /data/kell8360/thesis_framing_pipeline/results/generations_pilot.jsonl \
+  --device cuda:2 \
+  --batch-size 64 \
+  --max-new-tokens 1000 \
+  --num-shards 2 \
+  --shard-index 0
+
+python3 stereoissuebench/thesis_framing_pipeline/02_run_generation.py \
+  --prompts /data/kell8360/thesis_framing_pipeline/results/prompts_pilot.csv \
+  --out-jsonl /data/kell8360/thesis_framing_pipeline/results/generations_pilot_shard1.jsonl \
+  --out-csv /data/kell8360/thesis_framing_pipeline/results/generations_pilot_shard1.csv \
+  --resume-from-jsonl /data/kell8360/thesis_framing_pipeline/results/generations_pilot.jsonl \
+  --device cuda:3 \
+  --batch-size 64 \
+  --max-new-tokens 1000 \
+  --num-shards 2 \
+  --shard-index 1
+```
+
+After both finish, merge the partial original output and the shard outputs:
+
+```bash
+python3 stereoissuebench/thesis_framing_pipeline/merge_generation_outputs.py \
+  --prompts /data/kell8360/thesis_framing_pipeline/results/prompts_pilot.csv \
+  --inputs \
+    /data/kell8360/thesis_framing_pipeline/results/generations_pilot.jsonl \
+    /data/kell8360/thesis_framing_pipeline/results/generations_pilot_shard0.jsonl \
+    /data/kell8360/thesis_framing_pipeline/results/generations_pilot_shard1.jsonl \
+  --out-jsonl /data/kell8360/thesis_framing_pipeline/results/generations_pilot_merged.jsonl \
+  --out-csv /data/kell8360/thesis_framing_pipeline/results/generations_pilot_merged.csv
+```
+
 Run preliminary summaries and figures:
 
 ```bash

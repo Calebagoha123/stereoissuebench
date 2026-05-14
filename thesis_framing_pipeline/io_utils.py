@@ -32,6 +32,14 @@ def append_jsonl(path: str | Path, row: dict) -> None:
         handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def write_jsonl(path: str | Path, rows: Iterable[dict]) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
 def read_jsonl(path: str | Path) -> list[dict]:
     rows = []
     with Path(path).open(encoding="utf-8") as handle:
@@ -57,4 +65,3 @@ def existing_prompt_ids(path: str | Path) -> set[str]:
         return {str(row["prompt_id"]) for row in read_table(path) if row.get("prompt_id")}
     except Exception:
         return set()
-

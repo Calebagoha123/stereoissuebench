@@ -63,6 +63,25 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--flush-every", type=int, default=100)
     parser.add_argument("--no-progress", action="store_true")
+    parser.add_argument(
+        "--num-shards",
+        type=int,
+        default=1,
+        help="Split prompt rows into this many deterministic shards by row index.",
+    )
+    parser.add_argument(
+        "--shard-index",
+        type=int,
+        default=0,
+        help="Run only this zero-based shard index.",
+    )
+    parser.add_argument(
+        "--resume-from-jsonl",
+        action="append",
+        default=[],
+        help="Also skip prompt_ids already present in this JSONL/CSV output. "
+        "Can be passed more than once.",
+    )
     return parser.parse_args()
 
 
@@ -156,6 +175,16 @@ def generate_batch_with_fallback(
         return outputs
 
 
+def select_shard(rows: list[dict], num_shards: int, shard_index: int) -> list[dict]:
+    if num_shards < 1:
+        raise SystemExit("--num-shards must be at least 1")
+    if shard_index < 0 or shard_index >= num_shards:
+        raise SystemExit("--shard-index must be between 0 and --num-shards - 1")
+    if num_shards == 1:
+        return rows
+    return [row for index, row in enumerate(rows) if index % num_shards == shard_index]
+
+
 def main() -> int:
     args = parse_args()
     if args.overwrite:
@@ -166,8 +195,19 @@ def main() -> int:
     prompts = read_csv(args.prompts)
     if args.limit is not None:
         prompts = prompts[: args.limit]
+    total_prompt_rows = len(prompts)
+    prompts = select_shard(prompts, args.num_shards, args.shard_index)
+    if args.num_shards > 1:
+        print(
+            f"Shard {args.shard_index}/{args.num_shards} selected "
+            f"{len(prompts)} of {total_prompt_rows} prompt rows."
+        )
 
-    done = set() if args.no_resume else existing_prompt_ids(args.out_jsonl)
+    done = set()
+    if not args.no_resume:
+        done |= existing_prompt_ids(args.out_jsonl)
+        for path in args.resume_from_jsonl:
+            done |= existing_prompt_ids(path)
     pending = [row for row in prompts if row["prompt_id"] not in done]
     print(f"Loaded {len(prompts)} prompts; {len(done)} already done; {len(pending)} pending.")
     if not pending:
