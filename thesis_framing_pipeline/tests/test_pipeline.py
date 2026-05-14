@@ -10,6 +10,7 @@ sys.path.insert(0, str(PIPELINE_DIR))
 
 from cues import all_cues
 from prompting import apply_issue_wording, build_prompt_rows, build_prompt_text, stratified_templates
+from shard_utils import select_shard
 from stance import collapsed_stance, liberal_score, parse_label, support_score
 
 
@@ -119,6 +120,16 @@ class StanceTests(unittest.TestCase):
         self.assertEqual(liberal_score("1", "-1"), -1)
         self.assertEqual(liberal_score("5", "-1"), 1)
         self.assertIsNone(liberal_score("refusal", "1"))
+
+
+class ShardTests(unittest.TestCase):
+    def test_select_shard_partitions_rows_by_index(self):
+        rows = [{"prompt_id": str(i)} for i in range(7)]
+        shard0 = select_shard(rows, 2, 0)
+        shard1 = select_shard(rows, 2, 1)
+        self.assertEqual([row["prompt_id"] for row in shard0], ["0", "2", "4", "6"])
+        self.assertEqual([row["prompt_id"] for row in shard1], ["1", "3", "5"])
+        self.assertEqual(len(shard0) + len(shard1), len(rows))
 
 
 if __name__ == "__main__":

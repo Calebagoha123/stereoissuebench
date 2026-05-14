@@ -10,6 +10,7 @@ from pathlib import Path
 from config import DEFAULT_JUDGE_MODEL, DEFAULT_RESULTS_DIR, EVAL_COLUMNS
 from hf_utils import apply_chat_template, resolve_local_model_path
 from io_utils import append_jsonl, existing_prompt_ids, read_jsonl, read_table, write_csv
+from shard_utils import select_shard
 from stance import build_eval_prompt, collapsed_stance, liberal_score, parse_label, support_score
 
 try:
@@ -54,6 +55,25 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--flush-every", type=int, default=100)
     parser.add_argument("--no-progress", action="store_true")
+    parser.add_argument(
+        "--num-shards",
+        type=int,
+        default=1,
+        help="Split generation rows into this many deterministic shards by row index.",
+    )
+    parser.add_argument(
+        "--shard-index",
+        type=int,
+        default=0,
+        help="Run only this zero-based shard index.",
+    )
+    parser.add_argument(
+        "--resume-from-jsonl",
+        action="append",
+        default=[],
+        help="Also skip prompt_ids already present in this JSONL/CSV output. "
+        "Can be passed more than once.",
+    )
     return parser.parse_args()
 
 
@@ -145,7 +165,19 @@ def main() -> int:
     generations = read_table(args.generations)
     if args.limit is not None:
         generations = generations[: args.limit]
-    done = set() if args.no_resume else existing_prompt_ids(args.out_jsonl)
+    total_generation_rows = len(generations)
+    generations = select_shard(generations, args.num_shards, args.shard_index)
+    if args.num_shards > 1:
+        print(
+            f"Shard {args.shard_index}/{args.num_shards} selected "
+            f"{len(generations)} of {total_generation_rows} generation rows."
+        )
+
+    done = set()
+    if not args.no_resume:
+        done |= existing_prompt_ids(args.out_jsonl)
+        for path in args.resume_from_jsonl:
+            done |= existing_prompt_ids(path)
     pending = [row for row in generations if row["prompt_id"] not in done]
     print(f"Loaded {len(generations)} generations; {len(done)} already done; {len(pending)} pending.")
     if not pending:

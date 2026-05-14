@@ -121,6 +121,40 @@ python3 stereoissuebench/thesis_framing_pipeline/merge_generation_outputs.py \
   --out-csv /data/kell8360/thesis_framing_pipeline/results/generations_pilot_merged.csv
 ```
 
+Judging can be sharded the same way after generation is merged:
+
+```bash
+python3 stereoissuebench/thesis_framing_pipeline/03_run_stance_eval.py \
+  --generations /data/kell8360/thesis_framing_pipeline/results/generations_pilot_merged.csv \
+  --out-jsonl /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_shard0.jsonl \
+  --out-csv /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_shard0.csv \
+  --device cuda:2 \
+  --batch-size 64 \
+  --num-shards 2 \
+  --shard-index 0
+
+python3 stereoissuebench/thesis_framing_pipeline/03_run_stance_eval.py \
+  --generations /data/kell8360/thesis_framing_pipeline/results/generations_pilot_merged.csv \
+  --out-jsonl /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_shard1.jsonl \
+  --out-csv /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_shard1.csv \
+  --device cuda:3 \
+  --batch-size 64 \
+  --num-shards 2 \
+  --shard-index 1
+```
+
+After both judging shards finish, merge them:
+
+```bash
+python3 stereoissuebench/thesis_framing_pipeline/merge_eval_outputs.py \
+  --generations /data/kell8360/thesis_framing_pipeline/results/generations_pilot_merged.csv \
+  --inputs \
+    /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_shard0.jsonl \
+    /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_shard1.jsonl \
+  --out-jsonl /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_merged.jsonl \
+  --out-csv /data/kell8360/thesis_framing_pipeline/results/evaluated_pilot_merged.csv
+```
+
 Run preliminary summaries and figures:
 
 ```bash

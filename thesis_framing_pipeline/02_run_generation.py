@@ -12,6 +12,7 @@ from pathlib import Path
 from config import DEFAULT_GEN_MODEL, DEFAULT_RESULTS_DIR, GENERATION_COLUMNS
 from hf_utils import apply_chat_template, resolve_local_model_path
 from io_utils import append_jsonl, existing_prompt_ids, read_csv, read_jsonl, write_csv
+from shard_utils import select_shard
 
 try:
     from tqdm.auto import tqdm
@@ -173,16 +174,6 @@ def generate_batch_with_fallback(
         for row in rows:
             outputs.extend(generate_batch_with_fallback([row], tokenizer, model, torch, args))
         return outputs
-
-
-def select_shard(rows: list[dict], num_shards: int, shard_index: int) -> list[dict]:
-    if num_shards < 1:
-        raise SystemExit("--num-shards must be at least 1")
-    if shard_index < 0 or shard_index >= num_shards:
-        raise SystemExit("--shard-index must be between 0 and --num-shards - 1")
-    if num_shards == 1:
-        return rows
-    return [row for index, row in enumerate(rows) if index % num_shards == shard_index]
 
 
 def main() -> int:
