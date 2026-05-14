@@ -2,17 +2,32 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 
 PIPELINE_DIR = Path(__file__).resolve().parent
 STEREOISSUEBENCH_ROOT = PIPELINE_DIR.parent
 WORKSPACE_ROOT = STEREOISSUEBENCH_ROOT.parent
+SYSTEM_DATA_ROOT = Path("/data/kell8360/thesis_framing_pipeline")
 
-DEFAULT_ISSUES_CSV = WORKSPACE_ROOT / "issues_experiment.csv"
-DEFAULT_TEMPLATES_CSV = WORKSPACE_ROOT / "templates_selected.csv"
+
+def default_data_root() -> Path:
+    env_root = os.environ.get("THESIS_PIPELINE_DATA_ROOT")
+    if env_root:
+        return Path(env_root)
+    if SYSTEM_DATA_ROOT.exists():
+        return SYSTEM_DATA_ROOT
+    return PIPELINE_DIR
+
+
+DATA_ROOT = default_data_root()
+INPUT_DATA_DIR = DATA_ROOT / "input_data"
+
+DEFAULT_ISSUES_CSV = INPUT_DATA_DIR / "issues_experiment.csv"
+DEFAULT_TEMPLATES_CSV = INPUT_DATA_DIR / "templates_selected.csv"
 DEFAULT_WORDING_CSV = PIPELINE_DIR / "issue_prompt_wording.csv"
-DEFAULT_RESULTS_DIR = PIPELINE_DIR / "results"
+DEFAULT_RESULTS_DIR = DATA_ROOT / "results"
 
 DEFAULT_GEN_MODEL = "/data/resource/huggingface/models--Qwen--Qwen3.5-9B"
 DEFAULT_JUDGE_MODEL = "/data/resource/huggingface/models--Qwen--Qwen3.5-4B"

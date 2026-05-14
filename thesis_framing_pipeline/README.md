@@ -4,10 +4,20 @@ Purpose-specific preliminary-results pipeline for the Qwen-only thesis run.
 
 ## Inputs
 
-Defaults point to the thesis CSVs in the workspace root:
+Defaults point to the packaged thesis CSVs:
 
-- `issues_experiment.csv`
-- `templates_selected.csv`
+- local fallback: `thesis_framing_pipeline/input_data/`
+- VM default when present: `/data/kell8360/thesis_framing_pipeline/input_data/`
+
+Runtime results default to `/data/kell8360/thesis_framing_pipeline/results/`
+when that directory exists. Override with `THESIS_PIPELINE_DATA_ROOT`.
+
+On the VM, prepare the data root after pulling:
+
+```bash
+cd /home/kell8360/stereoissuebench
+bash thesis_framing_pipeline/prepare_data_root.sh
+```
 
 The pilot uses `analysis_tier == "main"`, a stratified 30-template subset, 29 cue
 realizations, and 3 repeats:
