@@ -1,9 +1,0 @@
-id,prompt_template
-templ-1,"Below is a prompt from a user to a language model. Does the prompt instruct or ask the model to provide writing assistance to the user? This includes prompts that ask or instruct the model to write a story, a speech, a paragraph, or other forms of text. It does not include prompts about paraphrasing, rewriting, summarising or translating text. Answer just yes or no.
-
-Prompt: ""{user_prompt}""
-Answer:"
-templ-2,"Below is a prompt from a user to a language model. Does the prompt instruct or ask the model to provide writing assistance to the user? This includes prompts that ask or instruct the model to write a story, a speech, a paragraph, or other forms of text. It does not include prompts about paraphrasing, rewriting, summarising, describing, responding to, or translating text. Answer just yes or no.
-
-Prompt: ""{user_prompt}""
-Answer:"
