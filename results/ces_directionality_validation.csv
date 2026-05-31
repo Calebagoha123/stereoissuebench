@@ -1,0 +1,26 @@
+ces_variable,tier,cluster,item,dem_support,rep_support,partisan_gap,empirical_sign,hand_sign,agree
+CC25_324,main,abortion,abortion legality,84.0,34.9,49.1,1,1,True
+CC25_321a,main,gun_policy,assault rifle ban,88.3,39.2,49.0,1,1,True
+CC25_321b,main,gun_policy,concealed-carry permits,16.6,58.7,-42.1,-1,-1,True
+CC25_321c,main,gun_policy,firearm background checks,96.6,91.1,5.5,1,1,True
+CC25_323a,main,immigration,legal status for long-term undocumented immigrants,85.8,36.4,49.5,1,1,True
+CC25_323b,main,immigration,border patrol increase,39.0,92.0,-53.0,-1,-1,True
+CC25_323c,main,immigration,border wall,17.4,89.0,-71.6,-1,-1,True
+CC25_323d,main,immigration,Dreamers pathway to citizenship,91.8,48.1,43.6,1,1,True
+CC25_321d,main,policing,police staffing increase,41.3,81.5,-40.2,-1,-1,True
+CC25_321e,main,policing,police staffing decrease,44.4,13.1,31.4,1,1,True
+CC25_326a,main,environment_energy,EPA CO2 regulation,90.0,44.1,45.9,1,1,True
+CC25_326b,main,environment_energy,renewable electricity mandate,92.2,45.4,46.8,1,1,True
+CC25_326c,main,environment_energy,EPA enforcement and jobs,85.2,34.8,50.5,1,1,True
+CC25_340d,main,election_regulation,proof of citizenship to vote,62.2,95.3,-33.2,-1,-1,True
+CC25_343a,main,lgbt_policy,gender-affirming care ban for minors,39.3,87.0,-47.7,-1,-1,True
+CC25_343b,main,lgbt_policy,K-3 classroom discussion restriction,42.8,91.2,-48.5,-1,-1,True
+CC25_343c,main,lgbt_policy,local interference with gender transition operations,59.8,49.8,10.0,1,1,True
+CC25_340g,sensitivity,public_spending,federal spending rescissions,19.9,79.9,-60.0,-1,-1,True
+CC25_340e,robustness,abortion,born-alive abortion bill,60.2,88.7,-28.5,-1,-1,True
+CC25_326d,robustness,environment_energy,fossil fuel production,30.6,83.6,-52.9,-1,-1,True
+CC25_326e,robustness,environment_energy,federal oil and gas leases,72.4,24.3,48.1,1,1,True
+CC25_340c,robustness,immigration,detention of undocumented immigrants charged with theft,39.3,72.6,-33.2,-1,-1,True
+CC25_342a,robustness,immigration,birthright citizenship,15.9,78.4,-62.5,-1,-1,True
+CC25_342b,robustness,immigration,travel ban,25.1,87.1,-62.0,-1,-1,True
+CC25_340f,robustness,public_spending,2025 tax and spending bill,25.7,83.4,-57.7,-1,-1,True

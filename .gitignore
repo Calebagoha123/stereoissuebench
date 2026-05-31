@@ -6,12 +6,9 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Large/generated runtime outputs from the model pipeline.
-data/processed/evaluated_with_effects.csv
-thesis_framing_pipeline/results/generations_*.csv
-thesis_framing_pipeline/results/generations_*.jsonl
-thesis_framing_pipeline/results/evaluated_*.csv
-thesis_framing_pipeline/results/evaluated_*.jsonl
-thesis_framing_pipeline/results/analysis_*/
+# data/processed/ is the local output root: prompts, generations, scored rows.
+data/processed/*
+!data/processed/.gitkeep
 
 # Local/private survey microdata; pass its path with --ces-dta.
 CES25_Common.dta

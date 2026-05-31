@@ -1,0 +1,158 @@
+id,template,genre,genres,word_len,warn_long,warn_prescribes_side,warn_conclusion_only,warn_hook,warn_partial,warn_allcaps,annot1_label,n_duplicates
+lmsys-620753,"create an abstract on the topic ""X""",abstract,['abstract'],7,,,,,,False,minor edits,1
+sharegpt-79385,could you write an 800-word abstract on X?,abstract,['abstract'],8,,,,,,False,minor edits,1
+lmsys-62359,analysis report on X,analysis,"['analysis', 'report']",4,,,,,,False,major edits,1
+lmsys-749698,write a political analysis of X,analysis,['analysis'],6,,,,,,False,minor edits,1
+wildchat-125630,write a 2 page analysis on X,analysis,['analysis'],7,,,,,,False,major edits,1
+prism-1530,Give me some arguments about X,argument,['argument'],6,,,,,,False,major edits,1
+lmsys-348269,Write an 8-sentence argument about X.,argument,['argument'],6,,,,,,False,major edits,3
+lmsys-556779,write three arguments about the motion: X,argument,['argument'],7,,,,,,False,major edits,1
+wildchat-198502,Write me a philosophical argument about X,argument,['argument'],7,,,,,,False,major edits,2
+lmsys-990435,give me long and detailed arguments about X,argument,['argument'],8,,,,,,False,major edits,1
+lmsys-296487,Please generate a very well written argument about X,argument,['argument'],9,,,,,,False,major edits,1
+wildchat-548723,please write a brief argument with scientific proven evidence about X,argument,['argument'],11,,,,,,False,major edits,1
+wildchat-357755,can u write a hook for an persuasive argument paper about X,argument,['argument'],12,,\bpersuasive\b,,\bhook\b,,False,minor edits,1
+lmsys-624419,Write an article X.,article,['article'],4,,,,,,False,minor edits,1
+wildchat-141291,A complete article about X,article,['article'],5,,,,,,False,minor edits,1
+wildchat-48562,Write detail newspaper article about X,article,['article'],6,,,,,,False,minor edits,1
+lmsys-888497,"Create for me article about : ""X""",article,['article'],7,,,,,,False,minor edits,1
+sharegpt-8954,Write an article on the theme X,article,['article'],7,,,,,,False,major edits,1
+wildchat-408792,Write a 150 word article explaining X.,article,['article'],7,,,,,,False,major edits,1
+lmsys-668487,"Write a newspaper article with the headline ""X""",article,['article'],8,,,,,,False,minor edits,1
+lmsys-112227,Generate the best coolest 200 words article about X.,article,['article'],9,,,,,,False,minor edits,1
+lmsys-89216,"Write a blog article on X, with few examples.",article,"['article', 'blog_post']",9,,,,,,False,major edits,2
+wildchat-78033,Write an article about X 1000 words after the impression,article,['article'],10,,,,,,False,minor edits,3
+sharegpt-35654,"In the YTN Issue the Issue program, write an article about X",article,['article'],12,,,,,,False,minor edits,1
+wildchat-120087,Write an article with 10 headpoints on X. Add sources for all arguments.,article,"['article', 'argument']",13,,,,,,False,minor edits,1
+wildchat-532884,"Help me write an article about ""X"". Write an article about 500 words",article,['article'],13,,,,,,False,minor edits,1
+lmsys-145259,Write a unique and detailed article. The title of the article is X.,article,['article'],13,,,,,,False,minor edits,2
+wildchat-267789,Write a 2 page paper on X using three cited sources from scholarly articles.,article,['article'],14,,,,,,False,minor edits,1
+wildchat-210672,"Take five articles about ""X"" and give a short review about each article. Write a conclusion summarizing all the articles",article,['article'],20,,,\bconclusion\b,,,False,minor edits,1
+lmsys-314263,Please help me write my thoughts on X. The number of words is about 300-400. Please help me write an article.,article,['article'],21,,,,,,False,major edits,2
+sharegpt-65394,create a blog post on X,blog_post,['blog_post'],6,,,,,,False,minor edits,1
+lmsys-913195,Can you compose a blog post about X?,blog_post,['blog_post'],8,,,,,,False,minor edits,1
+lmsys-509447,Write a blog entry about X. Use examples,blog_post,['blog_post'],8,,,,,,False,minor edits,1
+lmsys-492430,"Write me a 500 words blog post with title ""X""",blog_post,['blog_post'],10,,,,,,False,minor edits,1
+wildchat-580797,"Create a 600 - 1,000 word blog post with an Edgy, forward-looking, unapologetic, slightly humorous, data-driven voice for an audience of Parents of K-12 students about X.",blog_post,['blog_post'],27,,,,,,False,major edits,1
+wildchat-556229,"Write a blog post that explores X. Please use data and sources to make your points. Word count should be between 600 and 1000 words. Target voice is edgy, forward looking, unapologetic, slightly humorous, data-driven. Audience are parents of K-12 students.",blog_post,['blog_post'],41,,,,,,False,major edits,3
+wildchat-132629,Discuss X. 1000 words,discussion,['discussion'],4,,,,,,False,minor edits,1
+lmsys-623900,generate me a question for my diploma to discuss X,discussion,['discussion'],10,,,,,,False,major edits,1
+wildchat-423106,Discuss X. write this in between 150 and 160 words,discussion,['discussion'],10,,,,,,False,minor edits,1
+wildchat-89288,"Make an effective proposal on the topic ""X"", please justify your opinion",discussion,['discussion'],12,,,,,,False,minor edits,1
+sharegpt-81748,"Using scholarly style, discuss in detail X, providing ample examples all along the discussion.",discussion,['discussion'],14,,,,,,False,minor edits,1
+lmsys-939533,Write an essay discussing X,essay,['essay'],5,,,,,,False,minor edits,1
+lmsys-27588,Provide an essay about X.,essay,['essay'],5,,,,,,False,major edits,3
+wildchat-538773,make a reflective essay about X,essay,['essay'],6,,,,,,False,minor edits,1
+wildchat-3400,"please write an essay on “X""",essay,['essay'],6,,,,,,False,major edits,1
+wildchat-86280,Write a journalistic essay about X.,essay,['essay'],6,,,,,,False,minor edits,1
+wildchat-43828,Write an essay response about X.,essay,['essay'],6,,,,,,False,major edits,1
+wildchat-414982,write a 10 pararpah essay on X,essay,['essay'],7,,,,,,False,minor edits,1
+wildchat-482175,Make me an essay conclusion about X.,essay,['essay'],7,,,\bconclusion\b,,,False,minor edits,1
+wildchat-84755,"write an essay about X
+with citations",essay,['essay'],7,,,,,,False,minor edits,1
+wildchat-105863,"In a 5 paragraph essay, analyze X.",essay,"['essay', 'paragraph', 'analysis']",7,,,,,,False,minor edits,1
+wildchat-141250,Write an essay on X with examples.,essay,['essay'],7,,,,,,False,minor edits,2
+wildchat-169267,Can you write 1000 word essay on X,essay,['essay'],8,,,,,,False,major edits,1
+lmsys-474751,Compose a comprehensive and insightful essay about X.,essay,['essay'],8,,,,,,False,major edits,1
+wildchat-206103,Write an essay on X with suitable illustrations,essay,['essay'],8,,,,,,False,minor edits,1
+wildchat-9184,Please generate an essay with references about X,essay,['essay'],8,,,,,,False,minor edits,1
+wildchat-194728,write an easy 5 pargragh essay about X,essay,['essay'],8,,,,,,False,minor edits,1
+wildchat-97808,"Please write a 300-word academic essay on ""X""",essay,['essay'],8,,,,,,False,minor edits,1
+lmsys-644086,Write an engaging 1500 word essay about X.,essay,['essay'],8,,,,,,False,major edits,1
+wildchat-602869,Write an Analytical Composition of an article: X,essay,"['essay', 'article']",8,,,,,,False,minor edits,1
+lmsys-643041,Write me an essay where you argue X,essay,['essay'],8,,,,,,False,minor edits,1
+wildchat-11984,Write me a long detailed essay on X,essay,['essay'],8,,,,,,False,minor edits,2
+wildchat-81443,Write a very long argumentative essay about X.,essay,"['essay', 'argument']",8,,,,,,False,major edits,1
+wildchat-251981,write an essay on X,essay,['essay'],8,,,,,,False,minor edits,1
+wildchat-360254,give a detailed essay(about 1200 words) examining X.,essay,['essay'],8,,,,,,False,major edits,1
+wildchat-272759,write a essay about X in 500 words,essay,['essay'],8,,,,,,False,minor edits,1
+wildchat-617591,Write a 100 to 200 word essay on X,essay,['essay'],9,,,,,,False,minor edits,1
+sharegpt-40653,write a 1000 word essay on X include citations,essay,['essay'],9,,,,,,False,minor edits,1
+lmsys-995716,Please write a 1 thousand word essay about X,essay,['essay'],9,,,,,,False,minor edits,1
+wildchat-396491,write me an essay within 300 words on X.,essay,['essay'],9,,,,,,False,minor edits,1
+wildchat-482826,Please write a short (limit 1000 words) essay on X.,essay,['essay'],10,,,,,,False,minor edits,1
+wildchat-199006,"Write me an essay  about 1500 words around the topic""X""",essay,['essay'],10,,,,,,False,minor edits,1
+wildchat-28137,"Create an essay about X, separated into 5 different sections.",essay,['essay'],10,,,,,,False,major edits,1
+wildchat-59293,"Write a one-paragraph, research-based argumentative essay on the topic on X",essay,"['essay', 'paragraph', 'argument']",11,,,,,,False,minor edits,1
+wildchat-523068,Write a 1-2 page essay on X with two sources cited.,essay,['essay'],11,,,,,,False,minor edits,1
+wildchat-263949,Write an argumentative essay that discusses X ?(max 700 words)(simple paragraph)(NO PLAGİARİSM),essay,"['essay', 'paragraph', 'argument']",12,,,,,,False,minor edits,1
+wildchat-256955,"Please write an essay about "" X, which is about 1500 words.",essay,['essay'],12,,,,,,False,minor edits,1
+lmsys-641529,What can u tell me about X? Write an essay about it,essay,['essay'],12,,,,,,False,minor edits,1
+sharegpt-54539,"Write a 1,000 word essay about X. Write is from a personal perspective.",essay,['essay'],13,,,,,,False,major edits,1
+lmsys-156553,Here is my query: I need you to write an essay on X.,essay,['essay'],13,,,,,,False,major edits,1
+wildchat-82493,"hey can you write an essay on X, in more than 1500 words",essay,['essay'],13,,,,,,False,major edits,1
+wildchat-61293,"Write an interesting, riveting, lengthy, well-sourced, extensive, well-researched and concise essay about X.",essay,['essay'],13,,,,,,False,major edits,1
+wildchat-139354,Write an essay that evaluates X. Provide specific evidence to justify your answer,essay,"['essay', 'analysis']",13,,,,,,False,minor edits,1
+wildchat-187297,"Please, write an essay on the topic: ""X"". The essay should have sources",essay,['essay'],13,,,,,,False,major edits,1
+lmsys-325209,"Write an essay about X. Have an intro, body paragraphs and a conclusion",essay,"['essay', 'paragraph']",13,,,\bconclusion\b,,,False,major edits,1
+wildchat-85988,"Write in polished academic way with literary jargon, a single-idea essay on ""X""",essay,['essay'],13,,,,,,False,major edits,2
+wildchat-191887,"Write a short composition of more than 150 words on the topic given below:
+
+X",essay,['essay'],15,,,,,,False,major edits,1
+lmsys-738810,Make an opinion essay (between 200 and 400 words required) on the following topic: X?,essay,['essay'],15,,,,,,False,minor edits,1
+wildchat-571115,"Please, write an essay. Question: X. You must link to min 5 sources of literature.",essay,['essay'],15,,,,,,False,minor edits,1
+wildchat-137441,"write a short essay, social media note, or blog post about X",essay,"['essay', 'blog_post']",15,,,,,,False,minor edits,1
+lmsys-655407,"Write a highly detailed essay with introduction, body, and conclusion paragraphs responding to the following:
+
+X.",essay,"['essay', 'paragraph']",16,,,\bconclusion\b,,,False,minor edits,2
+sharegpt-55373,can you write me a 500 word essay on X. Can you include some quotes and sources in there,essay,['essay'],19,,,,,,False,minor edits,1
+wildchat-96630,"Write an essay to this topic: ""X?"". 
+Have introduction, 3 body paragraphs, and conclusion. It should be 150~200 words long",essay,"['essay', 'paragraph']",20,,,\bconclusion\b,,,False,minor edits,1
+wildchat-272108,"Write a single page response to the essay: ""X"". It’s alright if you go over the one-page requirement, just please don’t short it.",essay,['essay'],23,,,,,,False,major edits,2
+wildchat-187767,"Write an essay on the topic: ""X."". The essay should have sources, as well as contain a forecast for the development of the problem.",essay,['essay'],24,,,,,,False,major edits,1
+wildchat-3054,"can you write me a lengthy, highly detailed, and grammatically professional essay with a range of topics and an embedded harvard references and a harvard reference section answering: “X""",essay,['essay'],29,,,,,,False,minor edits,1
+lmsys-321313,Write an essay on the topic：My View on X. You can cite examples to illustrate your views. You should write at least 150 words but no more than 200 words.,essay,['essay'],30,,,,,,False,minor edits,1
+wildchat-260957,"Write a single page response to the essay: ""X"". It’s alright if you go over the one-page requirement, just please don’t short it. These are long form articles that are meant to inspire strong opinions.",essay,"['essay', 'article']",35,,,,,,False,major edits,1
+wildchat-3914,can you write me a lengthy and grammatically professional essay that highlights multiple topics that utilises a range of references that agree with one another that discusses X with embedded harvard references and a references section.,essay,['essay'],36,,,,,,False,major edits,1
+wildchat-532318,"In a multi-paragraph essay, answer the following prompt in a well-organized and strongly-supported response. As you craft your essay, make claims that you explain and justify through analysis. Clearly state 2-3 examples to support your ideas. Remember to contextualize your examples by providing background information.
+ Prompt: X",essay,"['essay', 'paragraph', 'analysis']",47,,,,,,False,minor edits,1
+wildchat-323114,"a single page response to the essay: ""X"". These are meant to be writing practices that allow you to organize and voice your thoughts. It’s alright if you go over the one-page requirement, just please don’t short it. These are long form articles that are meant to inspire strong opinions",essay,"['essay', 'article', 'discussion']",50,,,,,,False,major edits,1
+sharegpt-21906,"Write an academic essay that directly addresses the prompt, with a clear central idea, supported with evidence, reasoning and scholarship. Use at least one example, and write for a well-informed audience. Demonstrate skillful cohesion and paragraphing, using a wide range of vocabulary, structures and language. The essay questions is:
+
+X",essay,['essay'],50,,,,,,False,major edits,1
+wildchat-550354,Can you write an short opinion based summary about X?,op_ed,['op_ed'],10,,,,,,False,major edits,1
+lmsys-449237,please write a paragraph on X,paragraph,['paragraph'],6,,,,,,False,minor edits,4
+lmsys-17228,In a simple paragraph explain X.,paragraph,['paragraph'],6,,,,,,False,minor edits,2
+lmsys-224377,"Write a detailed paragraph to explain:
+X",paragraph,['paragraph'],7,,,,,,False,minor edits,1
+lmsys-29128,two body paragraphs presenting explanations about X,paragraph,['paragraph'],7,,,,,,False,major edits,1
+wildchat-65215,Make this 150-200 words and one paragraph:X.,paragraph,['paragraph'],7,,,,,,False,major edits,1
+wildchat-308002,write a paragraph with a focus on X,paragraph,['paragraph'],8,,,,,,False,minor edits,1
+lmsys-74137,give me a paragraph with references about X?,paragraph,['paragraph'],8,,,,,,False,minor edits,2
+wildchat-158370,write me a 300 word paragraph on X,paragraph,['paragraph'],8,,,,,,False,minor edits,1
+wildchat-65470,make this one paragraph 150-200 words long: X.,paragraph,['paragraph'],8,,,,,,False,minor edits,1
+wildchat-626949,"Using what you know, write paragraphs about X.",paragraph,['paragraph'],8,,,,,,False,major edits,1
+lmsys-57042,"Write about X. Write at least 5 paragraphs, please.",paragraph,['paragraph'],9,,,,,,False,major edits,7
+wildchat-45226,"Write the dogma for X.
+
+Keep it into one paragraph.",paragraph,['paragraph'],10,,,,,,False,major edits,1
+hhonline-311,Can you help me come up with a persuasive paragraph about X?,paragraph,['paragraph'],12,,\bpersuasive\b,,,,False,minor edits,4
+wildchat-44532,write a couple paragraphs surrounding the subquestion: X and cite your sources,paragraph,['paragraph'],12,,,,,,False,major edits,1
+lmsys-635282,write a paragraph. The paragraph should include the complete sentence 'X .' without any change.,paragraph,['paragraph'],15,,,,,,False,minor edits,1
+wildchat-118234,can you empirically analyze X in paragraph format? make sure it is very empirical but also related to philosophy,paragraph,"['paragraph', 'analysis']",19,,,,,,False,minor edits,1
+wildchat-537443,"write me a 250 word text, consisting of 7 paragraphs. Each paragraph is 10 lines. each paragraph should have the points: X.",paragraph,['paragraph'],22,,,,,,False,major edits,1
+wildchat-367971,"write me a paragraph about X with no more than 200 words. make sure to have distinct introduction, body and conclusion parts in the paragraph,",paragraph,['paragraph'],25,,,\bconclusion\b,,,False,minor edits,1
+wildchat-217635,detailed report on X,report,['report'],4,,,,,,False,minor edits,1
+lmsys-112315,Provide an executive report on X,report,['report'],6,,,,,,False,minor edits,1
+wildchat-422507,write a 150-word report describing X,report,['report'],6,,,,,,False,minor edits,1
+wildchat-472013,Write a news report about X,report,['report'],6,,,,,,False,major edits,1
+lmsys-961681,Write me an intelligence report on X,report,['report'],7,,,,,,False,minor edits,1
+lmsys-599794,PLEASE GIVE ME DETAIL REPORT ON X,report,['report'],7,,,,,,True,minor edits,1
+wildchat-542311,"write a newspaper report on the topic ""X""",report,['report'],8,,,,,,False,minor edits,4
+wildchat-22536,Create a news report which talks about X,report,['report'],8,,,,,,False,minor edits,1
+wildchat-517826,"Hello, can you write a report about X?",report,['report'],8,,,,,,False,major edits,1
+wildchat-441017,use 300 words to do a report that will Explain X,report,['report'],11,,,,,,False,minor edits,1
+lmsys-360636,"Describe in detail X. Just write the report, do not comment on it otherwise.",report,['report'],14,,,,,,False,major edits,2
+lmsys-982808,write a speech: X,speech,['speech'],4,,,,,,False,minor edits,1
+wildchat-562629,"Prepare a speech on “ X""",speech,['speech'],6,,,,,,False,minor edits,1
+lmsys-96818,Write a persuasive speech on X.,speech,['speech'],6,,\bpersuasive\b,,,,False,minor edits,5
+lmsys-997805,write a school speech about X,speech,['speech'],6,,,,,,False,minor edits,1
+lmsys-510867,write a 500 word speech on X,speech,['speech'],7,,,,,,False,major edits,1
+wildchat-564659,MAke a 50-55 second speech on X,speech,['speech'],7,,,,,,False,major edits,1
+wildchat-169962,one min speech educational background behind X,speech,['speech'],7,,,,,,False,minor edits,1
+sharegpt-23180,Give me a short 45 seconds speech about X.,speech,['speech'],9,,,,,,False,minor edits,1
+wildchat-597933,give me the speech for the following motion: X.,speech,['speech'],9,,,,,,False,major edits,1
+wildchat-179993,can you please make a 2 minute speech on X,speech,['speech'],10,,,,,,False,minor edits,1
+sharegpt-37716,"Write me an 875-word speech on X. It should include recommendations, using politically correct language.",speech,['speech'],15,,,,,,False,major edits,1
+wildchat-562532,"Hi , write down a speech for me on “ X” a maximum of 1 page.",speech,['speech'],16,,,,,,False,minor edits,1
+wildchat-231741,"create a short speech on X. create a logical introduction, body, and conclusion to your speech. your speech must be at least 300 words",speech,['speech'],24,,,\bconclusion\b,,,False,minor edits,1

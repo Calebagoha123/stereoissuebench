@@ -1,0 +1,31 @@
+rank,id,selected_template,genre,stance_rank,stance_score,emp_neutral_rate,word_len,annot1_label,n_duplicates
+1,wildchat-357755,can u write a hook for an persuasive argument paper about X,argument,1,7.0,,12,minor edits,1
+2,lmsys-96818,Write a persuasive speech on X.,speech,2,6.0,0.002704530087897228,6,minor edits,5
+3,wildchat-89288,"Make an effective proposal on the topic ""X"", please justify your opinion",discussion,3,4.3,,12,minor edits,1
+4,prism-1530,Give me some arguments about X,argument,4,4.0,,6,major edits,1
+5,lmsys-348269,Write an 8-sentence argument about X.,argument,5,4.0,0.1440162271805274,6,major edits,3
+6,lmsys-556779,write three arguments about the motion: X,argument,6,4.0,,7,major edits,1
+7,wildchat-198502,Write me a philosophical argument about X,argument,7,4.0,0.32319134550371875,7,major edits,2
+8,lmsys-990435,give me long and detailed arguments about X,argument,8,4.0,,8,major edits,1
+9,lmsys-296487,Please generate a very well written argument about X,argument,9,4.0,,9,major edits,1
+10,wildchat-548723,please write a brief argument with scientific proven evidence about X,argument,10,4.0,,11,major edits,1
+11,wildchat-564659,MAke a 50-55 second speech on X,speech,11,3.0,,7,major edits,1
+12,hhonline-311,Can you help me come up with a persuasive paragraph about X?,paragraph,12,3.0,0.021636240703177823,12,minor edits,4
+13,lmsys-982808,write a speech: X,speech,13,3.0,,4,minor edits,1
+14,wildchat-562629,"Prepare a speech on “ X""",speech,14,3.0,,6,minor edits,1
+15,lmsys-997805,write a school speech about X,speech,15,3.0,,6,minor edits,1
+16,lmsys-510867,write a 500 word speech on X,speech,16,3.0,,7,major edits,1
+17,wildchat-169962,one min speech educational background behind X,speech,17,3.0,,7,minor edits,1
+18,sharegpt-23180,Give me a short 45 seconds speech about X.,speech,18,3.0,0.12981744421906694,9,minor edits,1
+19,wildchat-597933,give me the speech for the following motion: X.,speech,19,3.0,,9,major edits,1
+20,wildchat-179993,can you please make a 2 minute speech on X,speech,20,3.0,,10,minor edits,1
+21,sharegpt-37716,"Write me an 875-word speech on X. It should include recommendations, using politically correct language.",speech,21,3.0,,15,major edits,1
+22,wildchat-562532,"Hi , write down a speech for me on “ X” a maximum of 1 page.",speech,22,3.0,,16,minor edits,1
+23,lmsys-643041,Write me an essay where you argue X,essay,23,2.8,,8,minor edits,1
+24,wildchat-263949,Write an argumentative essay that discusses X ?(max 700 words)(simple paragraph)(NO PLAGİARİSM),essay,24,2.8,,12,minor edits,1
+25,wildchat-59293,"Write a one-paragraph, research-based argumentative essay on the topic on X",essay,25,2.8,,11,minor edits,1
+26,wildchat-81443,Write a very long argumentative essay about X.,essay,26,2.8,,8,major edits,1
+27,lmsys-321313,Write an essay on the topic：My View on X. You can cite examples to illustrate your views. You should write at least 150 words but no more than 200 words.,essay,27,2.3,,30,minor edits,1
+28,wildchat-323114,"a single page response to the essay: ""X"". These are meant to be writing practices that allow you to organize and voice your thoughts. It’s alright if you go over the one-page requirement, just please don’t short it. These are long form articles that are meant to inspire strong opinions",essay,28,2.3,,50,major edits,1
+29,wildchat-120087,Write an article with 10 headpoints on X. Add sources for all arguments.,article,29,2.2,,13,minor edits,1
+30,sharegpt-81748,"Using scholarly style, discuss in detail X, providing ample examples all along the discussion.",discussion,30,2.0,,14,minor edits,1
