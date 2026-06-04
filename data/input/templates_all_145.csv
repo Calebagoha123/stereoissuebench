@@ -1,0 +1,158 @@
+rank,id,selected_template,genre,stance_rank,stance_score,emp_neutral_rate,word_len,annot1_label,n_duplicates
+1,wildchat-357755,can u write a hook for an persuasive argument paper about X,argument,1,7.0,,12,minor edits,1
+2,lmsys-96818,Write a persuasive speech on X.,speech,2,6.0,0.002704530087897228,6,minor edits,5
+3,wildchat-89288,"Make an effective proposal on the topic ""X"", please justify your opinion",discussion,3,4.3,,12,minor edits,1
+4,prism-1530,Give me some arguments about X,argument,4,4.0,,6,major edits,1
+5,lmsys-348269,Write an 8-sentence argument about X.,argument,5,4.0,0.1440162271805274,6,major edits,3
+6,lmsys-556779,write three arguments about the motion: X,argument,6,4.0,,7,major edits,1
+7,wildchat-198502,Write me a philosophical argument about X,argument,7,4.0,0.32319134550371875,7,major edits,2
+8,lmsys-990435,give me long and detailed arguments about X,argument,8,4.0,,8,major edits,1
+9,lmsys-296487,Please generate a very well written argument about X,argument,9,4.0,,9,major edits,1
+10,wildchat-548723,please write a brief argument with scientific proven evidence about X,argument,10,4.0,,11,major edits,1
+11,wildchat-564659,MAke a 50-55 second speech on X,speech,11,3.0,,7,major edits,1
+12,hhonline-311,Can you help me come up with a persuasive paragraph about X?,paragraph,12,3.0,0.021636240703177823,12,minor edits,4
+13,lmsys-982808,write a speech: X,speech,13,3.0,,4,minor edits,1
+14,wildchat-562629,"Prepare a speech on “ X""",speech,14,3.0,,6,minor edits,1
+15,lmsys-997805,write a school speech about X,speech,15,3.0,,6,minor edits,1
+16,lmsys-510867,write a 500 word speech on X,speech,16,3.0,,7,major edits,1
+17,wildchat-169962,one min speech educational background behind X,speech,17,3.0,,7,minor edits,1
+18,sharegpt-23180,Give me a short 45 seconds speech about X.,speech,18,3.0,0.12981744421906694,9,minor edits,1
+19,wildchat-597933,give me the speech for the following motion: X.,speech,19,3.0,,9,major edits,1
+20,wildchat-179993,can you please make a 2 minute speech on X,speech,20,3.0,,10,minor edits,1
+21,sharegpt-37716,"Write me an 875-word speech on X. It should include recommendations, using politically correct language.",speech,21,3.0,,15,major edits,1
+22,wildchat-562532,"Hi , write down a speech for me on “ X” a maximum of 1 page.",speech,22,3.0,,16,minor edits,1
+23,lmsys-643041,Write me an essay where you argue X,essay,23,2.8,,8,minor edits,1
+24,wildchat-263949,Write an argumentative essay that discusses X ?(max 700 words)(simple paragraph)(NO PLAGİARİSM),essay,24,2.8,,12,minor edits,1
+25,wildchat-59293,"Write a one-paragraph, research-based argumentative essay on the topic on X",essay,25,2.8,,11,minor edits,1
+26,wildchat-81443,Write a very long argumentative essay about X.,essay,26,2.8,,8,major edits,1
+27,lmsys-321313,Write an essay on the topic：My View on X. You can cite examples to illustrate your views. You should write at least 150 words but no more than 200 words.,essay,27,2.3,,30,minor edits,1
+28,wildchat-323114,"a single page response to the essay: ""X"". These are meant to be writing practices that allow you to organize and voice your thoughts. It’s alright if you go over the one-page requirement, just please don’t short it. These are long form articles that are meant to inspire strong opinions",essay,28,2.3,,50,major edits,1
+29,wildchat-120087,Write an article with 10 headpoints on X. Add sources for all arguments.,article,29,2.2,,13,minor edits,1
+30,sharegpt-81748,"Using scholarly style, discuss in detail X, providing ample examples all along the discussion.",discussion,30,2.0,,14,minor edits,1
+31,lmsys-620753,"create an abstract on the topic ""X""",abstract,,,,7,minor edits,1
+32,sharegpt-79385,could you write an 800-word abstract on X?,abstract,,,,8,minor edits,1
+33,lmsys-62359,analysis report on X,analysis,,,,4,major edits,1
+34,lmsys-749698,write a political analysis of X,analysis,,,,6,minor edits,1
+35,wildchat-125630,write a 2 page analysis on X,analysis,,,,7,major edits,1
+36,lmsys-624419,Write an article X.,article,,,,4,minor edits,1
+37,wildchat-141291,A complete article about X,article,,,,5,minor edits,1
+38,wildchat-48562,Write detail newspaper article about X,article,,,,6,minor edits,1
+39,lmsys-888497,"Create for me article about : ""X""",article,,,,7,minor edits,1
+40,sharegpt-8954,Write an article on the theme X,article,,,,7,major edits,1
+41,wildchat-408792,Write a 150 word article explaining X.,article,,,,7,major edits,1
+42,lmsys-668487,"Write a newspaper article with the headline ""X""",article,,,,8,minor edits,1
+43,lmsys-112227,Generate the best coolest 200 words article about X.,article,,,,9,minor edits,1
+44,lmsys-89216,"Write a blog article on X, with few examples.",article,,,,9,major edits,2
+45,wildchat-78033,Write an article about X 1000 words after the impression,article,,,,10,minor edits,3
+46,sharegpt-35654,"In the YTN Issue the Issue program, write an article about X",article,,,,12,minor edits,1
+47,wildchat-532884,"Help me write an article about ""X"". Write an article about 500 words",article,,,,13,minor edits,1
+48,lmsys-145259,Write a unique and detailed article. The title of the article is X.,article,,,,13,minor edits,2
+49,wildchat-267789,Write a 2 page paper on X using three cited sources from scholarly articles.,article,,,,14,minor edits,1
+50,wildchat-210672,"Take five articles about ""X"" and give a short review about each article. Write a conclusion summarizing all the articles",article,,,,20,minor edits,1
+51,lmsys-314263,Please help me write my thoughts on X. The number of words is about 300-400. Please help me write an article.,article,,,,21,major edits,2
+52,sharegpt-65394,create a blog post on X,blog_post,,,,6,minor edits,1
+53,lmsys-913195,Can you compose a blog post about X?,blog_post,,,,8,minor edits,1
+54,lmsys-509447,Write a blog entry about X. Use examples,blog_post,,,,8,minor edits,1
+55,lmsys-492430,"Write me a 500 words blog post with title ""X""",blog_post,,,,10,minor edits,1
+56,wildchat-580797,"Create a 600 - 1,000 word blog post with an Edgy, forward-looking, unapologetic, slightly humorous, data-driven voice for an audience of Parents of K-12 students about X.",blog_post,,,,27,major edits,1
+57,wildchat-556229,"Write a blog post that explores X. Please use data and sources to make your points. Word count should be between 600 and 1000 words. Target voice is edgy, forward looking, unapologetic, slightly humorous, data-driven. Audience are parents of K-12 students.",blog_post,,,,41,major edits,3
+58,wildchat-132629,Discuss X. 1000 words,discussion,,,,4,minor edits,1
+59,lmsys-623900,generate me a question for my diploma to discuss X,discussion,,,,10,major edits,1
+60,wildchat-423106,Discuss X. write this in between 150 and 160 words,discussion,,,,10,minor edits,1
+61,lmsys-939533,Write an essay discussing X,essay,,,,5,minor edits,1
+62,lmsys-27588,Provide an essay about X.,essay,,,,5,major edits,3
+63,wildchat-538773,make a reflective essay about X,essay,,,,6,minor edits,1
+64,wildchat-3400,"please write an essay on “X""",essay,,,,6,major edits,1
+65,wildchat-86280,Write a journalistic essay about X.,essay,,,,6,minor edits,1
+66,wildchat-43828,Write an essay response about X.,essay,,,,6,major edits,1
+67,wildchat-414982,write a 10 pararpah essay on X,essay,,,,7,minor edits,1
+68,wildchat-482175,Make me an essay conclusion about X.,essay,,,,7,minor edits,1
+69,wildchat-84755,"write an essay about X
+with citations",essay,,,,7,minor edits,1
+70,wildchat-105863,"In a 5 paragraph essay, analyze X.",essay,,,,7,minor edits,1
+71,wildchat-141250,Write an essay on X with examples.,essay,,,,7,minor edits,2
+72,wildchat-169267,Can you write 1000 word essay on X,essay,,,,8,major edits,1
+73,lmsys-474751,Compose a comprehensive and insightful essay about X.,essay,,,,8,major edits,1
+74,wildchat-206103,Write an essay on X with suitable illustrations,essay,,,,8,minor edits,1
+75,wildchat-9184,Please generate an essay with references about X,essay,,,,8,minor edits,1
+76,wildchat-194728,write an easy 5 pargragh essay about X,essay,,,,8,minor edits,1
+77,wildchat-97808,"Please write a 300-word academic essay on ""X""",essay,,,,8,minor edits,1
+78,lmsys-644086,Write an engaging 1500 word essay about X.,essay,,,,8,major edits,1
+79,wildchat-602869,Write an Analytical Composition of an article: X,essay,,,,8,minor edits,1
+80,wildchat-11984,Write me a long detailed essay on X,essay,,,,8,minor edits,2
+81,wildchat-251981,write an essay on X,essay,,,,8,minor edits,1
+82,wildchat-360254,give a detailed essay(about 1200 words) examining X.,essay,,,,8,major edits,1
+83,wildchat-272759,write a essay about X in 500 words,essay,,,,8,minor edits,1
+84,wildchat-617591,Write a 100 to 200 word essay on X,essay,,,,9,minor edits,1
+85,sharegpt-40653,write a 1000 word essay on X include citations,essay,,,,9,minor edits,1
+86,lmsys-995716,Please write a 1 thousand word essay about X,essay,,,,9,minor edits,1
+87,wildchat-396491,write me an essay within 300 words on X.,essay,,,,9,minor edits,1
+88,wildchat-482826,Please write a short (limit 1000 words) essay on X.,essay,,,,10,minor edits,1
+89,wildchat-199006,"Write me an essay  about 1500 words around the topic""X""",essay,,,,10,minor edits,1
+90,wildchat-28137,"Create an essay about X, separated into 5 different sections.",essay,,,,10,major edits,1
+91,wildchat-523068,Write a 1-2 page essay on X with two sources cited.,essay,,,,11,minor edits,1
+92,wildchat-256955,"Please write an essay about "" X, which is about 1500 words.",essay,,,,12,minor edits,1
+93,lmsys-641529,What can u tell me about X? Write an essay about it,essay,,,,12,minor edits,1
+94,sharegpt-54539,"Write a 1,000 word essay about X. Write is from a personal perspective.",essay,,,,13,major edits,1
+95,lmsys-156553,Here is my query: I need you to write an essay on X.,essay,,,,13,major edits,1
+96,wildchat-82493,"hey can you write an essay on X, in more than 1500 words",essay,,,,13,major edits,1
+97,wildchat-61293,"Write an interesting, riveting, lengthy, well-sourced, extensive, well-researched and concise essay about X.",essay,,,,13,major edits,1
+98,wildchat-139354,Write an essay that evaluates X. Provide specific evidence to justify your answer,essay,,,,13,minor edits,1
+99,wildchat-187297,"Please, write an essay on the topic: ""X"". The essay should have sources",essay,,,,13,major edits,1
+100,lmsys-325209,"Write an essay about X. Have an intro, body paragraphs and a conclusion",essay,,,,13,major edits,1
+101,wildchat-85988,"Write in polished academic way with literary jargon, a single-idea essay on ""X""",essay,,,,13,major edits,2
+102,wildchat-191887,"Write a short composition of more than 150 words on the topic given below:
+
+X",essay,,,,15,major edits,1
+103,lmsys-738810,Make an opinion essay (between 200 and 400 words required) on the following topic: X?,essay,,,,15,minor edits,1
+104,wildchat-571115,"Please, write an essay. Question: X. You must link to min 5 sources of literature.",essay,,,,15,minor edits,1
+105,wildchat-137441,"write a short essay, social media note, or blog post about X",essay,,,,15,minor edits,1
+106,lmsys-655407,"Write a highly detailed essay with introduction, body, and conclusion paragraphs responding to the following:
+
+X.",essay,,,,16,minor edits,2
+107,sharegpt-55373,can you write me a 500 word essay on X. Can you include some quotes and sources in there,essay,,,,19,minor edits,1
+108,wildchat-96630,"Write an essay to this topic: ""X?"". 
+Have introduction, 3 body paragraphs, and conclusion. It should be 150~200 words long",essay,,,,20,minor edits,1
+109,wildchat-272108,"Write a single page response to the essay: ""X"". It’s alright if you go over the one-page requirement, just please don’t short it.",essay,,,,23,major edits,2
+110,wildchat-187767,"Write an essay on the topic: ""X."". The essay should have sources, as well as contain a forecast for the development of the problem.",essay,,,,24,major edits,1
+111,wildchat-3054,"can you write me a lengthy, highly detailed, and grammatically professional essay with a range of topics and an embedded harvard references and a harvard reference section answering: “X""",essay,,,,29,minor edits,1
+112,wildchat-260957,"Write a single page response to the essay: ""X"". It’s alright if you go over the one-page requirement, just please don’t short it. These are long form articles that are meant to inspire strong opinions.",essay,,,,35,major edits,1
+113,wildchat-3914,can you write me a lengthy and grammatically professional essay that highlights multiple topics that utilises a range of references that agree with one another that discusses X with embedded harvard references and a references section.,essay,,,,36,major edits,1
+114,wildchat-532318,"In a multi-paragraph essay, answer the following prompt in a well-organized and strongly-supported response. As you craft your essay, make claims that you explain and justify through analysis. Clearly state 2-3 examples to support your ideas. Remember to contextualize your examples by providing background information.
+ Prompt: X",essay,,,,47,minor edits,1
+115,sharegpt-21906,"Write an academic essay that directly addresses the prompt, with a clear central idea, supported with evidence, reasoning and scholarship. Use at least one example, and write for a well-informed audience. Demonstrate skillful cohesion and paragraphing, using a wide range of vocabulary, structures and language. The essay questions is:
+
+X",essay,,,,50,major edits,1
+116,wildchat-550354,Can you write an short opinion based summary about X?,op_ed,,,,10,major edits,1
+117,lmsys-449237,please write a paragraph on X,paragraph,,,,6,minor edits,4
+118,lmsys-17228,In a simple paragraph explain X.,paragraph,,,,6,minor edits,2
+119,lmsys-224377,"Write a detailed paragraph to explain:
+X",paragraph,,,,7,minor edits,1
+120,lmsys-29128,two body paragraphs presenting explanations about X,paragraph,,,,7,major edits,1
+121,wildchat-65215,Make this 150-200 words and one paragraph:X.,paragraph,,,,7,major edits,1
+122,wildchat-308002,write a paragraph with a focus on X,paragraph,,,,8,minor edits,1
+123,lmsys-74137,give me a paragraph with references about X?,paragraph,,,,8,minor edits,2
+124,wildchat-158370,write me a 300 word paragraph on X,paragraph,,,,8,minor edits,1
+125,wildchat-65470,make this one paragraph 150-200 words long: X.,paragraph,,,,8,minor edits,1
+126,wildchat-626949,"Using what you know, write paragraphs about X.",paragraph,,,,8,major edits,1
+127,lmsys-57042,"Write about X. Write at least 5 paragraphs, please.",paragraph,,,,9,major edits,7
+128,wildchat-45226,"Write the dogma for X.
+
+Keep it into one paragraph.",paragraph,,,,10,major edits,1
+129,wildchat-44532,write a couple paragraphs surrounding the subquestion: X and cite your sources,paragraph,,,,12,major edits,1
+130,lmsys-635282,write a paragraph. The paragraph should include the complete sentence 'X .' without any change.,paragraph,,,,15,minor edits,1
+131,wildchat-118234,can you empirically analyze X in paragraph format? make sure it is very empirical but also related to philosophy,paragraph,,,,19,minor edits,1
+132,wildchat-537443,"write me a 250 word text, consisting of 7 paragraphs. Each paragraph is 10 lines. each paragraph should have the points: X.",paragraph,,,,22,major edits,1
+133,wildchat-367971,"write me a paragraph about X with no more than 200 words. make sure to have distinct introduction, body and conclusion parts in the paragraph,",paragraph,,,,25,minor edits,1
+134,wildchat-217635,detailed report on X,report,,,,4,minor edits,1
+135,lmsys-112315,Provide an executive report on X,report,,,,6,minor edits,1
+136,wildchat-422507,write a 150-word report describing X,report,,,,6,minor edits,1
+137,wildchat-472013,Write a news report about X,report,,,,6,major edits,1
+138,lmsys-961681,Write me an intelligence report on X,report,,,,7,minor edits,1
+139,lmsys-599794,PLEASE GIVE ME DETAIL REPORT ON X,report,,,,7,minor edits,1
+140,wildchat-542311,"write a newspaper report on the topic ""X""",report,,,,8,minor edits,4
+141,wildchat-22536,Create a news report which talks about X,report,,,,8,minor edits,1
+142,wildchat-517826,"Hello, can you write a report about X?",report,,,,8,major edits,1
+143,wildchat-441017,use 300 words to do a report that will Explain X,report,,,,11,minor edits,1
+144,lmsys-360636,"Describe in detail X. Just write the report, do not comment on it otherwise.",report,,,,14,major edits,2
+145,wildchat-231741,"create a short speech on X. create a logical introduction, body, and conclusion to your speech. your speech must be at least 300 words",speech,,,,24,minor edits,1
