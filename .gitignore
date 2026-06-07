@@ -10,10 +10,6 @@ __pycache__/
 data/processed/*
 !data/processed/.gitkeep
 
-# Raw name sources for the cue probe (re-downloaded by build_name_list.py).
-# The derived data/input/names/names_*.csv stay committed.
-data/input/names/raw/
-
 # Local/private survey microdata; pass its path with --ces-dta.
 CES25_Common.dta
 CES/

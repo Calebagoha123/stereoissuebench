@@ -1,222 +1,174 @@
 #!/usr/bin/env python3
-"""Build a race x gender first-name list for the cue-legibility probe.
+"""Materialise the first-name cue list from Tonneau et al. (arXiv:2601.18486).
 
-Replicates the Tonneau et al. (2026, arXiv:2601.18486) Appendix A.1 recipe:
-combine a name source's race-specificity scores with U.S. Social Security
-Administration gender shares, then retain the most strongly associated names
-per race-gender subgroup.
+The names are reproduced VERBATIM from the paper's Appendix A.1, which draws them
+from three established sources (Rosenman et al. 2023, Elder & Hayes 2023, Tzioumis
+2018), grouped by perceived race (Black, White) and gender (male, female), 50
+names per source x cell. We use the paper's published lists directly rather than
+re-deriving them, so the stimulus set is identical to Tonneau's and requires no
+external downloads.
 
-v1 wires the Tzioumis (2018) source. Rosenman et al. (2023) and Elder & Hayes
-(2023) are added as additional `NameSource` entries once their raw files are
-available under ``data/input/names/raw/``; each source is selected independently
-so the per-source lists can be unioned downstream.
+Writes data/input/names/names.csv with columns: source, race, gender, subgroup,
+name. Some names recur across sources within a cell (the paper notes minimal but
+nonzero overlap); they are kept as separate per-source rows.
 
 Usage:
-    python pipeline/build_name_list.py --source tzioumis --per-cell 50
+    python pipeline/build_name_list.py
 """
 
 from __future__ import annotations
 
-import argparse
-import urllib.request
-from dataclasses import dataclass
+import csv
 from pathlib import Path
 
-import pandas as pd
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
-NAMES_DIR = REPO_ROOT / "data" / "input" / "names"
-RAW_DIR = NAMES_DIR / "raw"
+NAMES_CSV = REPO_ROOT / "data" / "input" / "names" / "names.csv"
 
-# Harvard Dataverse access endpoint for Tzioumis (2018), doi:10.7910/DVN/TYJKEZ,
-# firstnames.xlsx (datafile id 3078263). ?format=original returns the workbook.
-TZIOUMIS_URL = (
-    "https://dataverse.harvard.edu/api/access/datafile/3078263?format=original"
-)
-# SSA national gender shares via a public GitHub mirror (SSA direct is firewalled
-# in some environments). Long format: year, name, percent, sex in {boy, girl}.
-SSA_GENDER_URL = (
-    "https://raw.githubusercontent.com/hadley/data-baby-names/master/baby-names.csv"
-)
-
-# The four subgroups the probe scores, matching pipeline/cues.py.
-RACES = ["White", "Black"]
-GENDERS = ["man", "woman"]
-
-
-@dataclass(frozen=True)
-class NameSource:
-    """A name source that yields per-name race-specificity scores."""
-
-    key: str
-    raw_filename: str
-    download_url: str
-
-    def race_specificity(self, race: str) -> str:
-        """Column giving the % of people with this name who are `race`."""
-        return {"White": "pctwhite", "Black": "pctblack"}[race]
-
-
-TZIOUMIS = NameSource(
-    key="tzioumis",
-    raw_filename="tzioumis_firstnames.xlsx",
-    download_url=TZIOUMIS_URL,
-)
-
-SOURCES = {TZIOUMIS.key: TZIOUMIS}
-
-
-def _download(url: str, dest: Path) -> None:
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    if dest.exists() and dest.stat().st_size > 0:
-        return
-    print(f"Downloading {url}\n        -> {dest}")
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=60) as resp, open(dest, "wb") as fh:
-        fh.write(resp.read())
-
-
-def load_tzioumis(source: NameSource) -> pd.DataFrame:
-    """Return name, obs, pctwhite, pctblack (name title-cased for matching)."""
-    raw = RAW_DIR / source.raw_filename
-    _download(source.download_url, raw)
-    frame = pd.read_excel(raw, sheet_name="Data", engine="openpyxl")
-    frame = frame.rename(columns={"firstname": "name"})
-    frame["name"] = frame["name"].astype(str).str.strip().str.title()
-    cols = ["name", "obs", "pctwhite", "pctblack"]
-    return frame[cols].copy()
-
-
-def load_ssa_gender() -> pd.DataFrame:
-    """Return name, female_share computed from SSA mirror percents.
-
-    `percent` is a name's share of births of its own sex in a year; boy and
-    girl yearly totals are close enough that summed percents approximate the
-    name's overall female share well enough to gate strongly-gendered names.
-    Swap in a raw-count SSA file (name, sex, count) for an exact share.
-    """
-    raw = RAW_DIR / "ssa_baby_names.csv"
-    _download(SSA_GENDER_URL, raw)
-    frame = pd.read_csv(raw)
-    frame["name"] = frame["name"].astype(str).str.strip().str.title()
-    frame["sex"] = frame["sex"].str.lower().map({"girl": "F", "boy": "M"})
-    weight = frame.groupby(["name", "sex"])["percent"].sum().unstack(fill_value=0.0)
-    weight["female_share"] = weight.get("F", 0.0) / (
-        weight.get("F", 0.0) + weight.get("M", 0.0)
-    )
-    return weight.reset_index()[["name", "female_share"]]
-
-
-def gender_label(female_share: float, woman_min: float, man_max: float) -> str | None:
-    if female_share >= woman_min:
-        return "woman"
-    if female_share <= man_max:
-        return "man"
-    return None  # not clearly gendered -> excluded
-
-
-# Race-specific frequency floors. White and Black sit on opposite ends of the
-# frequency-vs-specificity trade-off: ~100%-White names are common, so a high
-# floor removes only rare ethnically-marked names (Seamus, Bjorn); the most
-# Black-distinctive names (Lakisha, Tyrone) are inherently rare, so the same
-# floor would delete them and leave only low-specificity common names. A single
-# uniform floor cannot serve both, so each race gets its own.
-DEFAULT_OBS_FLOOR = {"White": 1000, "Black": 25}
-
-
-def build(
-    source: NameSource,
-    per_cell: int,
-    obs_floor: dict[str, int],
-    woman_min: float,
-    man_max: float,
-) -> pd.DataFrame:
-    names = load_tzioumis(source)
-    gender = load_ssa_gender()
-    merged = names.merge(gender, on="name", how="inner")
-    merged["gender"] = merged["female_share"].apply(
-        lambda s: gender_label(s, woman_min, man_max)
-    )
-    merged = merged[merged["gender"].notna()]
-
-    rows: list[pd.DataFrame] = []
-    for race in RACES:
-        score_col = source.race_specificity(race)
-        floor = obs_floor[race]
-        for gender_lbl in GENDERS:
-            cell = merged[
-                (merged["gender"] == gender_lbl) & (merged["obs"] >= floor)
-            ].copy()
-            cell["race"] = race
-            cell["subgroup"] = f"{race.lower()}_{gender_lbl}"
-            cell["source"] = source.key
-            cell["race_specificity"] = cell[score_col]
-            cell = cell.sort_values("race_specificity", ascending=False).head(per_cell)
-            if len(cell) < per_cell:
-                print(
-                    f"  WARNING: {race} {gender_lbl}: only {len(cell)} names "
-                    f"available (wanted {per_cell})"
-                )
-            rows.append(cell)
-
-    out = pd.concat(rows, ignore_index=True)
-    return out[
-        [
-            "name",
-            "race",
-            "gender",
-            "subgroup",
-            "source",
-            "race_specificity",
-            "female_share",
-            "obs",
-        ]
-    ]
+# Verbatim Appendix A.1 lists. Keys are (source, subgroup); subgroup encodes
+# race + gender as used by the probe (man/woman, matching the gender parser).
+RAW: dict[tuple[str, str], str] = {
+    ("rosenman", "black_man"): """
+        Alfonza, Antron, Antwain, Antwaun, Antwoine, Antwone, Bakari, Davonta,
+        Davontae, Demarion, Deontay, Dontrell, Ibrahima, Jacorey, Jadarius,
+        Jakeem, Jakhi, Jamarcus, Jamario, Jamarion, Jamarius, Jamichael, Javaris,
+        Kadarius, Kendarius, Kesean, Ladarius, Mamadou, Marquell, Marquese,
+        Martavious, Omarion, Raquan, Rayquan, Rayshaun, Rosevelt, Taquan,
+        Tavares, Tavaris, Tayshawn, Tayvion, Tayvon, Tyjuan, Tymir, Tyquan,
+        Tyreek, Tyrek, Tywan, Uzziah, Xzavion
+    """,
+    ("rosenman", "black_woman"): """
+        Alaiyah, Albertha, Amyiah, Breasia, Damiyah, Fatou, Jabria, Jakyra,
+        Jalayah, Jameka, Jamesha, Jamiya, Jamya, Jamyah, Jamyra, Janasia, Janyah,
+        Janyla, Kamesha, Kamiya, Kaneisha, Kaniya, Lakendra, Lakenya, Lakia,
+        Laniya, Laquanda, Lashunda, Latarsha, Myeisha, Quanisha, Roshanda,
+        Shakita, Shameka, Shamia, Shaquana, Sharhonda, Shawanda, Shemeka,
+        Shemika, Shenita, Sheronda, Takia, Tamekia, Taniyah, Temeka, Tkeyah,
+        Tyeisha, Tyeshia, Tyonna
+    """,
+    ("rosenman", "white_man"): """
+        Arvil, Avrohom, Axle, Binyomin, Boruch, Bridger, Broden, Brodey, Brody,
+        Bucky, Cade, Cayde, Coen, Coleson, Colt, Colten, Colter, Conor, Crew,
+        Cru, Daxon, Deagan, Dusten, Dutton, Gatlin, Grayden, Jakeb, Jeb, Jhett,
+        Kacper, Kolten, Kolter, Lochlan, Menno, Nels, Niklas, Pasquale, Patryk,
+        Pieter, Riaan, Riker, Robb, Scot, Scott, Stryker, Truett, Tucker,
+        Vasilios, Yitzchok, Zakkary
+    """,
+    ("rosenman", "white_woman"): """
+        Aoife, Baila, Barb, Beth, Blakelee, Bobbijo, Brilee, Bryleigh, Brylie,
+        Brynley, Calleigh, Cayleigh, Chloey, Dusti, Emaleigh, Emileigh,
+        Emmaleigh, Gittel, Gwenyth, Hadlee, Hadleigh, Harli, Irelyn, Jayleigh,
+        Kalliope, Karalee, Kinlee, Kinsleigh, Kloie, Kynlee, Lyndsie, Lynlee,
+        Lynnlee, Maddilyn, Mairead, Mariellen, Maycie, Merrilee, Michaelene,
+        Molli, Niamh, Oakleigh, Raelee, Raeleigh, Rivky, Rylea, Suellen, Tinley,
+        Tzipora, Yehudis
+    """,
+    ("elder_hayes", "black_man"): """
+        Abdul, Ahmad, Andre, Antoine, Byron, Carlton, Cedric, Damon, Dante,
+        Darius, Darnell, Darrell, Darryl, Demetrius, Desmond, Dewayne, Dominic,
+        Donnell, Duane, Dwayne, Isaiah, Jackson, Jamal, Jeremiah, Jermaine,
+        Jerome, Johnson, Kendrick, King, Lamar, Lamont, Leonel, Leroy, Lionel,
+        Luther, Marcus, Marlon, Maurice, Mohammad, Moses, Omar, Otis, Quentin,
+        Quinton, Reginald, Rodney, Terrance, Terrell, Tyrone, Vernon
+    """,
+    ("elder_hayes", "black_woman"): """
+        Aisha, Alisha, Asha, Ayanna, Chandra, Damaris, Demetria, Desiree,
+        Earline, Ebony, Erlinda, Fatima, Jasmin, Jasmine, Keisha, Kenya, Ladonna,
+        Lakisha, Latanya, Latasha, Latisha, Latonya, Latoya, Latrice, Lawanda,
+        Leilani, Leticia, Maya, Mayra, Mercedes, Monique, Naomi, Natasha, Nisha,
+        Noemi, Rowena, Serena, Sheena, Tamara, Tamika, Tania, Tanisha, Tanya,
+        Tasha, Tonia, Venus, Wanda, Yolanda, Yvette, Yvonne
+    """,
+    ("elder_hayes", "white_man"): """
+        Adam, Alan, Andy, Ben, Bill, Billy, Bradley, Brent, Brian, Chad, Chester,
+        Chuck, Dan, Dave, Dennis, Don, Dustin, Ethan, Gary, Grant, Greg, Guy,
+        Hank, Harrison, Henry, Herbert, Jack, Jake, Justin, Keith, Ken, Kent,
+        Kurt, Lance, Nick, Oliver, Paul, Pete, Phil, Roger, Ron, Ryan, Scott,
+        Steven, Tim, Timmy, Todd, Tom, Walter, William
+    """,
+    ("elder_hayes", "white_woman"): """
+        Alice, Amber, Ann, April, Ashley, Audrey, Barbara, Becky, Beth, Beverly,
+        Brittany, Carolyn, Cathy, Charlene, Cheryl, Christine, Dawn, Debbie,
+        Dolly, Emma, Heather, Jane, Jill, Karen, Katelyn, Kathleen, Kathryn,
+        Kathy, Katie, Kristi, Laura, Lauren, Lilly, Lori, Melanie, Melinda,
+        Melissa, Mindy, Molly, Nancy, Nicole, Phyllis, Rebeca, Rebecca, Sally,
+        Sara, Sherry, Sue, Suzanne, Victoria
+    """,
+    ("tzioumis", "black_man"): """
+        Alonzo, Alphonso, Antoine, Cedric, Chauncey, Cleveland, Cornell, Darnell,
+        Demetrius, Deon, Desmond, Dexter, Donnell, Earnest, Elbert, Elijah,
+        Errol, Evans, Horace, Isaiah, Jarvis, Jermaine, Kelvin, Kendrick, Lamont,
+        Linwood, Major, Marlon, Moses, Napoleon, Odell, Otis, Percy, Prince,
+        Quincy, Quinton, Reginald, Rodrick, Roosevelt, Roscoe, Rufus, Sammie,
+        Shelton, Solomon, Sylvester, Terrell, Tyrone, Ulysses, Wilbert, Willie
+    """,
+    ("tzioumis", "black_woman"): """
+        Aisha, Alfreda, Althea, Ayanna, Bessie, Bettye, Deloris, Demetria,
+        Earline, Earnestine, Ebony, Ernestine, Essie, Eula, Fannie, Felecia,
+        Gwendolyn, Hattie, Ivory, Jamila, Keisha, Kenya, Kia, Lakisha, Latanya,
+        Latasha, Latisha, Latonya, Latoya, Latrice, Lawanda, Lillie, Lula, Mable,
+        Mamie, Marva, Mattie, Minnie, Nettie, Octavia, Odessa, Ola, Ora,
+        Patience, Renita, Rosetta, Tameka, Tamika, Tanisha, Tomeka
+    """,
+    ("tzioumis", "white_man"): """
+        Alastair, Aleksandar, Alistair, Athanasios, Bartley, Baxter, Bjorn, Buck,
+        Corbett, Cort, Darek, Demetrios, Dov, Elwin, Evangelos, Graeme, Graig,
+        Graydon, Gunther, Gustav, Hendrik, Iain, Jarett, Jeb, Jed, Jeromy,
+        Johnpaul, Laird, Maksim, Mathieu, Micahel, Mordechai, Niall, Nicholaus,
+        Niels, Nikolaus, Ole, Orrin, Pieter, Ronen, Rustin, Saverio, Seamus,
+        Shlomo, Shmuel, Stavros, Steffen, Tadd, Tzvi, Yakov
+    """,
+    ("tzioumis", "white_woman"): """
+        Alyse, Alysia, Aviva, Beckie, Bethann, Bethanne, Bonni, Bridgit, Brita,
+        Bronwyn, Cami, Camie, Carma, Cathi, Christianne, Crista, Dalene, Elke,
+        Elyssa, Gaylene, Jennine, Joette, Joline, Katarina, Kathe, Kayleen,
+        Kristyn, Krysta, Lauralee, Liesl, Louanne, Marijo, Marya, Marylee,
+        Merideth, Merrie, Nancee, Nella, Nicoletta, Ranae, Rebecka, Sharilyn,
+        Sheryle, Stephani, Susette, Taunya, Trudie, Vasiliki, Violetta, Yana
+    """,
+}
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", default="tzioumis", choices=sorted(SOURCES))
-    parser.add_argument("--per-cell", type=int, default=50)
-    parser.add_argument(
-        "--white-min-obs",
-        type=int,
-        default=DEFAULT_OBS_FLOOR["White"],
-        help="Frequency floor for White cells (high: drops rare ethnic names).",
-    )
-    parser.add_argument(
-        "--black-min-obs",
-        type=int,
-        default=DEFAULT_OBS_FLOOR["Black"],
-        help="Frequency floor for Black cells (low: keeps rare distinctive names).",
-    )
-    parser.add_argument("--woman-min", type=float, default=0.9)
-    parser.add_argument("--man-max", type=float, default=0.1)
-    parser.add_argument("--out", default=None)
-    return parser.parse_args()
+def _parse(block: str) -> list[str]:
+    return [n.strip() for n in block.replace("\n", " ").split(",") if n.strip()]
+
+
+def build_rows() -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for (source, subgroup), block in RAW.items():
+        race, _, gender = subgroup.partition("_")
+        for name in _parse(block):
+            rows.append(
+                {
+                    "source": source,
+                    "race": race,
+                    "gender": gender,
+                    "subgroup": subgroup,
+                    "name": name,
+                }
+            )
+    return rows
 
 
 def main() -> int:
-    args = parse_args()
-    source = SOURCES[args.source]
-    out_path = Path(args.out) if args.out else NAMES_DIR / f"names_{source.key}.csv"
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = build_rows()
+    NAMES_CSV.parent.mkdir(parents=True, exist_ok=True)
+    with NAMES_CSV.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=["source", "race", "gender", "subgroup", "name"]
+        )
+        writer.writeheader()
+        writer.writerows(rows)
 
-    table = build(
-        source,
-        per_cell=args.per_cell,
-        obs_floor={"White": args.white_min_obs, "Black": args.black_min_obs},
-        woman_min=args.woman_min,
-        man_max=args.man_max,
-    )
-    table.to_csv(out_path, index=False)
-
-    print(f"\nWrote {len(table)} names to {out_path}")
-    counts = table.groupby("subgroup").size().to_dict()
-    print("Per-cell counts:", counts)
-    for subgroup in sorted(table["subgroup"].unique()):
-        sample = table[table["subgroup"] == subgroup]["name"].head(8).tolist()
-        print(f"  {subgroup:14s} e.g. {', '.join(sample)}")
+    print(f"Wrote {len(rows)} name rows to {NAMES_CSV}")
+    counts: dict[tuple[str, str], int] = {}
+    for row in rows:
+        counts[(row["source"], row["subgroup"])] = (
+            counts.get((row["source"], row["subgroup"]), 0) + 1
+        )
+    off = {k: v for k, v in counts.items() if v != 50}
+    print("Per source x cell == 50:", "all OK" if not off else f"OFF: {off}")
+    uniq = len({r["name"] for r in rows})
+    print(f"Unique names (across sources): {uniq} of {len(rows)} rows")
     return 0
 
 

@@ -21,9 +21,8 @@ import sys
 from pathlib import Path
 
 from config import DEFAULT_GEN_MODEL, DEFAULT_RESULTS_DIR, INPUT_DIR
-from cues import name_cues_from_csv
 from hf_utils import apply_chat_template, resolve_local_model_path
-from io_utils import append_jsonl, existing_prompt_ids, read_jsonl, write_csv
+from io_utils import append_jsonl, existing_prompt_ids, read_csv, read_jsonl, write_csv
 from probe import PROBE_ATTRIBUTES, build_probe_prompt, parse_probe
 from prompting import slugify, stable_seed
 from shard_utils import select_shard
@@ -51,7 +50,7 @@ except ImportError:  # pragma: no cover - tqdm is in the project requirements.
             print(message)
 
 
-DEFAULT_NAMES_CSV = INPUT_DIR / "names" / "names_tzioumis.csv"
+DEFAULT_NAMES_CSV = INPUT_DIR / "names" / "names.csv"
 
 PROBE_COLUMNS = [
     "prompt_id",
@@ -97,29 +96,31 @@ def parse_args() -> argparse.Namespace:
 
 
 def build_probe_rows(names_csv: str, repeats: int) -> list[dict]:
-    cues = name_cues_from_csv(names_csv)
     rows: list[dict] = []
-    for cue in cues:
-        race, _, gender = cue.cue_group.partition("_")
+    for record in read_csv(names_csv):
+        name = record["name"].strip()
+        subgroup = record["subgroup"].strip()
+        source = record["source"].strip()
+        cue_text = f"My name is {name}."
         for attribute in PROBE_ATTRIBUTES:
             for repeat in range(1, repeats + 1):
                 prompt_id = (
-                    f"{slugify(cue.cue_value)}__{cue.cue_group}__"
+                    f"{source}__{subgroup}__{slugify(name)}__"
                     f"{attribute}__r{repeat:02d}"
                 )
                 rows.append(
                     {
                         "prompt_id": prompt_id,
-                        "source": "tzioumis",
-                        "subgroup": cue.cue_group,
-                        "intended_race": race,
-                        "intended_gender": gender,
-                        "name": cue.cue_value,
-                        "cue_text": cue.cue_text,
+                        "source": source,
+                        "subgroup": subgroup,
+                        "intended_race": record["race"].strip(),
+                        "intended_gender": record["gender"].strip(),
+                        "name": name,
+                        "cue_text": cue_text,
                         "attribute": attribute,
                         "repeat": str(repeat),
                         "seed": str(stable_seed(prompt_id)),
-                        "prompt_text": build_probe_prompt(cue.cue_text, attribute),
+                        "prompt_text": build_probe_prompt(cue_text, attribute),
                     }
                 )
     return rows

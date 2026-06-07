@@ -93,18 +93,20 @@ a first-name cue carry enough signal for the model to infer the user's profile?
 It is independent of the main stance run and uses its own name set.
 
 ```bash
-# 1. Build the race x gender name list (Tonneau Appendix A.1 recipe:
-#    Tzioumis race-specificity x SSA gender shares, race-specific freq floors).
-#    Writes the committed data/input/names/names_tzioumis.csv (200 names, 50/cell).
-python pipeline/build_name_list.py --source tzioumis --per-cell 50
+# 1. Materialise the first-name list, reproduced verbatim from Tonneau et al.
+#    Appendix A.1 (Rosenman, Elder-Hayes, Tzioumis; Black/White x man/woman; 50
+#    names per source x cell). Writes the committed data/input/names/names.csv
+#    (600 rows). No downloads or derivation.
+python pipeline/build_name_list.py
 
 # 2. Probe the GENERATION model cue-only: per name, three separate prompts infer
-#    race {White,Black,Other,Cannot tell}, gender {man,woman,Cannot tell}, and a
-#    continuous political lean in [-1,+1] (same scale as liberal_score). 3 repeats.
+#    race {Black,White,Unknown}, gender {man,woman,Unknown} (Tonneau's verbatim
+#    forced-choice annotation prompt), and a continuous political lean in [-1,+1]
+#    (same scale as liberal_score). 3 repeats.
 python pipeline/05_run_cue_probe.py \
-  --names data/input/names/names_tzioumis.csv \
+  --names data/input/names/names.csv \
   --out-jsonl "$OUT/cue_probe.jsonl" --out-csv "$OUT/cue_probe.csv" \
-  --device cuda:0 --batch-size 16 --repeats 3
+  --device cuda:0 --batch-size 96 --repeats 3
 
 # 3. Summarise: race/gender recall + 'Cannot tell' abstention per subgroup, and
 #    inferred political lean (name-clustered bootstrap CI) by subgroup.
