@@ -118,6 +118,20 @@ Three separate prompts per name (not one joint prompt) so a race/gender guess
 cannot prime the political-lean guess. `05_run_cue_probe.py` honours the same
 `--num-shards`/`--shard-index`, resume, and seeding conventions as `02`/`03`.
 
+Cue-only (above) is the primary measure. The **ecological** variant places each
+name inside a real writing request (the rank-1 template filled with each of the
+19 main issues) so legibility is measured under generation conditions — "does the
+conclusion survive when the name sits inside a task?". It multiplies rows by the
+issue count, so run it at `--repeats 1` (600 names x 19 issues x 3 attributes =
+34,200 probes, ~20 min on one GPU):
+
+```bash
+python pipeline/05_run_cue_probe.py --names data/input/names/names.csv \
+  --questions --repeats 1 \
+  --out-jsonl "$OUT/cue_probe_questions.jsonl" --out-csv "$OUT/cue_probe_questions.csv" \
+  --device cuda:0 --batch-size 96
+```
+
 ## Tests
 
 ```bash

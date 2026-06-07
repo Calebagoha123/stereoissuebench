@@ -20,11 +20,18 @@ import random
 import sys
 from pathlib import Path
 
-from config import DEFAULT_GEN_MODEL, DEFAULT_RESULTS_DIR, INPUT_DIR
+from config import (
+    DEFAULT_GEN_MODEL,
+    DEFAULT_ISSUES_CSV,
+    DEFAULT_RESULTS_DIR,
+    DEFAULT_TEMPLATES_CSV,
+    DEFAULT_WORDING_CSV,
+    INPUT_DIR,
+)
 from hf_utils import apply_chat_template, resolve_local_model_path
 from io_utils import append_jsonl, existing_prompt_ids, read_csv, read_jsonl, write_csv
 from probe import PROBE_ATTRIBUTES, build_probe_prompt, parse_probe
-from prompting import slugify, stable_seed
+from prompting import apply_issue_wording, fill_template, main_issues, slugify, stable_seed
 from shard_utils import select_shard
 
 try:
@@ -60,6 +67,8 @@ PROBE_COLUMNS = [
     "intended_gender",
     "name",
     "cue_text",
+    "issue_id",
+    "user_prompt",
     "attribute",
     "repeat",
     "seed",
@@ -83,8 +92,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top-p", type=float, default=0.8)
     parser.add_argument("--top-k", type=int, default=20)
-    parser.add_argument("--max-input-tokens", type=int, default=256)
+    parser.add_argument("--max-input-tokens", type=int, default=512)
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument(
+        "--questions",
+        action="store_true",
+        help="Ecological variant: place each name inside a real writing request "
+        "(rank-1 template x each main issue) instead of probing the bare name. "
+        "Multiplies rows by the issue count; use --repeats 1.",
+    )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
@@ -95,34 +111,67 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_probe_rows(names_csv: str, repeats: int) -> list[dict]:
+def load_issue_questions() -> list[dict]:
+    """One canonical writing request per main issue: the rank-1 template filled
+    with the issue's open-direction topic, matching the form the generation
+    model actually saw."""
+    issues = apply_issue_wording(
+        main_issues(read_csv(DEFAULT_ISSUES_CSV)), read_csv(DEFAULT_WORDING_CSV)
+    )
+    templates = [t for t in read_csv(DEFAULT_TEMPLATES_CSV) if t.get("selected_template", "").strip()]
+    top_template = min(templates, key=lambda t: int(t.get("rank") or 10**9))["selected_template"].strip()
+
+    questions: list[dict] = []
+    for issue in issues:
+        issue_id = issue.get("ces_variable", "").strip() or slugify(issue["topic_neutral"])
+        topic = issue.get("prompt_topic", issue.get("topic_neutral", "")).strip()
+        questions.append({"issue_id": issue_id, "question_text": fill_template(top_template, topic)})
+    return questions
+
+
+def build_probe_rows(names_csv: str, repeats: int, questions: list[dict] | None = None) -> list[dict]:
     rows: list[dict] = []
     for record in read_csv(names_csv):
         name = record["name"].strip()
         subgroup = record["subgroup"].strip()
         source = record["source"].strip()
         cue_text = f"My name is {name}."
-        for attribute in PROBE_ATTRIBUTES:
-            for repeat in range(1, repeats + 1):
-                prompt_id = (
-                    f"{source}__{subgroup}__{slugify(name)}__"
-                    f"{attribute}__r{repeat:02d}"
-                )
-                rows.append(
-                    {
-                        "prompt_id": prompt_id,
-                        "source": source,
-                        "subgroup": subgroup,
-                        "intended_race": record["race"].strip(),
-                        "intended_gender": record["gender"].strip(),
-                        "name": name,
-                        "cue_text": cue_text,
-                        "attribute": attribute,
-                        "repeat": str(repeat),
-                        "seed": str(stable_seed(prompt_id)),
-                        "prompt_text": build_probe_prompt(cue_text, attribute),
-                    }
-                )
+        # (issue_id, text inserted into the inference prompt). Cue-only by
+        # default; with questions, the name sits inside each writing request.
+        if questions:
+            contexts = []
+            for q in questions:
+                qtext = q["question_text"].rstrip()
+                if qtext and qtext[-1] not in ".!?":
+                    qtext += "."  # so it reads cleanly before "Using linguistic patterns…"
+                contexts.append((q["issue_id"], f"{cue_text}\n\n{qtext}"))
+        else:
+            contexts = [("", cue_text)]
+        for issue_id, user_prompt in contexts:
+            for attribute in PROBE_ATTRIBUTES:
+                for repeat in range(1, repeats + 1):
+                    issue_part = f"{issue_id}__" if issue_id else ""
+                    prompt_id = (
+                        f"{source}__{subgroup}__{slugify(name)}__"
+                        f"{issue_part}{attribute}__r{repeat:02d}"
+                    )
+                    rows.append(
+                        {
+                            "prompt_id": prompt_id,
+                            "source": source,
+                            "subgroup": subgroup,
+                            "intended_race": record["race"].strip(),
+                            "intended_gender": record["gender"].strip(),
+                            "name": name,
+                            "cue_text": cue_text,
+                            "issue_id": issue_id,
+                            "user_prompt": user_prompt,
+                            "attribute": attribute,
+                            "repeat": str(repeat),
+                            "seed": str(stable_seed(prompt_id)),
+                            "prompt_text": build_probe_prompt(user_prompt, attribute),
+                        }
+                    )
     return rows
 
 
@@ -213,7 +262,10 @@ def main() -> int:
             if path_obj.exists():
                 path_obj.unlink()
 
-    rows = build_probe_rows(args.names, args.repeats)
+    questions = load_issue_questions() if args.questions else None
+    if questions is not None:
+        print(f"Ecological mode: crossing names with {len(questions)} issue questions.")
+    rows = build_probe_rows(args.names, args.repeats, questions)
     if args.limit is not None:
         rows = rows[: args.limit]
     total_rows = len(rows)
