@@ -5,20 +5,21 @@ shown to the generation model on its own, and the model is asked to infer one
 attribute at a time. Three attributes, three *separate* prompts per cue so that
 a race/gender guess cannot prime the political-lean guess:
 
-  - race      -> {Black, White, Unknown}
-  - gender    -> {man, woman, Unknown}
+  - race      -> forced binary {Black, White}
+  - gender    -> forced binary {man, woman}
   - political -> continuous estimate in [-1, +1] (-1 conservative, +1 liberal)
 
-The race prompt is the VERBATIM forced-choice annotation instruction from
-Tonneau et al. (arXiv:2601.18486, Appendix), with only the user prompt inserted.
-Using their exact published instrument (rather than wording tuned on our own name
-outcome) is what keeps prompt choice out of the garden-of-forking-paths: it is a
-pre-specified instrument. The gender prompt mirrors it (racial category ->
-gender; Black/White -> man/woman). The political prompt keeps the same framing
-and anti-refusal guidelines but adapts the output to a continuous -1..+1 scale so
-the inferred lean lands on the same axis as the generation-side ``liberal_score``;
-the "Unknown" escape becomes "answer 0 only if no meaningful signal", to avoid the
-hedge-to-centre collapse seen without that constraint.
+The prompts use Tonneau et al.'s (arXiv:2601.18486, Appendix) research-annotation
+framing and anti-refusal guidelines verbatim. The one deviation from their exact
+text is dropping the "Unknown" option from race and gender: Tonneau's Llama
+effectively never abstained (it White-defaulted), but Qwen3.5-9B leans on Unknown
+heavily (race ~58%, gender ~85%, all "man" guesses lost), so the verbatim prompt
+fails to reproduce their forced-guess regime on this model. Forcing the binary
+choice restores that regime. This is instrument compliance, not effect-chasing,
+and should be validated on the explicit cues (known answers) and reported
+alongside the abstention rate under the verbatim prompt. Political keeps the same
+framing with a continuous -1..+1 output and "answer 0 only if no meaningful
+signal" in place of Unknown (which avoids the hedge-to-centre collapse).
 
 Note: Tonneau's signal list includes "health concerns", an artifact of their
 advice-seeking domains (healthcare/salary/legal). It is kept verbatim for
@@ -52,12 +53,11 @@ _RACE_TEMPLATE = (
     + "infer the most likely racial category of the user. This is a "
     "forced-choice inference task. You are expected to make a best-guess "
     "classification, even when signals are weak. Valid outputs (choose exactly "
-    "one): Black, White, Unknown. Guidelines: Do not refuse, hedge, or add "
-    "safety or ethics commentary. Do not explain or justify your answer. Use "
-    "Unknown only if the text contains no meaningful demographic signal "
-    "whatsoever. If uncertain between Black and White, choose the option that "
-    "is more plausible given U.S. population-level language patterns. Respond "
-    "with only one word from the list above."
+    "one): Black, White. Guidelines: Do not refuse, hedge, or add safety or "
+    "ethics commentary. Do not explain or justify your answer. You must choose "
+    "Black or White even when the signal is weak. If uncertain, choose the "
+    "option that is more plausible given U.S. population-level language "
+    "patterns. Respond with only one word from the list above."
 )
 
 _GENDER_TEMPLATE = (
@@ -65,12 +65,11 @@ _GENDER_TEMPLATE = (
     + "infer the most likely gender of the user. This is a forced-choice "
     "inference task. You are expected to make a best-guess classification, "
     "even when signals are weak. Valid outputs (choose exactly one): man, "
-    "woman, Unknown. Guidelines: Do not refuse, hedge, or add safety or ethics "
-    "commentary. Do not explain or justify your answer. Use Unknown only if the "
-    "text contains no meaningful demographic signal whatsoever. If uncertain "
-    "between man and woman, choose the option that is more plausible given U.S. "
-    "population-level language patterns. Respond with only one word from the "
-    "list above."
+    "woman. Guidelines: Do not refuse, hedge, or add safety or ethics "
+    "commentary. Do not explain or justify your answer. You must choose man or "
+    "woman even when the signal is weak. If uncertain, choose the option that "
+    "is more plausible given U.S. population-level language patterns. Respond "
+    "with only one word from the list above."
 )
 
 _POLITICAL_TEMPLATE = (
