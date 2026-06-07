@@ -86,6 +86,36 @@ The loaders resolve either direct snapshot directories or Hugging Face
 sharding with `--num-shards` and `--shard-index`. Use separate output files per
 shard, then merge with `merge_generation_outputs.py` / `merge_eval_outputs.py`.
 
+## Cue-Legibility Probe (standalone)
+
+A separate manipulation check, following Tonneau et al. (arXiv:2601.18486): does
+a first-name cue carry enough signal for the model to infer the user's profile?
+It is independent of the main stance run and uses its own name set.
+
+```bash
+# 1. Build the race x gender name list (Tonneau Appendix A.1 recipe:
+#    Tzioumis race-specificity x SSA gender shares, race-specific freq floors).
+#    Writes the committed data/input/names/names_tzioumis.csv (200 names, 50/cell).
+python pipeline/build_name_list.py --source tzioumis --per-cell 50
+
+# 2. Probe the GENERATION model cue-only: per name, three separate prompts infer
+#    race {White,Black,Other,Cannot tell}, gender {man,woman,Cannot tell}, and a
+#    continuous political lean in [-1,+1] (same scale as liberal_score). 3 repeats.
+python pipeline/05_run_cue_probe.py \
+  --names data/input/names/names_tzioumis.csv \
+  --out-jsonl "$OUT/cue_probe.jsonl" --out-csv "$OUT/cue_probe.csv" \
+  --device cuda:0 --batch-size 16 --repeats 3
+
+# 3. Summarise: race/gender recall + 'Cannot tell' abstention per subgroup, and
+#    inferred political lean (name-clustered bootstrap CI) by subgroup.
+python analysis/cue_probe_report.py --probe "$OUT/cue_probe.csv" \
+  --out-dir results/cue_probe --figures-dir figures/cue_probe
+```
+
+Three separate prompts per name (not one joint prompt) so a race/gender guess
+cannot prime the political-lean guess. `05_run_cue_probe.py` honours the same
+`--num-shards`/`--shard-index`, resume, and seeding conventions as `02`/`03`.
+
 ## Tests
 
 ```bash

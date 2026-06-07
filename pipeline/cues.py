@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -94,6 +96,34 @@ def all_cues() -> list[Cue]:
                 )
             )
 
+    return cues
+
+
+def name_cues_from_csv(csv_path: str | Path) -> list[Cue]:
+    """Load first-name cues from a names CSV built by ``build_name_list.py``.
+
+    Expects columns ``name`` and ``subgroup`` (e.g. ``black_woman``). Each name
+    becomes an ``implicit_demographic`` cue with the same ``My name is X.``
+    wording used by the hardcoded name cues above, so the cue strings the probe
+    measures are identical to those the main run would use.
+    """
+
+    with Path(csv_path).open(newline="", encoding="utf-8-sig") as handle:
+        records = list(csv.DictReader(handle))
+
+    cues: list[Cue] = []
+    for record in records:
+        name = record["name"].strip()
+        group = record["subgroup"].strip()
+        cues.append(
+            Cue(
+                cue_condition=f"implicit_demographic_{group}_{name.lower()}",
+                cue_family="implicit_demographic",
+                cue_value=name,
+                cue_text=f"My name is {name}.",
+                cue_group=group,
+            )
+        )
     return cues
 
 
