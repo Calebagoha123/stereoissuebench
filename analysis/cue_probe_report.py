@@ -83,6 +83,49 @@ def _political_summary(frame: pd.DataFrame, n_boot: int, seed: int) -> pd.DataFr
     return pd.DataFrame(records).set_index("subgroup")
 
 
+def _name_scores(frame: pd.DataFrame) -> pd.DataFrame:
+    """Per-name legibility: race / gender recall + abstain, mean political lean,
+    and a combined ``total_score`` = mean(race_recall, gender_recall).
+
+    ``source`` is carried through so scores can be rolled up by name list. Each
+    name keeps the subgroup it was authored for; recall counts an Unknown
+    abstention as not-recalled (the Tonneau legibility convention)."""
+    keys = ["source", "subgroup", "intended_race", "intended_gender", "name"]
+    out = {}
+    for attr, intended in (("race", "intended_race"), ("gender", "intended_gender")):
+        rows = frame[frame["attribute"] == attr].copy()
+        rows["recall"] = rows["parsed_value"] == rows[intended]
+        rows["abstain"] = rows["parsed_value"] == ABSTAIN
+        g = rows.groupby(keys).agg(
+            recall=("recall", "mean"), abstain=("abstain", "mean"), n=("recall", "size")
+        )
+        out[attr] = g.rename(columns={c: f"{attr}_{c}" for c in g.columns})
+
+    pol = frame[frame["attribute"] == "political"].copy()
+    pol["value"] = pd.to_numeric(pol["parsed_value"], errors="coerce")
+    pol_g = pol.groupby(keys)["value"].mean().rename("political_mean").to_frame()
+
+    scores = out["race"].join(out["gender"], how="outer").join(pol_g, how="outer")
+    scores["total_score"] = scores[["race_recall", "gender_recall"]].mean(axis=1)
+    return scores.reset_index()
+
+
+def _by_source(name_scores: pd.DataFrame, by_subgroup: bool) -> pd.DataFrame:
+    """Roll per-name scores up to the name list (one row = one name, equal
+    weight), optionally split by subgroup."""
+    keys = ["source", "subgroup"] if by_subgroup else ["source"]
+    agg = name_scores.groupby(keys).agg(
+        n_names=("name", "size"),
+        total_score=("total_score", "mean"),
+        race_recall=("race_recall", "mean"),
+        race_abstain=("race_abstain", "mean"),
+        gender_recall=("gender_recall", "mean"),
+        gender_abstain=("gender_abstain", "mean"),
+        political_mean=("political_mean", "mean"),
+    )
+    return agg.round(3)
+
+
 def _plot_legibility(table: pd.DataFrame, out_path: Path) -> None:
     subgroups = [s for s in SUBGROUP_ORDER if s in table.index]
     x = np.arange(len(subgroups))
@@ -157,10 +200,22 @@ def main() -> int:
         out_dir / "political_by_name.csv", index=False
     )
 
+    # Per-name total score + roll-ups by name-list source.
+    name_scores = _name_scores(frame)
+    name_scores.round(3).sort_values(["source", "subgroup", "total_score"]).to_csv(
+        out_dir / "name_scores.csv", index=False
+    )
+    by_source = _by_source(name_scores, by_subgroup=False)
+    by_source_sg = _by_source(name_scores, by_subgroup=True)
+    by_source.to_csv(out_dir / "legibility_by_source.csv")
+    by_source_sg.to_csv(out_dir / "legibility_by_source_subgroup.csv")
+
     _plot_legibility(table, fig_dir / "name_cue_legibility.png")
     _plot_political(table, fig_dir / "inferred_political_by_subgroup.png")
 
     print("Legibility summary:\n", table.round(3).to_string())
+    print("\nBy name-list source:\n", by_source.to_string())
+    print("\nBy source x subgroup:\n", by_source_sg.to_string())
     print(f"\nWrote tables to {out_dir} and figures to {fig_dir}")
     return 0
 
