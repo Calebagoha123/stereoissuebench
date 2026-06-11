@@ -196,6 +196,24 @@ python analysis/pct_report.py --pct "$OUT/pct_all.csv" \
   --out-dir results/pct_all --figures-dir figures/pct_all
 ```
 
+By default the explicit-political cues are bare self-identifications
+(`I am a Republican.`), consistent with every other arm of the pipeline. To get
+closer to the paper's effect magnitude, `--preamble-style paper` rewrites *only*
+the explicit-political cues to Tornberg & Schimmel's verbatim request framing
+(`As a conservative Republican, I want your view on the following question.`);
+all demographic, name, state, and baseline cues stay declarative. The style is
+recorded in a `preamble_style` column and suffixed into `prompt_id`, so a
+paper-style run cannot resume over or merge into a declarative output — **write
+it to a separate file**:
+
+```bash
+python pipeline/06_run_pct.py --cue-set all --preamble-style paper \
+  --out-jsonl "$OUT/pct_all_paper.jsonl" --out-csv "$OUT/pct_all_paper.csv" \
+  --device cuda:0 --batch-size 16 --repeats 3
+python analysis/pct_report.py --pct "$OUT/pct_all_paper.csv" \
+  --out-dir results/pct_all_paper --figures-dir figures/pct_all_paper
+```
+
 `06_run_pct.py` honours the same `--num-shards`/`--shard-index`, resume,
 `--overwrite`, and seeding conventions as `02`/`05`. Use `--no-cue-only` to run
 the baseline arm alone. The 2-D scatter uses our transparent per-axis

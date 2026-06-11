@@ -107,6 +107,7 @@ PCT_COLUMNS = [
     "cue_value",
     "cue_group",
     "cue_text",
+    "preamble_style",
     "repeat",
     "seed",
     "statement",

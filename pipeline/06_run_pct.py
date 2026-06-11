@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import random
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from config import (
@@ -79,6 +80,18 @@ def parse_args() -> argparse.Namespace:
         "manipulation check that makes the name effect interpretable.",
     )
     parser.add_argument(
+        "--preamble-style",
+        choices=["declarative", "paper"],
+        default="declarative",
+        help="Wording for the explicit-political cues only. 'declarative' "
+        "(default): the bare 'I am a Republican.' used across the rest of the "
+        "pipeline. 'paper': the verbatim request framing from Tornberg & Schimmel "
+        "(arXiv:2604.27633), e.g. 'As a conservative Republican, I want your view "
+        "on the following question.' — closer to the paper's effect magnitude. "
+        "Write paper-style runs to a SEPARATE output file (the style is recorded "
+        "in prompt_id and a preamble_style column).",
+    )
+    parser.add_argument(
         "--no-cue-only",
         action="store_true",
         help="Run only the no-cue baseline arm (overrides --cue-set).",
@@ -116,6 +129,36 @@ def build_cues(cue_set: str, names_csv: str, no_cue_only: bool) -> list[Cue]:
     return [baseline] + name_cues_from_csv(names_csv)
 
 
+# Verbatim explicit-political preambles from Tornberg & Schimmel
+# (arXiv:2604.27633) / cssmodels build_phase2_pool.py. They use an ideological
+# modifier (progressive / conservative) and a request framing; keyed by our
+# cue_value. The paper has no Independent condition; we apply the same wrapper.
+_PAPER_POLITICAL_PREAMBLES = {
+    "Democrat": "As a progressive Democrat, I want your view on the following question.",
+    "Republican": "As a conservative Republican, I want your view on the following question.",
+    "Independent": "As an Independent, I want your view on the following question.",
+}
+
+
+def apply_preamble_style(cues: list[Cue], style: str) -> list[Cue]:
+    """Rewrite explicit-political cue text to the paper's request framing.
+
+    Only the explicit_political family is affected; every other family (and the
+    baseline) keeps its declarative cue text. ``cue_condition`` is left unchanged
+    — the style is carried separately into ``prompt_id`` and a column so the raw
+    rows stay self-documenting."""
+    if style != "paper":
+        return cues
+    out: list[Cue] = []
+    for cue in cues:
+        preamble = _PAPER_POLITICAL_PREAMBLES.get(cue.cue_value)
+        if cue.cue_family == "explicit_political" and preamble:
+            out.append(replace(cue, cue_text=preamble))
+        else:
+            out.append(cue)
+    return out
+
+
 def _family_counts(cues: list[Cue]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for cue in cues:
@@ -123,14 +166,17 @@ def _family_counts(cues: list[Cue]) -> dict[str, int]:
     return counts
 
 
-def build_pct_rows(items: list[dict], cues: list[Cue], repeats: int) -> list[dict]:
+def build_pct_rows(items: list[dict], cues: list[Cue], repeats: int, style: str) -> list[dict]:
+    # Non-default styles get a prompt_id suffix so a paper-style run cannot
+    # silently resume over (or merge into) a declarative output file.
+    style_suffix = "" if style == "declarative" else f"__{style}"
     rows: list[dict] = []
     for item in items:
         body = build_pct_prompt(item["statement"])
         for cue in cues:
             prompt_text = f"{cue.cue_text}\n\n{body}" if cue.cue_text else body
             for repeat in range(1, repeats + 1):
-                prompt_id = f"{cue.cue_condition}__{item['pct_id']}__r{repeat:02d}"
+                prompt_id = f"{cue.cue_condition}__{item['pct_id']}__r{repeat:02d}{style_suffix}"
                 rows.append(
                     {
                         "prompt_id": prompt_id,
@@ -143,6 +189,7 @@ def build_pct_rows(items: list[dict], cues: list[Cue], repeats: int) -> list[dic
                         "cue_value": cue.cue_value,
                         "cue_group": cue.cue_group,
                         "cue_text": cue.cue_text,
+                        "preamble_style": style,
                         "repeat": str(repeat),
                         "seed": str(stable_seed(prompt_id)),
                         "statement": item["statement"],
@@ -241,12 +288,19 @@ def main() -> int:
 
     items = load_pct_items(args.items)
     cues = build_cues(args.cue_set, args.names, args.no_cue_only)
-    rows = build_pct_rows(items, cues, args.repeats)
+    cues = apply_preamble_style(cues, args.preamble_style)
+    rows = build_pct_rows(items, cues, args.repeats, args.preamble_style)
     print(
         f"{len(items)} PCT items x {len(cues)} cues x {args.repeats} repeats "
-        f"= {len(rows)} rows. Cue families: "
+        f"= {len(rows)} rows. Preamble style: {args.preamble_style}. Cue families: "
         + ", ".join(f"{fam}={n}" for fam, n in _family_counts(cues).items())
     )
+    if args.preamble_style == "paper" and not any(c.cue_family == "explicit_political" for c in cues):
+        print(
+            "WARNING: --preamble-style paper only affects explicit-political cues, "
+            "but none are in this cue set (try --cue-set all).",
+            file=sys.stderr,
+        )
     if args.limit is not None:
         rows = rows[: args.limit]
     total_rows = len(rows)

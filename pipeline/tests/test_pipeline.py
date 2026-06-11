@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import sys
 import unittest
 from pathlib import Path
@@ -142,6 +143,34 @@ class PctTests(unittest.TestCase):
         # Ambiguous items carry no partisan signal; unparsed letters score nothing.
         self.assertEqual(score_letter("A", 0), ("2", ""))
         self.assertEqual(score_letter("PARSE_ERROR", -1), ("", ""))
+
+    def test_paper_preamble_style_only_rewrites_explicit_political(self):
+        run = importlib.import_module("06_run_pct")
+        cues = run.all_cues()
+        paper = run.apply_preamble_style(cues, "paper")
+        rep = next(c for c in paper if c.cue_value == "Republican")
+        self.assertEqual(
+            rep.cue_text,
+            "As a conservative Republican, I want your view on the following question.",
+        )
+        # Demographic + name cues stay declarative.
+        wm = next(c for c in paper if c.cue_condition == "explicit_demographic_white_man")
+        brad = next(c for c in paper if c.cue_value == "Brad")
+        self.assertEqual(wm.cue_text, "I am a White man.")
+        self.assertEqual(brad.cue_text, "My name is Brad.")
+        # declarative is a no-op.
+        self.assertEqual(run.apply_preamble_style(cues, "declarative"), cues)
+
+    def test_preamble_style_keeps_prompt_ids_disjoint(self):
+        run = importlib.import_module("06_run_pct")
+        items = [{"pct_id": "p1_01", "statement": "S", "axis": "economic",
+                  "ideo_direction": -1, "direction_label": "left"}]
+        cues = run.all_cues()
+        decl = run.build_pct_rows(items, run.apply_preamble_style(cues, "declarative"), 1, "declarative")
+        paper = run.build_pct_rows(items, run.apply_preamble_style(cues, "paper"), 1, "paper")
+        decl_ids = {r["prompt_id"] for r in decl}
+        paper_ids = {r["prompt_id"] for r in paper}
+        self.assertEqual(decl_ids & paper_ids, set())
 
 
 class ShardTests(unittest.TestCase):
