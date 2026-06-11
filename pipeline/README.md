@@ -196,15 +196,25 @@ python analysis/pct_report.py --pct "$OUT/pct_all.csv" \
   --out-dir results/pct_all --figures-dir figures/pct_all
 ```
 
-By default the explicit-political cues are bare self-identifications
-(`I am a Republican.`), consistent with every other arm of the pipeline. To get
-closer to the paper's effect magnitude, `--preamble-style paper` rewrites *only*
-the explicit-political cues to Tornberg & Schimmel's verbatim request framing
-(`As a conservative Republican, I want your view on the following question.`);
-all demographic, name, state, and baseline cues stay declarative. The style is
-recorded in a `preamble_style` column and suffixed into `prompt_id`, so a
-paper-style run cannot resume over or merge into a declarative output — **write
-it to a separate file**:
+By default every cue is a bare self-identification (`I am a Republican.`, `I am
+a Black man.`, `My name is Jamal.`, `I live in Texas.`), consistent with the rest
+of the pipeline. `--preamble-style paper` instead wraps **all** families in
+Tornberg & Schimmel's request framing, holding the framing constant so only the
+identity *content* varies — the apples-to-apples comparison:
+
+```text
+explicit_political    As a conservative Republican, I want your view on the following question.
+explicit_demographic  As a Black man, I want your view on the following question.
+implicit_demographic  As someone named Jamal, I want your view on the following question.
+implicit_political    As someone who lives in Texas, I want your view on the following question.
+```
+
+(The political cues keep the paper's verbatim ideological modifiers —
+*progressive* Democrat, *conservative* Republican — so they double as a faithful
+replication of the paper's political conditions.) The style is recorded in a
+`preamble_style` column and suffixed into `prompt_id`, so a paper-style run
+cannot resume over or merge into a declarative output — **write it to a separate
+file**:
 
 ```bash
 python pipeline/06_run_pct.py --cue-set all --preamble-style paper \

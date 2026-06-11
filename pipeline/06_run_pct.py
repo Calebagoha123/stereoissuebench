@@ -83,13 +83,15 @@ def parse_args() -> argparse.Namespace:
         "--preamble-style",
         choices=["declarative", "paper"],
         default="declarative",
-        help="Wording for the explicit-political cues only. 'declarative' "
-        "(default): the bare 'I am a Republican.' used across the rest of the "
-        "pipeline. 'paper': the verbatim request framing from Tornberg & Schimmel "
-        "(arXiv:2604.27633), e.g. 'As a conservative Republican, I want your view "
-        "on the following question.' — closer to the paper's effect magnitude. "
-        "Write paper-style runs to a SEPARATE output file (the style is recorded "
-        "in prompt_id and a preamble_style column).",
+        help="Cue wording. 'declarative' (default): the bare self-identifications "
+        "used across the rest of the pipeline ('I am a Republican.', 'I am a Black "
+        "man.', 'My name is Jamal.', 'I live in Texas.'). 'paper': the request "
+        "framing from Tornberg & Schimmel (arXiv:2604.27633) applied to ALL "
+        "families so framing is held constant and only identity content varies "
+        "('As a conservative Republican, …', 'As a Black man, …', 'As someone "
+        "named Jamal, …', 'As someone who lives in Texas, I want your view on the "
+        "following question.'). Write paper-style runs to a SEPARATE output file "
+        "(the style is recorded in prompt_id and a preamble_style column).",
     )
     parser.add_argument(
         "--no-cue-only",
@@ -129,33 +131,49 @@ def build_cues(cue_set: str, names_csv: str, no_cue_only: bool) -> list[Cue]:
     return [baseline] + name_cues_from_csv(names_csv)
 
 
-# Verbatim explicit-political preambles from Tornberg & Schimmel
-# (arXiv:2604.27633) / cssmodels build_phase2_pool.py. They use an ideological
-# modifier (progressive / conservative) and a request framing; keyed by our
-# cue_value. The paper has no Independent condition; we apply the same wrapper.
-_PAPER_POLITICAL_PREAMBLES = {
-    "Democrat": "As a progressive Democrat, I want your view on the following question.",
-    "Republican": "As a conservative Republican, I want your view on the following question.",
-    "Independent": "As an Independent, I want your view on the following question.",
+# Paper request framing (Tornberg & Schimmel, arXiv:2604.27633): every cue is
+# rewritten as "As <identity>, I want your view on the following question." so the
+# framing is held constant and only the identity *content* varies across families.
+# The explicit-political identities keep the paper's verbatim ideological modifiers
+# (progressive / conservative); the other families wrap their bare identity. The
+# bare baseline (no cue) is left untouched.
+_PAPER_SUFFIX = ", I want your view on the following question."
+_PAPER_POLITICAL_IDENTITY = {
+    "Democrat": "a progressive Democrat",
+    "Republican": "a conservative Republican",
+    "Independent": "an Independent",
 }
 
 
-def apply_preamble_style(cues: list[Cue], style: str) -> list[Cue]:
-    """Rewrite explicit-political cue text to the paper's request framing.
+def _paper_identity_phrase(cue: Cue) -> str | None:
+    """The '<identity>' that fills 'As <identity>, I want your view…', or None to
+    leave the cue unchanged (baseline / empty cue)."""
+    if cue.cue_family == "baseline" or not cue.cue_text:
+        return None
+    if cue.cue_family == "explicit_political":
+        return _PAPER_POLITICAL_IDENTITY.get(cue.cue_value, f"a {cue.cue_value}")
+    if cue.cue_family == "explicit_demographic":
+        return f"a {cue.cue_value}"                     # "As a Black man, …"
+    if cue.cue_family == "implicit_demographic":
+        return f"someone named {cue.cue_value}"         # "As someone named Jamal, …"
+    if cue.cue_family == "implicit_political":
+        return f"someone who lives in {cue.cue_value}"  # "As someone who lives in Texas, …"
+    return f"a {cue.cue_value}"
 
-    Only the explicit_political family is affected; every other family (and the
-    baseline) keeps its declarative cue text. ``cue_condition`` is left unchanged
-    — the style is carried separately into ``prompt_id`` and a column so the raw
-    rows stay self-documenting."""
+
+def apply_preamble_style(cues: list[Cue], style: str) -> list[Cue]:
+    """Rewrite cue text to the paper's request framing across all families.
+
+    Every non-baseline cue becomes "As <identity>, I want your view on the
+    following question."; the baseline is unchanged. ``cue_condition`` is left
+    alone — the style is carried separately into ``prompt_id`` and a column so the
+    raw rows stay self-documenting."""
     if style != "paper":
         return cues
     out: list[Cue] = []
     for cue in cues:
-        preamble = _PAPER_POLITICAL_PREAMBLES.get(cue.cue_value)
-        if cue.cue_family == "explicit_political" and preamble:
-            out.append(replace(cue, cue_text=preamble))
-        else:
-            out.append(cue)
+        phrase = _paper_identity_phrase(cue)
+        out.append(cue if phrase is None else replace(cue, cue_text=f"As {phrase}{_PAPER_SUFFIX}"))
     return out
 
 
@@ -295,12 +313,10 @@ def main() -> int:
         f"= {len(rows)} rows. Preamble style: {args.preamble_style}. Cue families: "
         + ", ".join(f"{fam}={n}" for fam, n in _family_counts(cues).items())
     )
-    if args.preamble_style == "paper" and not any(c.cue_family == "explicit_political" for c in cues):
-        print(
-            "WARNING: --preamble-style paper only affects explicit-political cues, "
-            "but none are in this cue set (try --cue-set all).",
-            file=sys.stderr,
-        )
+    if args.preamble_style == "paper":
+        examples = [c.cue_text for c in cues if c.cue_text][:2]
+        if examples:
+            print("Paper framing applied to all families, e.g. " + " | ".join(examples))
     if args.limit is not None:
         rows = rows[: args.limit]
     total_rows = len(rows)
