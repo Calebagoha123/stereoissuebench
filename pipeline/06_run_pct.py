@@ -29,7 +29,7 @@ from config import (
     DEFAULT_RESULTS_DIR,
     PCT_COLUMNS,
 )
-from cues import Cue, name_cues_from_csv
+from cues import Cue, all_cues, name_cues_from_csv
 from hf_utils import apply_chat_template, resolve_local_model_path
 from io_utils import append_jsonl, existing_prompt_ids, read_jsonl, write_csv
 from pct import build_pct_prompt, load_pct_items, parse_pct_letter, score_letter
@@ -69,9 +69,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument(
+        "--cue-set",
+        choices=["names", "all"],
+        default="names",
+        help="'names' (default): no-cue baseline + the 12 implicit-demographic "
+        "name cues. 'all': the full 29-cue grid from cues.all_cues() — baseline + "
+        "explicit political + implicit political (states) + explicit demographic + "
+        "implicit demographic (the same 12 names). Use 'all' to get the explicit "
+        "manipulation check that makes the name effect interpretable.",
+    )
+    parser.add_argument(
         "--no-cue-only",
         action="store_true",
-        help="Run only the no-cue baseline arm (skip the name cues).",
+        help="Run only the no-cue baseline arm (overrides --cue-set).",
     )
     parser.add_argument("--max-new-tokens", type=int, default=8)
     parser.add_argument("--temperature", type=float, default=0.7)
@@ -89,12 +99,28 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_cues(names_csv: str, no_cue_only: bool) -> list[Cue]:
-    """Baseline (no cue) plus the implicit-demographic name cues."""
-    cues = [Cue("baseline", "baseline", "none", "", "baseline")]
-    if not no_cue_only:
-        cues.extend(name_cues_from_csv(names_csv))
-    return cues
+def build_cues(cue_set: str, names_csv: str, no_cue_only: bool) -> list[Cue]:
+    """Select the cue grid for the PCT arm.
+
+    - ``no_cue_only``: just the no-cue baseline.
+    - ``all``: the full 29-cue grid (``cues.all_cues()``; baseline first), whose
+      name cues are the same 12 generation names.
+    - ``names`` (default): baseline + the implicit-demographic name cues loaded
+      from ``names_csv``.
+    """
+    baseline = Cue("baseline", "baseline", "none", "", "baseline")
+    if no_cue_only:
+        return [baseline]
+    if cue_set == "all":
+        return all_cues()
+    return [baseline] + name_cues_from_csv(names_csv)
+
+
+def _family_counts(cues: list[Cue]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for cue in cues:
+        counts[cue.cue_family] = counts.get(cue.cue_family, 0) + 1
+    return counts
 
 
 def build_pct_rows(items: list[dict], cues: list[Cue], repeats: int) -> list[dict]:
@@ -214,11 +240,12 @@ def main() -> int:
                 path_obj.unlink()
 
     items = load_pct_items(args.items)
-    cues = build_cues(args.names, args.no_cue_only)
+    cues = build_cues(args.cue_set, args.names, args.no_cue_only)
     rows = build_pct_rows(items, cues, args.repeats)
     print(
-        f"{len(items)} PCT items x {len(cues)} cues "
-        f"(1 baseline + {len(cues) - 1} names) x {args.repeats} repeats = {len(rows)} rows."
+        f"{len(items)} PCT items x {len(cues)} cues x {args.repeats} repeats "
+        f"= {len(rows)} rows. Cue families: "
+        + ", ".join(f"{fam}={n}" for fam, n in _family_counts(cues).items())
     )
     if args.limit is not None:
         rows = rows[: args.limit]

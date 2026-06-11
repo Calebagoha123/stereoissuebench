@@ -173,6 +173,29 @@ python analysis/pct_report.py --pct "$OUT/pct.csv" \
   --out-dir results/pct --figures-dir figures/pct
 ```
 
+`--cue-set all` runs the full 29-cue grid instead of baseline + names: explicit
+political (Democrat / Republican / Independent), implicit political (red/blue/
+swing states), explicit demographic ("I am a White man."), and the implicit
+demographic names. The explicit-political cues are the manipulation check —
+following Tornberg & Schimmel (arXiv:2604.27633), an explicit conservative cue
+should swing the PCT sharply right while the progressive cue barely moves it
+(the baseline already sits near the left ceiling), which is what makes a
+near-zero implicit-name effect interpretable. The report keys conditions by
+`cue_family`/`cue_group` so explicit and implicit demographic cues (which share
+a cue_group) stay distinct.
+
+```text
+62 PCT items x 29 cues x 3 repeats = 5,394 rows
+```
+
+```bash
+python pipeline/06_run_pct.py --cue-set all \
+  --out-jsonl "$OUT/pct_all.jsonl" --out-csv "$OUT/pct_all.csv" \
+  --device cuda:0 --batch-size 16 --repeats 3
+python analysis/pct_report.py --pct "$OUT/pct_all.csv" \
+  --out-dir results/pct_all --figures-dir figures/pct_all
+```
+
 `06_run_pct.py` honours the same `--num-shards`/`--shard-index`, resume,
 `--overwrite`, and seeding conventions as `02`/`05`. Use `--no-cue-only` to run
 the baseline arm alone. The 2-D scatter uses our transparent per-axis
