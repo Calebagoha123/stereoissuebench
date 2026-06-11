@@ -132,6 +132,52 @@ python pipeline/05_run_cue_probe.py --names data/input/names/names.csv \
   --device cuda:0 --batch-size 96
 ```
 
+## Political Compass Test (standalone)
+
+A second arm that puts the **same name cues** in front of a fixed survey
+instrument instead of an open writing task, adapting Rozado / cssmodels
+(`biasissycophancy`). It answers a complementary question to the main run: does
+the implicit demographic cue move the model's *self-reported* political position?
+
+The 62-item instrument and its left/right coding are committed verbatim at
+`data/input/pct/pct_items_coded.csv` (`axis` = economic/social, `ideo_direction`
+= -1 left / +1 right / 0 ambiguous). Each item is asked as a forced-choice
+Likert block (A Strongly Agree … D Strongly Disagree). Two arms run over it:
+
+- **baseline** — the bare Likert prompt, no cue.
+- **implicit-demographic cue** — each item prepended with `My name is X.`, the
+  same 12 generation names (`data/input/names/names_generation.csv`) and the
+  byte-identical cue string used by the main run.
+
+Letters are scored to the pipeline's `liberal_score` axis (+1 liberal/left, -1
+conservative/right): `agree_score x (-ideo_direction) / 2`. Ambiguous items get
+no `liberal_score`.
+
+```text
+62 PCT items
+13 cues (1 no-cue baseline + 12 name cues)
+ 3 stochastic repeats
+= 2,418 rows
+```
+
+```bash
+# Run baseline + name cues on the GENERATION model (same loader/seeding as 02).
+python pipeline/06_run_pct.py \
+  --out-jsonl "$OUT/pct.jsonl" --out-csv "$OUT/pct.csv" \
+  --device cuda:0 --batch-size 16 --repeats 3
+
+# Summarise: PCT lean by condition (overall + economic/social axes), the
+# name-cue effect vs baseline (paired within item, item-clustered bootstrap),
+# and a 2-D compass scatter.
+python analysis/pct_report.py --pct "$OUT/pct.csv" \
+  --out-dir results/pct --figures-dir figures/pct
+```
+
+`06_run_pct.py` honours the same `--num-shards`/`--shard-index`, resume,
+`--overwrite`, and seeding conventions as `02`/`05`. Use `--no-cue-only` to run
+the baseline arm alone. The 2-D scatter uses our transparent per-axis
+`liberal_score` means, not politicalcompass.org's proprietary coordinates.
+
 ## Tests
 
 ```bash

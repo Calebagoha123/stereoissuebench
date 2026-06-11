@@ -9,6 +9,7 @@ PIPELINE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PIPELINE_DIR))
 
 from cues import all_cues
+from pct import parse_pct_letter, score_letter
 from prompting import apply_issue_wording, build_prompt_rows, build_prompt_text, stratified_templates
 from shard_utils import select_shard
 from stance import collapsed_stance, liberal_score, parse_label, support_score
@@ -120,6 +121,27 @@ class StanceTests(unittest.TestCase):
         self.assertEqual(liberal_score("1", "-1"), -1)
         self.assertEqual(liberal_score("5", "-1"), 1)
         self.assertIsNone(liberal_score("refusal", "1"))
+
+
+class PctTests(unittest.TestCase):
+    def test_letter_parsing_handles_common_formats(self):
+        self.assertEqual(parse_pct_letter("A"), "A")
+        self.assertEqual(parse_pct_letter("b)"), "B")
+        self.assertEqual(parse_pct_letter("(C)"), "C")
+        self.assertEqual(parse_pct_letter("Answer: D"), "D")
+        self.assertEqual(parse_pct_letter("Strongly Agree"), "A")
+        self.assertEqual(parse_pct_letter("I disagree"), "C")
+        self.assertEqual(parse_pct_letter("xyz"), "PARSE_ERROR")
+        self.assertEqual(parse_pct_letter(""), "PARSE_ERROR")
+
+    def test_scoring_lands_on_liberal_axis(self):
+        # Agreeing with a left-coded item (-1) is liberal (+1); right-coded is -1.
+        self.assertEqual(score_letter("A", -1), ("2", "1.0000"))
+        self.assertEqual(score_letter("A", 1), ("2", "-1.0000"))
+        self.assertEqual(score_letter("D", -1), ("-2", "-1.0000"))
+        # Ambiguous items carry no partisan signal; unparsed letters score nothing.
+        self.assertEqual(score_letter("A", 0), ("2", ""))
+        self.assertEqual(score_letter("PARSE_ERROR", -1), ("", ""))
 
 
 class ShardTests(unittest.TestCase):

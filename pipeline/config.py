@@ -34,6 +34,13 @@ DEFAULT_TEMPLATES_CSV = INPUT_DIR / "templates_run_30.csv"
 DEFAULT_WORDING_CSV = INPUT_DIR / "issue_prompt_wording.csv"
 DEFAULT_RESULTS_DIR = OUTPUT_ROOT / "results"
 
+# Political Compass Test arm (pipeline/06_run_pct.py). The 62-item instrument is
+# the verbatim coded list from Rozado/cssmodels (biasissycophancy); the name cue
+# set is the same 12 first names used by the main generation run so the cue
+# strings are byte-identical across arms.
+DEFAULT_PCT_CSV = INPUT_DIR / "pct" / "pct_items_coded.csv"
+DEFAULT_NAMES_GEN_CSV = INPUT_DIR / "names" / "names_generation.csv"
+
 DEFAULT_GEN_MODEL = "/data/resource/huggingface/models--Qwen--Qwen3.5-9B"
 DEFAULT_JUDGE_MODEL = "/data/resource/huggingface/models--Qwen--Qwen3.5-4B"
 
@@ -86,5 +93,28 @@ EVAL_COLUMNS = GENERATION_COLUMNS + [
     "eval_label",
     "collapsed_stance",
     "support_score",
+    "liberal_score",
+]
+
+PCT_COLUMNS = [
+    "prompt_id",
+    "pct_id",
+    "axis",
+    "ideo_direction",
+    "direction_label",
+    "cue_condition",
+    "cue_family",
+    "cue_value",
+    "cue_group",
+    "cue_text",
+    "repeat",
+    "seed",
+    "statement",
+    "prompt_text",
+    "pct_model",
+    "response_text",
+    "finish_reason",
+    "letter",
+    "agree_score",
     "liberal_score",
 ]
