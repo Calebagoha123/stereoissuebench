@@ -106,18 +106,28 @@ def name_cues_from_csv(csv_path: str | Path) -> list[Cue]:
     becomes an ``implicit_demographic`` cue with the same ``My name is X.``
     wording used by the hardcoded name cues above, so the cue strings the probe
     measures are identical to those the main run would use.
+
+    Names that recur across source lists within the same subgroup (the full
+    ``names.csv`` has ~38 such pairs) are deduplicated on ``cue_condition``,
+    keeping the first occurrence, so each name produces exactly one cue and
+    ``prompt_id`` stays unique.
     """
 
     with Path(csv_path).open(newline="", encoding="utf-8-sig") as handle:
         records = list(csv.DictReader(handle))
 
     cues: list[Cue] = []
+    seen: set[str] = set()
     for record in records:
         name = record["name"].strip()
         group = record["subgroup"].strip()
+        condition = f"implicit_demographic_{group}_{name.lower()}"
+        if condition in seen:
+            continue
+        seen.add(condition)
         cues.append(
             Cue(
-                cue_condition=f"implicit_demographic_{group}_{name.lower()}",
+                cue_condition=condition,
                 cue_family="implicit_demographic",
                 cue_value=name,
                 cue_text=f"My name is {name}.",
