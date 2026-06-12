@@ -20,10 +20,12 @@ open writing task. All numbers below are for **Qwen3.5-9B**.
   Jamal…", ≈0), and with **no race/gender differentiation**.
 - The apparent name effect in a 3-names-per-subgroup pilot was **name-sampling
   noise**: it disappears once averaged over ~140 names per subgroup.
-- A **cue-legibility probe** explains why: Qwen cannot reliably read race from
-  Black first names (it defaults them to "White") and infers no political lean
-  from any name. Names are not legible demographic/political signals to this
-  model, so they cannot drive accommodation.
+- A **cue-legibility probe** explains why: Qwen volunteers race for *White*
+  names far more readily than Black (which it mostly abstains on, or guesses
+  White), and assigns the **same** mild-liberal lean (~+0.37) to every name
+  regardless of group — no political differentiation. Names are not legible
+  *differential* demographic/political signals to this model, so they cannot
+  drive accommodation.
 
 The headline: *the accommodation that drives political-bias audits is specific
 to **political** identity, not identity in general, and is not triggered by
@@ -114,22 +116,37 @@ same for every demographic, so it is not a bias.
 
 ### 4. Why names do nothing: they are not legible to the model
 
-The probe explains the null at the source.
+The probe explains the null at the source. (Mean of three name dictionaries —
+Elder-Hayes, Rosenman, Tzioumis — 50 names each, n = 150 per subgroup; the
+verbatim Tonneau prompt offers an "Unknown" option, so the model can abstain.)
 
-| Subgroup | Race recall | → guessed *White* | Gender recall | Inferred political lean | n names |
-|---|---|---|---|---|---|
-| White man | 100% | — | 100% | +0.00 | 50 |
-| White woman | 100% | — | 100% | +0.00 | 50 |
-| Black man | 8% | 92% | 100% | +0.00 | 50 |
-| Black woman | 18% | 82% | 100% | +0.00 | 50 |
+| Subgroup | Leak score | Race recalled | Race abstained | Gender recalled | Gender abstained | Assumed politics |
+|---|---|---|---|---|---|---|
+| White man | 0.26 | **0.51** | 0.49 | **0.00** | 1.00 | +0.37 |
+| White woman | 0.37 | **0.46** | 0.54 | **0.28** | 0.72 | +0.38 |
+| Black man | 0.03 | **0.07** | 0.62 | **0.00** | 1.00 | +0.37 |
+| Black woman | 0.18 | **0.08** | 0.66 | **0.29** | 0.71 | +0.37 |
 
-Qwen identifies **gender** from a first name perfectly (100% across groups) and
-reads **White** names' race perfectly (100%), but recovers the race of **Black**
-names only 8% (black-male) / 18% (black-female) of the time — with abstention
-off, it is **defaulting Black names to "White"** (92% / 82% of the time). And it
-infers **no political lean** from any name (a flat 0 across all 200 names). A
-name the model cannot place racially and will not place politically cannot move
-a political survey. The PCT name-null and the probe agree.
+Recall = the model volunteered the attribute when prompted; abstain = it
+declined; leak score = mean(race recall, gender recall). Three asymmetries stand
+out:
+
+- **Race leaks, but unequally.** The model volunteers White names' race ~6× more
+  than Black (0.46–0.51 vs 0.07–0.08). White names are read as White or not at
+  all (recall + abstain ≈ 1.00, never guessed Black); Black names mostly draw an
+  abstention (~0.64) and, when the model does commit, it often guesses *White*.
+  White is the default racial read.
+- **Gender is volunteered only for female names** (~0.28); male names are never
+  assigned a gender (0.00 recall, full abstention) — male as the unmarked
+  default.
+- **Politics is flat (~+0.37) across every subgroup.** The model assigns the
+  same mild-liberal lean to every name regardless of race or gender — no
+  differentiation. (That +0.37 ≈ the model's own +0.46 PCT baseline: it treats
+  every name as the same mildly-liberal default user.)
+
+A name the model reads only weakly and asymmetrically on race, not at all on
+gender for half the names, and identically on politics cannot move a political
+survey. The PCT name-null and the probe agree.
 
 ## Caveats
 
@@ -140,13 +157,11 @@ a political survey. The PCT name-null and the probe agree.
 - **Item-clustered intervals.** Effect CIs (~±0.05–0.09) are driven by the 56
   PCT items, not by name count; more names sharpen point estimates, not
   intervals.
-- **Probe provenance.** The probe figure here is from a 200-name (tzioumis-only)
-  run with abstention forced off, which predates the current verbatim-Tonneau
-  prompt (the live code restores the "Unknown" option). The race-recall
-  asymmetry is robust, but the flat-zero political readout may partly reflect the
-  model defaulting to centrist under the forced prompt rather than a graded "no
-  signal." A fresh run on the full 600-name list with the current prompt would
-  firm this up.
+- **Probe politics readout.** The flat ~+0.37 "assumed politics" is uniform
+  across groups, which is the substantive point (no name-based differentiation),
+  but its near-constant value may partly reflect the model anchoring on a single
+  default rather than making graded per-name inferences. The race and gender
+  asymmetries do not depend on it.
 
 ## Reproduce
 

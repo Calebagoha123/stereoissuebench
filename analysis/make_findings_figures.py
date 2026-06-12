@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Presentation figures for the PCT arm and the cue-legibility probe.
+"""Presentation figures for the PCT arm.
 
-Reads the small summary tables the two report scripts already wrote and renders
-clean, self-contained figures into ``--figures-dir``. Each figure is skipped if
-its input table is missing, so this runs against whatever you have locally.
+Reads the small summary tables ``pct_report.py`` already wrote and renders clean,
+self-contained figures into ``--figures-dir``. Each figure is skipped if its
+input table is missing, so this runs against whatever you have locally. (The
+cue-legibility probe is reported as a table in docs/findings.md, not here.)
 
 Inputs (defaults):
-  results/pct_all_paper_v2/pct_cue_effects.csv      (framing-matched, all families)
-  results/pct_all_paper_v2/pct_scores_by_condition.csv
-  results/pct_names_full/pct_cue_effects.csv        (~140 names/subgroup)
-  results/cue_probe/legibility_by_subgroup.csv
+  results/pct_all_paper_v2/pct_cue_effects.csv   (framing-matched, all families)
+  results/pct_names_full/pct_cue_effects.csv     (~140 names/subgroup)
 """
 
 from __future__ import annotations
@@ -59,19 +58,13 @@ def _short(condition: str) -> str:
     return condition.split("/", 1)[-1] if "/" in condition else condition
 
 
-def fig_cue_effects(effects_csv: Path, scores_csv: Path, out: Path) -> None:
+def fig_cue_effects(effects_csv: Path, out: Path) -> None:
     """Headline forest plot: cue effect on PCT lean vs the no-cue baseline."""
     eff = pd.read_csv(effects_csv)
     eff = eff[eff["axis"] == "overall"].copy()
     rank = {f: i for i, f in enumerate(FAMILY_ORDER)}
     eff["frank"] = eff["cue_family"].map(rank).fillna(99)
     eff = eff.sort_values(["frank", "effect"], ascending=[False, True]).reset_index(drop=True)
-
-    baseline = ""
-    if scores_csv.exists():
-        s = pd.read_csv(scores_csv).set_index("condition")
-        if "baseline" in s.index:
-            baseline = f"  (baseline = {s.loc['baseline', 'overall_mean']:+.2f} liberal)"
 
     fig, ax = plt.subplots(figsize=(9, 7))
     ax.axvspan(-0.05, 0.05, color="0.85", alpha=0.5, zorder=0, label="negligible (±0.05)")
@@ -86,7 +79,6 @@ def fig_cue_effects(effects_csv: Path, scores_csv: Path, out: Path) -> None:
     ax.set_yticklabels([_short(c) for c in eff["condition"]])
     ax.set_xlabel("Shift in Political-Compass lean vs no-cue baseline\n"
                   "(− = more conservative · + = more liberal)")
-    ax.set_title(f"Only explicit political identity moves Qwen's compass{baseline}", fontsize=12)
     handles = [plt.Line2D([0], [0], marker="o", color=FAMILY_COLOURS[f], lw=0, label=FAMILY_LABELS[f])
                for f in FAMILY_ORDER if f in set(eff["cue_family"])]
     ax.legend(handles=handles, fontsize=8, loc="lower left", framealpha=0.9)
@@ -132,41 +124,10 @@ def fig_names_robustness(small_csv: Path, full_csv: Path, out: Path) -> None:
     print(f"wrote {out}")
 
 
-def fig_probe_legibility(legib_csv: Path, out: Path) -> None:
-    """Name legibility: race recall (White default), gender recall, political flatline."""
-    d = pd.read_csv(legib_csv).set_index("subgroup")
-    subgroups = [s for s in SUBGROUP_LABEL if s in d.index]
-    x = range(len(subgroups))
-    w = 0.38
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-    ax.bar([i - w / 2 for i in x], d.loc[subgroups, "race_recall"], w, color="#2e6da4", label="race recall")
-    ax.bar([i + w / 2 for i in x], d.loc[subgroups, "gender_recall"], w, color="#27915b", label="gender recall")
-    if "political_mean" in d.columns:
-        ax.plot(list(x), d.loc[subgroups, "political_mean"], "D", color="#c0392b",
-                markersize=8, label="inferred political lean")
-    ax.axhline(0, color="0.4", lw=0.8)
-    ax.set_xticks(list(x))
-    ax.set_xticklabels([SUBGROUP_LABEL[s] for s in subgroups])
-    ax.set_ylim(-0.1, 1.05)
-    ax.set_ylabel("rate  /  inferred lean (−1…+1)")
-    ax.set_title("Qwen reads gender and White names, defaults Black names to White,\n"
-                 "and infers no political lean from any name", fontsize=12)
-    ax.legend(fontsize=9, loc="center right", framealpha=0.9)
-    for i, sg in enumerate(subgroups):
-        ax.annotate(f"{d.loc[sg, 'race_recall']:.0%}", (i - w / 2, d.loc[sg, "race_recall"] + 0.02),
-                    ha="center", fontsize=8)
-    fig.tight_layout()
-    fig.savefig(out)
-    plt.close(fig)
-    print(f"wrote {out}")
-
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--pct-all", default="results/pct_all_paper_v2")
     p.add_argument("--pct-names-full", default="results/pct_names_full")
-    p.add_argument("--probe", default="results/cue_probe")
     p.add_argument("--figures-dir", default="figures/findings")
     return p.parse_args()
 
@@ -175,18 +136,14 @@ def main() -> int:
     a = parse_args()
     out = Path(a.figures_dir)
     out.mkdir(parents=True, exist_ok=True)
-    pct_all, pct_full, probe = Path(a.pct_all), Path(a.pct_names_full), Path(a.probe)
+    pct_all, pct_full = Path(a.pct_all), Path(a.pct_names_full)
 
     if (pct_all / "pct_cue_effects.csv").exists():
-        fig_cue_effects(pct_all / "pct_cue_effects.csv",
-                        pct_all / "pct_scores_by_condition.csv",
-                        out / "pct_cue_effects.png")
+        fig_cue_effects(pct_all / "pct_cue_effects.csv", out / "pct_cue_effects.png")
     if (pct_all / "pct_cue_effects.csv").exists() and (pct_full / "pct_cue_effects.csv").exists():
         fig_names_robustness(pct_all / "pct_cue_effects.csv",
                              pct_full / "pct_cue_effects.csv",
                              out / "pct_names_robustness.png")
-    if (probe / "legibility_by_subgroup.csv").exists():
-        fig_probe_legibility(probe / "legibility_by_subgroup.csv", out / "probe_legibility.png")
     print(f"\nFigures in {out}")
     return 0
 
