@@ -74,8 +74,10 @@ def fig_cue_effects(effects_csv: Path, scores_csv: Path, out: Path) -> None:
             baseline = f"  (baseline = {s.loc['baseline', 'overall_mean']:+.2f} liberal)"
 
     fig, ax = plt.subplots(figsize=(9, 7))
-    ax.axvspan(-0.05, 0.05, color="0.85", alpha=0.5, zorder=0, label="≈ no shift")
-    ax.axvline(0, color="0.4", lw=1)
+    ax.axvspan(-0.05, 0.05, color="0.85", alpha=0.5, zorder=0, label="negligible (±0.05)")
+    ax.axvline(0, color="0.4", lw=1.2)
+    ax.annotate("no-cue baseline", xy=(0, len(eff) - 0.5), ha="center", va="bottom",
+                fontsize=8.5, color="0.35")
     for y, row in eff.iterrows():
         c = FAMILY_COLOURS.get(row["cue_family"], "#333")
         ax.errorbar(row["effect"], y, xerr=[[row["effect"] - row["lo"]], [row["hi"] - row["effect"]]],

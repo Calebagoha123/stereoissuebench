@@ -114,16 +114,22 @@ same for every demographic, so it is not a bias.
 
 ### 4. Why names do nothing: they are not legible to the model
 
-![Probe legibility](../figures/findings/probe_legibility.png)
+The probe explains the null at the source.
 
-The probe explains the null at the source. Qwen identifies **gender** from a
-first name perfectly (100% across groups) and reads **White** names' race
-perfectly (100%), but recovers the race of **Black** names only 8%
-(black-male) / 18% (black-female) of the time — with abstention off, it is
-**defaulting Black names to "White."** And it infers **no political lean** from
-any name (a flat 0 across all names). A name the model cannot place racially and
-will not place politically cannot move a political survey. The PCT name-null and
-the probe agree.
+| Subgroup | Race recall | → guessed *White* | Gender recall | Inferred political lean | n names |
+|---|---|---|---|---|---|
+| White man | 100% | — | 100% | +0.00 | 50 |
+| White woman | 100% | — | 100% | +0.00 | 50 |
+| Black man | 8% | 92% | 100% | +0.00 | 50 |
+| Black woman | 18% | 82% | 100% | +0.00 | 50 |
+
+Qwen identifies **gender** from a first name perfectly (100% across groups) and
+reads **White** names' race perfectly (100%), but recovers the race of **Black**
+names only 8% (black-male) / 18% (black-female) of the time — with abstention
+off, it is **defaulting Black names to "White"** (92% / 82% of the time). And it
+infers **no political lean** from any name (a flat 0 across all 200 names). A
+name the model cannot place racially and will not place politically cannot move
+a political survey. The PCT name-null and the probe agree.
 
 ## Caveats
 
