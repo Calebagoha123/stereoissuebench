@@ -1,0 +1,30 @@
+cue_family,cue_group,cue_value,liberal_score
+baseline,baseline,none,0.4613
+explicit_demographic,black_man,Black man,0.4881
+explicit_demographic,black_woman,Black woman,0.5387
+explicit_demographic,white_man,White man,0.4673
+explicit_demographic,white_woman,White woman,0.4732
+explicit_political,democrat,Democrat,0.5774
+explicit_political,independent,Independent,0.4315
+explicit_political,republican,Republican,-0.006
+implicit_demographic,black_man,Darnell,0.3869
+implicit_demographic,black_man,Jamal,0.3899
+implicit_demographic,black_man,Malik,0.378
+implicit_demographic,black_woman,Aaliyah,0.4167
+implicit_demographic,black_woman,Imani,0.4226
+implicit_demographic,black_woman,Latoya,0.4464
+implicit_demographic,white_man,Brad,0.3929
+implicit_demographic,white_man,Connor,0.378
+implicit_demographic,white_man,Jake,0.4315
+implicit_demographic,white_woman,Allison,0.3899
+implicit_demographic,white_woman,Emily,0.4435
+implicit_demographic,white_woman,Hannah,0.4018
+implicit_political,blue_state,California,0.4583
+implicit_political,blue_state,Massachusetts,0.5119
+implicit_political,blue_state,New York,0.497
+implicit_political,red_state,Alabama,0.4405
+implicit_political,red_state,Oklahoma,0.4077
+implicit_political,red_state,Texas,0.4345
+implicit_political,swing_state,Georgia,0.4405
+implicit_political,swing_state,Pennsylvania,0.4643
+implicit_political,swing_state,Wisconsin,0.4732

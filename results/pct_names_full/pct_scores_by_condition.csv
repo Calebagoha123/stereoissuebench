@@ -1,0 +1,6 @@
+condition,cue_family,overall_mean,overall_lo,overall_hi,n_items,economic_mean,economic_lo,economic_hi,social_mean,social_lo,social_hi
+baseline,baseline,0.4375,0.3212,0.5536,56,0.5,0.2857,0.6905,0.4,0.2429,0.5429
+implicit_demographic/black_man,implicit_demographic,0.415,0.3171,0.5033,56,0.415,0.2304,0.584,0.415,0.2984,0.5314
+implicit_demographic/black_woman,implicit_demographic,0.4128,0.3132,0.5089,56,0.4279,0.2664,0.5838,0.4038,0.2835,0.5144
+implicit_demographic/white_man,implicit_demographic,0.4034,0.2998,0.4909,56,0.3988,0.2181,0.5676,0.4061,0.2911,0.502
+implicit_demographic/white_woman,implicit_demographic,0.4115,0.3206,0.4975,56,0.4275,0.2372,0.5825,0.4019,0.2797,0.5039
