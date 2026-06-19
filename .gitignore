@@ -18,3 +18,6 @@ CES/
 # Dataverse (see data/reference/external/README.md). The built name_bank.csv is
 # the committed canonical input, so this raw table is not needed to run.
 data/reference/external/rosenman_first_nameRaceProbs.tab
+/data/
+/results/
+*.pyc

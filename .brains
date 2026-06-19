@@ -1,0 +1,4 @@
+# Brains project mapping (safe to commit — no secrets).
+BRAINS_HOST=brains.oii.ox.ac.uk
+BRAINS_USER=kell8360
+BRAINS_REMOTE_DIR=/data/kell8360/stereoissuebench
