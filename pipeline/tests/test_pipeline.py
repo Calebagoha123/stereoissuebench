@@ -3,17 +3,60 @@ from __future__ import annotations
 import importlib
 import sys
 import unittest
+from collections import Counter
 from pathlib import Path
 
 
 PIPELINE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PIPELINE_DIR))
 
-from cues import all_cues
+from cues import Instance, all_cues, arm_a_cues
 from pct import parse_pct_letter, score_letter
-from prompting import apply_issue_wording, build_prompt_rows, build_prompt_text, stratified_templates
+from prompting import (
+    apply_issue_wording,
+    build_prompt_rows,
+    build_system_text,
+    build_user_text,
+    proportional_templates,
+    stratified_templates,
+)
+from sampling import build_arm_b_rows, cap_bank, rotate_instances, validate_arm_b_rows
 from shard_utils import select_shard
 from stance import collapsed_stance, liberal_score, parse_label, support_score
+
+
+def _name_bank(group: str, names: list[str]) -> list[Instance]:
+    return [
+        Instance(
+            group=group,
+            cue_family="implicit_demographic",
+            value=name,
+            cue_text=f"My name is {name}.",
+            cue_memory=f"The user's name is {name}.",
+            covariates={
+                "instance_id": name,
+                "instance_n_sources": "1",
+                "cov_p_group": "0.9",
+                "cov_name_length": str(len(name)),
+            },
+        )
+        for name in names
+    ]
+
+
+_DEMO_ISSUE = {
+    "ces_variable": "CC_TEST",
+    "issue_cluster": "test",
+    "topic_neutral": "test policy",
+    "topic_support": "support for test policy",
+    "topic_oppose": "opposition to test policy",
+    "stance_target": "test policy",
+    "liberal_sign": "1",
+}
+_DEMO_TEMPLATES = [
+    {"id": "t1", "rank": "1", "selected_template": "Write about X.", "genre": "essay"},
+    {"id": "t2", "rank": "2", "selected_template": "Speak about X.", "genre": "speech"},
+]
 
 
 class CueTests(unittest.TestCase):
@@ -28,15 +71,17 @@ class CueTests(unittest.TestCase):
 
 
 class PromptTests(unittest.TestCase):
-    def test_template_filling_with_and_without_cue(self):
+    def test_user_text_is_filled_task_without_cue(self):
         self.assertEqual(
-            build_prompt_text("", "Write a speech about X.", "abortion law"),
+            build_user_text("Write a speech about X.", "abortion law"),
             "Write a speech about abortion law.",
         )
-        self.assertEqual(
-            build_prompt_text("I am a Democrat.", "Write a speech about X.", "abortion law"),
-            "I am a Democrat.\n\nWrite a speech about abortion law.",
-        )
+
+    def test_system_text_wraps_memory_and_is_empty_for_baseline(self):
+        self.assertEqual(build_system_text(""), "")
+        system_text = build_system_text("The user is a Democrat.")
+        self.assertTrue(system_text.startswith("# User Knowledge Memories:"))
+        self.assertTrue(system_text.endswith("The user is a Democrat."))
 
     def test_prompt_rows_are_matched(self):
         issues = [
@@ -102,6 +147,69 @@ class PromptTests(unittest.TestCase):
         selected = stratified_templates(rows, 4)
         self.assertEqual(len(selected), 4)
         self.assertEqual({row["genre"] for row in selected}, {"essay", "speech"})
+
+
+class ArmTests(unittest.TestCase):
+    def test_arm_a_is_fixed_conditions_only(self):
+        cues = arm_a_cues()
+        self.assertEqual(len(cues), 8)
+        self.assertEqual(cues[0].cue_condition, "baseline")
+        self.assertEqual(sum(c.cue_family == "explicit_political" for c in cues), 3)
+        self.assertEqual(sum(c.cue_family == "explicit_demographic" for c in cues), 4)
+        # Sampled-instance families are NOT in Arm A.
+        self.assertFalse(any("implicit" in c.cue_family for c in cues))
+
+    def test_rotation_is_deterministic_and_balanced(self):
+        bank = _name_bank("g", [f"N{i}" for i in range(5)])
+        a = rotate_instances(bank, 12, seed="s")
+        b = rotate_instances(bank, 12, seed="s")
+        self.assertEqual([x.value for x in a], [x.value for x in b])  # deterministic
+        counts = Counter(x.value for x in a)
+        self.assertLessEqual(max(counts.values()) - min(counts.values()), 1)  # balanced
+        self.assertEqual(set(counts), {n.value for n in bank})  # every instance used
+
+    def test_cap_bank_is_nested_by_size(self):
+        bank = _name_bank("g", [f"N{i}" for i in range(20)])
+        small = {x.value for x in cap_bank(bank, 5, seed="s")}
+        large = {x.value for x in cap_bank(bank, 12, seed="s")}
+        self.assertEqual(len(small), 5)
+        self.assertEqual(len(large), 12)
+        self.assertTrue(small <= large)  # smaller cap is a subset of the larger
+
+    def test_arm_b_rows_carry_instance_and_covariates(self):
+        banks = {"g": _name_bank("g", ["Ann", "Bob", "Cy"])}
+        rows = build_arm_b_rows([_DEMO_ISSUE], _DEMO_TEMPLATES, banks, repeats=2, seed="s")
+        self.assertEqual(len(rows), 1 * 2 * 2)  # issue x template x repeat slots
+        self.assertEqual({r["arm"] for r in rows}, {"B"})
+        self.assertTrue(all(r["instance_id"] and r["cov_p_group"] for r in rows))
+        self.assertEqual(len({r["prompt_id"] for r in rows}), len(rows))  # unique ids
+        self.assertEqual(validate_arm_b_rows(rows), [])
+
+    def test_proportional_templates_mirror_pool_genre_shares(self):
+        # Pool: 60% essay, 30% speech, 10% article.
+        rows = (
+            [{"id": f"e{i}", "rank": str(i), "selected_template": "E X", "genre": "essay"} for i in range(1, 61)]
+            + [{"id": f"s{i}", "rank": str(100 + i), "selected_template": "S X", "genre": "speech"} for i in range(1, 31)]
+            + [{"id": f"a{i}", "rank": str(200 + i), "selected_template": "A X", "genre": "article"} for i in range(1, 11)]
+        )
+        selected = proportional_templates(rows, 10)
+        self.assertEqual(len(selected), 10)
+        counts = Counter(r["genre"] for r in selected)
+        # Proportional, not flattened: essay keeps its dominant share.
+        self.assertEqual(counts["essay"], 6)
+        self.assertEqual(counts["speech"], 3)
+        self.assertEqual(counts["article"], 1)
+
+    def test_stratified_templates_preserve_genre_mix_at_scale(self):
+        rows = (
+            [{"id": f"e{i}", "rank": str(i), "selected_template": "E X", "genre": "essay"} for i in range(1, 30)]
+            + [{"id": f"s{i}", "rank": str(100 + i), "selected_template": "S X", "genre": "speech"} for i in range(1, 30)]
+            + [{"id": f"a{i}", "rank": str(200 + i), "selected_template": "A X", "genre": "article"} for i in range(1, 30)]
+        )
+        selected = stratified_templates(rows, 12)
+        self.assertEqual(len(selected), 12)
+        # Round-robin keeps all three genres rather than taking 12 essays.
+        self.assertEqual({r["genre"] for r in selected}, {"essay", "speech", "article"})
 
 
 class StanceTests(unittest.TestCase):

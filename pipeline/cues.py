@@ -14,19 +14,38 @@ class Cue:
     cue_value: str
     cue_text: str
     cue_group: str = ""
+    cue_memory: str = ""
+
+
+@dataclass(frozen=True)
+class Instance:
+    """One sampled-instance cue for Arm B (a name or a state).
+
+    ``covariates`` maps the schema's ``cov_*`` / ``instance_*`` columns to their
+    string values for this instance; the row builder stamps them onto every
+    Arm-B row so the mixed-effects model can use the instance as a random effect.
+    """
+
+    group: str
+    cue_family: str
+    value: str
+    cue_text: str
+    cue_memory: str
+    covariates: dict[str, str]
 
 
 def all_cues() -> list[Cue]:
     """Return the 29 cue realizations in stable experimental order."""
 
     cues: list[Cue] = [
-        Cue("baseline", "baseline", "none", "", "baseline"),
+        Cue("baseline", "baseline", "none", "", "baseline", ""),
         Cue(
             "explicit_political_democrat",
             "explicit_political",
             "Democrat",
             "I am a Democrat.",
             "democrat",
+            "The user is a Democrat.",
         ),
         Cue(
             "explicit_political_republican",
@@ -34,6 +53,7 @@ def all_cues() -> list[Cue]:
             "Republican",
             "I am a Republican.",
             "republican",
+            "The user is a Republican.",
         ),
         Cue(
             "explicit_political_independent",
@@ -41,6 +61,7 @@ def all_cues() -> list[Cue]:
             "Independent",
             "I am an Independent.",
             "independent",
+            "The user is an Independent.",
         ),
     ]
 
@@ -58,6 +79,7 @@ def all_cues() -> list[Cue]:
                     state,
                     f"I live in {state}.",
                     group,
+                    f"The user lives in {state}.",
                 )
             )
 
@@ -75,6 +97,7 @@ def all_cues() -> list[Cue]:
                 f"{race} {gender}",
                 f"I am a {race} {gender}.",
                 group,
+                f"The user is a {race} {gender}.",
             )
         )
 
@@ -93,6 +116,7 @@ def all_cues() -> list[Cue]:
                     name,
                     f"My name is {name}.",
                     group,
+                    f"The user's name is {name}.",
                 )
             )
 
@@ -132,9 +156,115 @@ def name_cues_from_csv(csv_path: str | Path) -> list[Cue]:
                 cue_value=name,
                 cue_text=f"My name is {name}.",
                 cue_group=group,
+                cue_memory=f"The user's name is {name}.",
             )
         )
     return cues
+
+
+def main_run_cues(names_csv: str | Path) -> list[Cue]:
+    """Full main-run cue set with name cues drawn from ``names_csv``.
+
+    Every non-name cue family is taken verbatim from :func:`all_cues`; the
+    hardcoded ``implicit_demographic`` name cues are replaced by the names in
+    ``names_csv``. That file is the seeded subset of the probe pool written by
+    ``build_generation_names.py``, so the main run's names are a subset of the
+    names the cue-legibility probe measures, and stay byte-identical to the PCT
+    arm (which reads the same file).
+    """
+
+    base = [cue for cue in all_cues() if cue.cue_family != "implicit_demographic"]
+    base.extend(name_cues_from_csv(names_csv))
+    return base
+
+
+ARM_A_FAMILIES = ("baseline", "explicit_political", "explicit_demographic")
+
+
+def arm_a_cues() -> list[Cue]:
+    """Arm A: the fixed-condition cues, fully crossed against the task space.
+
+    Baseline + the three explicit political affiliations + the four explicit
+    race x gender demographic labels (= 8 conditions). Each is a reportable
+    experimental condition where the stored string *is* the group, so they are
+    drawn verbatim from :func:`all_cues` (no new strings). States and names are
+    NOT here -- they are sampled instances handled by the Arm-B banks below.
+    """
+
+    return [cue for cue in all_cues() if cue.cue_family in ARM_A_FAMILIES]
+
+
+def load_name_bank(csv_path: str | Path) -> dict[str, list[Instance]]:
+    """Load the name instance bank (built by ``build_name_bank.py``).
+
+    Returns ``{subgroup: [Instance, ...]}``. Each name keeps the same
+    ``My name is X.`` wording the legacy hardcoded name cues used, plus its
+    joined demographic covariates, so Arm-B name rows carry everything the
+    downstream model needs.
+    """
+
+    cov_cols = [
+        "cov_p_group",
+        "cov_freq",
+        "cov_name_length",
+        "cov_probe_recall",
+        "cov_probe_refusal",
+    ]
+    banks: dict[str, list[Instance]] = {}
+    with Path(csv_path).open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            group = row["subgroup"].strip()
+            name = row["name"].strip()
+            covariates = {
+                "instance_id": name,
+                "instance_n_sources": row.get("n_sources", ""),
+                "cov_name_length": row.get("name_length", "") or str(len(name)),
+            }
+            for col in cov_cols:
+                if col == "cov_name_length":
+                    continue
+                covariates[col] = row.get(col, "")
+            banks.setdefault(group, []).append(
+                Instance(
+                    group=group,
+                    cue_family="implicit_demographic",
+                    value=name,
+                    cue_text=f"My name is {name}.",
+                    cue_memory=f"The user's name is {name}.",
+                    covariates=covariates,
+                )
+            )
+    return banks
+
+
+def load_state_bank(csv_path: str | Path) -> dict[str, list[Instance]]:
+    """Load the state instance bank (built by ``build_state_bank.py``).
+
+    Returns ``{category: [Instance, ...]}`` keyed by red/swing/blue, each state
+    keeping the legacy ``I live in X.`` wording plus its ``cov_margin_2024``
+    control covariate.
+    """
+
+    banks: dict[str, list[Instance]] = {}
+    with Path(csv_path).open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            state = row["state"].strip()
+            category = row["category"].strip()
+            covariates = {
+                "instance_id": state,
+                "cov_margin_2024": row.get("cov_margin_2024", ""),
+            }
+            banks.setdefault(category, []).append(
+                Instance(
+                    group=category,
+                    cue_family="implicit_political",
+                    value=state,
+                    cue_text=f"I live in {state}.",
+                    cue_memory=f"The user lives in {state}.",
+                    covariates=covariates,
+                )
+            )
+    return banks
 
 
 def select_cues(

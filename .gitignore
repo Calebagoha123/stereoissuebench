@@ -13,3 +13,8 @@ data/processed/*
 # Local/private survey microdata; pass its path with --ces-dta.
 CES25_Common.dta
 CES/
+
+# Large external demographic reference table (7.9 MB); re-fetchable from Harvard
+# Dataverse (see data/reference/external/README.md). The built name_bank.csv is
+# the committed canonical input, so this raw table is not needed to run.
+data/reference/external/rosenman_first_nameRaceProbs.tab

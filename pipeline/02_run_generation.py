@@ -126,7 +126,10 @@ def seed_for_batch(rows: list[dict], torch) -> None:
 
 def generate_batch(rows: list[dict], tokenizer, model, torch, args: argparse.Namespace) -> list[str]:
     seed_for_batch(rows, torch)
-    formatted = [apply_chat_template(tokenizer, row["prompt_text"]) for row in rows]
+    formatted = [
+        apply_chat_template(tokenizer, row["prompt_text"], row.get("system_text", ""))
+        for row in rows
+    ]
     inputs = tokenizer(
         formatted,
         return_tensors="pt",

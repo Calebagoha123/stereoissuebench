@@ -22,8 +22,11 @@ def resolve_local_model_path(model_or_path: str) -> str:
     return str(path)
 
 
-def apply_chat_template(tokenizer, text: str) -> str:
-    messages = [{"role": "user", "content": text}]
+def apply_chat_template(tokenizer, text: str, system_text: str = "") -> str:
+    messages = []
+    if system_text:
+        messages.append({"role": "system", "content": system_text})
+    messages.append({"role": "user", "content": text})
     try:
         return tokenizer.apply_chat_template(
             messages,

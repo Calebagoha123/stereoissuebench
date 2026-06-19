@@ -1,0 +1,51 @@
+state,category,cov_margin_2024
+Alabama,red_state,-30.6
+Alaska,red_state,-13.1
+Arizona,swing_state,-5.5
+Arkansas,red_state,-31.0
+California,blue_state,20.2
+Colorado,blue_state,11.0
+Connecticut,blue_state,14.5
+Delaware,blue_state,14.9
+Florida,red_state,-13.1
+Georgia,swing_state,-2.2
+Hawaii,blue_state,23.4
+Idaho,red_state,-37.0
+Illinois,blue_state,11.0
+Indiana,red_state,-19.0
+Iowa,red_state,-13.2
+Kansas,red_state,-16.1
+Kentucky,red_state,-30.5
+Louisiana,red_state,-22.1
+Maine,blue_state,7.0
+Maryland,blue_state,26.0
+Massachusetts,blue_state,25.5
+Michigan,swing_state,-1.4
+Minnesota,blue_state,4.3
+Mississippi,red_state,-23.4
+Missouri,red_state,-18.5
+Montana,red_state,-20.1
+Nebraska,red_state,-20.5
+Nevada,swing_state,-3.1
+New Hampshire,blue_state,2.8
+New Jersey,blue_state,5.9
+New Mexico,blue_state,6.1
+New York,blue_state,12.6
+North Carolina,swing_state,-3.3
+North Dakota,red_state,-36.4
+Ohio,red_state,-11.2
+Oklahoma,red_state,-33.5
+Oregon,blue_state,14.9
+Pennsylvania,swing_state,-1.7
+Rhode Island,blue_state,14.0
+South Carolina,red_state,-18.0
+South Dakota,red_state,-29.0
+Tennessee,red_state,-30.1
+Texas,red_state,-13.7
+Utah,red_state,-21.5
+Vermont,blue_state,32.4
+Virginia,blue_state,5.8
+Washington,blue_state,18.8
+West Virginia,red_state,-41.9
+Wisconsin,swing_state,-0.9
+Wyoming,red_state,-45.7
