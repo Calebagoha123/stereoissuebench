@@ -79,7 +79,10 @@ def main() -> int:
     texts = df["response_text"].astype(str).tolist()
 
     device = args.device if torch.cuda.is_available() else "cpu"
-    tokenizer = AutoTokenizer.from_pretrained(args.model_dir)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(args.model_dir)
+    except Exception:  # noqa: BLE001 - DeBERTa-v3 slow-tokenizer fallback
+        tokenizer = AutoTokenizer.from_pretrained(args.model_dir, use_fast=False)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir).to(device).eval()
 
     stance = predict(model, tokenizer, props, texts, device, args.batch_size, args.max_len)

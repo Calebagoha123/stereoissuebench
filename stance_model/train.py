@@ -35,6 +35,18 @@ from transformers import (
 
 from metrics import stance_metrics
 
+
+def load_tokenizer(model_name: str):
+    """DeBERTa-v3 ships only a SentencePiece model (no tokenizer.json); recent
+    transformers can misroute its fast-tokenizer conversion, so fall back to the
+    slow SentencePiece tokenizer when the fast build fails."""
+    try:
+        return AutoTokenizer.from_pretrained(model_name)
+    except Exception as exc:  # noqa: BLE001 - fast-conversion failure path
+        print(f"Fast tokenizer load failed ({type(exc).__name__}); using slow tokenizer.")
+        return AutoTokenizer.from_pretrained(model_name, use_fast=False)
+
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA = REPO_ROOT / "data" / "processed" / "stance_model" / "dataset.csv"
 DEFAULT_OUT = REPO_ROOT / "data" / "processed" / "stance_model"
@@ -172,7 +184,7 @@ def main() -> int:
     df = df.dropna(subset=["proposition", "text", "writer_stance"]).reset_index(drop=True)
     print(f"Loaded {len(df)} examples / {df['proposition_id'].nunique()} propositions")
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    tokenizer = load_tokenizer(args.model)
     if args.mode == "cv":
         run_cv(df, tokenizer, args)
     else:
