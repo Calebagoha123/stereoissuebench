@@ -74,8 +74,13 @@ class PairDataset(torch.utils.data.Dataset):
 
 
 def make_model(model_name: str):
+    # ignore_mismatched_sizes lets us warm-start from NLI/zero-shot classification
+    # checkpoints (e.g. cross-encoder/nli-deberta-v3-large, ModernBERT zeroshot):
+    # the pretrained classification head is dropped and a fresh 1-output regression
+    # head is initialised on top of the retained encoder body. Harmless for raw LMs.
     return AutoModelForSequenceClassification.from_pretrained(
-        model_name, num_labels=1, problem_type="regression"
+        model_name, num_labels=1, problem_type="regression",
+        ignore_mismatched_sizes=True,
     )
 
 
