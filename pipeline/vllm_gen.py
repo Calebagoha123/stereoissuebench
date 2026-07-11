@@ -40,6 +40,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--tensor-parallel-size", type=int, default=1)
     p.add_argument("--chunk", type=int, default=4000, help="Rows per generate() / write checkpoint.")
     p.add_argument("--limit", type=int)
+    p.add_argument("--num-shards", type=int, default=1, help="Split prompts into N deterministic shards.")
+    p.add_argument("--shard-index", type=int, default=0, help="Run only this shard (0-based).")
     p.add_argument("--no-resume", action="store_true")
     return p.parse_args()
 
@@ -58,6 +60,9 @@ def main() -> int:
     prompts = read_csv(args.prompts)
     if args.limit is not None:
         prompts = prompts[: args.limit]
+    if args.num_shards > 1:
+        prompts = prompts[args.shard_index :: args.num_shards]
+        print(f"Shard {args.shard_index}/{args.num_shards}: {len(prompts)} rows.", flush=True)
 
     done: set[str] = set()
     if not args.no_resume:

@@ -21,3 +21,6 @@ data/reference/external/rosenman_first_nameRaceProbs.tab
 /data/
 /results/
 *.pyc
+
+# Archived superseded outputs (kept on disk, not tracked)
+_archive/

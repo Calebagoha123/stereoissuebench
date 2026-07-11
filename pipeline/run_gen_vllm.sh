@@ -5,7 +5,7 @@
 set -euo pipefail
 
 MODEL="$1"; PREFIX="$2"; shift 2
-VENV=/data/kell8360/vllm-venv/bin/python
+VENV=/data/kell8360/vllm017-venv/bin/python
 IN=data/processed/full_3x
 OUT=/data/kell8360/full_3x_out
 mkdir -p "$OUT"

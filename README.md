@@ -1,137 +1,142 @@
 # Identity-Cued Political Stance in Writing Assistance
 
-A reproducible research artifact for a focused experiment: does a writing-
-assistance model change its political stance when the prompt contains a user
-identity cue? The report compares model cue effects against subgroup opinion in
-CES 2025 over CES-linked, IssueBench-style policy items.
+A reproducible research artifact for an MSc thesis experiment: **when a writing-
+assistance model is given a stored user-identity cue, does it change the political
+stance it writes — and does that change track real-world opinion differences
+between the corresponding groups?**
 
-## Repository Layout
+Model output and survey ground truth are put on one scale: a **liberal score** in
+`{−1, 0, +1}` (−1 = writes the conservative side of the issue, +1 = the liberal
+side, 0 = neutral). The same scale is reconstructed for the **CES 2025** survey so
+the two are directly comparable.
+
+Three research questions:
+
+- **RQ1 — Effect.** Do identity cues shift the written stance, and by how much, by
+  cue type (explicit party / explicit demographic label / implicit state / implicit
+  name)?
+- **RQ2 — Calibration.** Does the shift track the *real* CES subgroup−population
+  difference (calibrated personalisation), under-shoot it (flattening), or overshoot
+  it (stereotyping)?
+- **RQ3 — Mechanism.** Behavioural + internal linear probes explaining *why* implicit
+  (name) cues produce a near-null behavioural shift.
+
+For the design, estimators, and findings in prose, see **`docs/`** (start with
+`docs/methodology.md`, then `docs/robustness_checks.md`).
+
+---
+
+## Repository layout
 
 ```text
 .
+├── README.md                     # this file
+├── docs/                         # methodology + findings + robustness (prose)
+│   ├── methodology.md                # design, CES linkage, prompts, scorer, estimators
+│   ├── robustness_checks.md          # the RQ2 robustness suite, written up
+│   ├── analysis_decision_log.md      # pre-specified vs post-hoc decisions
+│   ├── findings_cross_model.md       # cross-model results
+│   └── probe_*.md                    # RQ3 probe methodology / findings / explainer
+│
 ├── data/
-│   ├── input/                       # committed experiment inputs
-│   │   ├── issues_experiment.csv        # CES-linked policy issues (19 main + sensitivity/robustness)
-│   │   ├── issue_prompt_wording.csv     # open-direction CES-style prompt phrasing per issue
-│   │   ├── templates_pool_145.csv       # the 145-template candidate pool
-│   │   └── templates_run_30.csv         # the 30 most stance-eliciting templates (run target)
-│   ├── reference/
-│   │   └── ces_ground_truth_template.csv   # CES issue recoding metadata
-│   └── processed/                   # large generated outputs (gitignored)
-├── pipeline/                        # model side: build prompts → generate → score stance
-├── analysis/                        # report side: figures + estimate tables from scored rows
-│   ├── make_report_figures.py
-│   └── recompute_nonneutral_baseline.py
-├── results/
-│   ├── main/                        # primary estimate tables
-│   ├── nonneutral/                  # non-neutral-baseline variant tables
-│   └── ces_directionality_validation.csv
-└── figures/
-    ├── main/                        # primary report figures
-    └── nonneutral/                  # non-neutral-baseline variant figures
+│   ├── input/                    # committed experiment inputs (issues, templates, cues, names, states)
+│   ├── reference/                # CES recoding metadata
+│   └── processed/                # large built prompts + generations (gitignored)
+│
+├── pipeline/                     # MODEL SIDE — build → generate → score (numbered 00–10)
+│   ├── 00_validate_inputs.py … 10_run_direct_probe.py
+│   ├── <lib>.py                      # config, cues, prompting, sampling, stance, probe, io…
+│   └── run_*.sh                      # drivers (local vLLM / HF, OpenAI batch)
+│
+├── stance_model/                 # DeBERTa-v3 stance cross-encoder: train / predict / metrics
+│
+├── analysis/                     # REPORT SIDE — numbered by analysis stage
+│   ├── lib/                          # shared code (_common.py estimator, _regression.py helpers)
+│   ├── 01_ground_truth/              # CES weighted subgroup estimates + descriptives
+│   ├── 02_stance_scorer/             # classifier validation, LLM-judge agreement, score combine
+│   ├── 03_cue_effects/               # cue-effect prep / non-neutral baseline
+│   ├── 04_calibration/               # RQ2 calibration slope + stance-reduction sensitivity
+│   ├── 05_robustness/                # the RQ2 robustness suite (+ run_robustness.sh)
+│   ├── 06_probe/                     # RQ3 probe / PCT / legibility reports
+│   └── plotting/                     # ALL figure generation (make_*.py); _legacy/ = superseded
+│
+├── results/                      # analysis outputs, CSVs (gitignored; local)
+│   ├── full_3x/                      # DATA OF RECORD: 3-rep 2k-token DeBERTa scores + CES estimates
+│   ├── robustness/                   # robustness-suite tables
+│   ├── full/                         # earlier 1-rep run (raw generations + OpenAI arm + judge labels)
+│   ├── probe_internal/  pct_*/  cue_probe*/
+│   ├── stance_model_cv/              # cross-validated scorer predictions + metrics
+│   └── _archive/                     # superseded outputs (gitignored, kept on disk)
+│
+└── figures/                      # rendered figures (gitignored; local)
+    ├── full_3x/  full_bert/  robustness/  probe_thesis/
+    └── _archive/                     # superseded figure iterations
 ```
 
-## Experimental Design
+## Data of record
 
-The run grid is:
+The headline numbers come from **`results/full_3x/`**: a fresh **3-repeat,
+2000-token** rerun of the three open-weight models, scored by the **DeBERTa-v3
+cross-encoder** (`bert_liberal_score`). An earlier local LLM judge (Qwen) was a
+placeholder and is retained only for validation; the OpenAI arm lives in
+`results/full/`.
 
-- **19** CES-linked main policy issues (`analysis_tier == main`; the issues file
-  also carries a few `sensitivity`/`robustness` items that are not used in the
-  main run)
-- **30** writing templates per issue — the most stance-eliciting templates in
-  `data/input/templates_run_30.csv`, ranked from the 145-template pool
-- **29** cue realizations, including a no-cue baseline
-- **3** stochastic repeats
+| Model | Access | Cue realizations |
+|---|---|---|
+| Llama-3.1-8B-Instruct | open weights (Brains GPU) | Arm A crossed + Arm B rotated |
+| Gemma-3-12B-IT | open weights (Brains GPU) | ″ |
+| Qwen3.6-27B | open weights (Brains GPU) | ″ |
+| GPT-5.4-mini | OpenAI Batch API | ″ (confirmatory) |
 
-= **49,590** prompt rows.
-
-Model output is scored on a liberal-score scale from `-1` (more conservative) to
-`+1` (more liberal). CES items are recoded to the same scale using
-`data/reference/ces_ground_truth_template.csv`.
-
-Cue groups:
-
-- Explicit political: Republican, Independent, Democrat
-- Explicit demographic: White man, White woman, Black man, Black woman
-- Implicit political: red, swing, and blue state residence
-- Implicit demographic: first-name cues grouped by race and gender
-
-## What Is Reported
-
-Primary figures in `figures/main/`:
-
-- `model_vs_ces_levels.png` — model mean liberal-score and CES weighted subgroup
-  mean by cue group.
-- `model_cue_effects.png` — model cue effect relative to the no-cue baseline.
-- `model_vs_ces_did.png` — difference-in-differences: model `(cued - baseline)`
-  against CES `(subgroup - population)`.
-
-The tables behind them are `results/main/cue_ces_estimates.csv` and
-`results/main/cue_ces_by_issue.csv`. The `nonneutral/` directories hold the same
-artifacts computed against a baseline restricted to non-neutral baseline rows
-(see `analysis/recompute_nonneutral_baseline.py`).
+**Design** (full detail in `docs/methodology.md`): 19 CES-linked IssueBench-style
+issues; cue delivered as an inferred user memory in the system prompt (never in the
+user turn); **Arm A** = fixed-condition cues (baseline + explicit party + explicit
+demographic labels) crossed over 145 templates; **Arm B** = sampled-instance cues
+(names, states) rotated over a genre-proportional 35-template subset.
 
 ## Setup
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt          # analysis deps
+# CLMM robustness additionally needs R with the 'ordinal' package
 ```
 
-## Reproduce The Report Figures
+CES respondent microdata (`CES25_Common.dta`) is **not committed**; scripts read it
+from `../CES/CES25_Common.dta` (override the `CES_DTA` constant if elsewhere).
 
-The figure script reads the scored model rows, the CES recoding metadata, and
-respondent-level CES microdata (passed with `--ces-dta`; not committed):
+## Reproduce
+
+**Model side (GPU, on Brains)** — build prompts, generate, score. See
+`pipeline/README.md` for per-step commands and the `run_*.sh` drivers.
+
+**Ground truth + calibration + robustness (local, from repo root):**
 
 ```bash
-python analysis/make_report_figures.py \
-  --evaluated data/processed/evaluated_with_effects.csv \
-  --ces-dta ../CES/CES25_Common.dta \
-  --bootstrap 1000
+# 1. CES weighted subgroup estimates (the RQ2 x-axis)
+python3 analysis/01_ground_truth/ces_estimates.py
+
+# 2. stance-scorer validation (confusion matrix, per-class F1)
+python3 analysis/02_stance_scorer/classifier_validation.py
+
+# 3. the full RQ2 robustness suite (model-shift table → all checks → CLMM)
+bash analysis/05_robustness/run_robustness.sh
 ```
 
-This writes `figures/main/*.png`, `results/main/cue_ces_estimates.csv`, and
-`results/main/cue_ces_by_issue.csv`. For the non-neutral-baseline variant, first
-recompute the baseline, then point the figure script at the output dirs:
+`run_robustness.sh` builds `results/robustness/model_shift_table.csv` once (the
+issue-clustered bootstrap backbone in `analysis/lib/_common.py`) and then runs every
+check: Deming/free-intercept calibration slope, threshold + directional-only
+sensitivity, TOST equivalence, composition/flattening, DiD variance propagation,
+refusal Manski bounds, generation variance, instance breakdown, BH-FDR /
+leave-one-issue-out / permutation, and the R CLMM. Outputs land in
+`results/robustness/` and `figures/robustness/`.
 
-```bash
-python analysis/recompute_nonneutral_baseline.py
-python analysis/make_report_figures.py \
-  --evaluated data/processed/evaluated_nonneutral_recomputed.csv \
-  --ces-dta ../CES/CES25_Common.dta \
-  --figures-dir figures/nonneutral \
-  --results-dir results/nonneutral
-```
+## Key conventions
 
-## Reproduce Model Scoring (GPU / VM)
-
-`pipeline/` builds prompts, runs generation, judges stance, and adds matched
-no-cue baselines. Committed inputs are read directly from `data/input/`; large
-generated outputs go to an output root (`$THESIS_PIPELINE_DATA_ROOT`, else a VM
-scratch volume, else the gitignored `data/processed/`).
-
-On the VM, after pulling the repo:
-
-```bash
-export THESIS_PIPELINE_DATA_ROOT=/data/<user>/thesis_framing_pipeline   # optional
-bash pipeline/prepare_data_root.sh        # creates the output results dir
-bash pipeline/run_pipeline.sh pilot       # full build → generate → score → analyse
-```
-
-`run_pipeline.sh smoke` runs a tiny 1-issue / 2-template slice for a quick check.
-Generation and judging honor `GEN_DEVICE`, `EVAL_DEVICE`, `GEN_BATCH_SIZE`,
-`EVAL_BATCH_SIZE`, and `GEN_MAX_NEW_TOKENS`. The scored output
-`evaluated_with_effects.csv` (and the `analysis_pilot/` summaries) land under the
-output root; copy `evaluated_with_effects.csv` into `data/processed/` to feed the
-report figures. See `pipeline/README.md` for the per-step commands, model
-defaults, and sharding.
-
-## Notes
-
-- Survey weights use CES `commonweight`.
-- CES state cue groups use CA/MA/NY (blue), AL/OK/TX (red), GA/PA/WI (swing),
-  matching the prompt cues.
-- Binary support/oppose items map support to `+1` and oppose to `-1` before
-  applying each issue's `liberal_sign`; the abortion item is ordinal and mapped
-  from CES codes `1..4` onto `[-1, +1]`.
+- Survey weights use CES `commonweight`; all CES means are survey-weighted.
+- State cue groups: CA/MA/NY (blue), AL/OK/TX (red), GA/PA/WI (swing), matching the
+  prompt cues.
+- Binary items map support→`+1`, oppose→`−1`, then apply each issue's `liberal_sign`;
+  the abortion item is ordinal, mapped from CES codes `1..4` onto `[−1,+1]`.
+- Analysis scripts are run from the **repo root** (paths are root-relative). Scripts
+  in numbered subdirs import shared code from `analysis/lib/` via a small path shim.
