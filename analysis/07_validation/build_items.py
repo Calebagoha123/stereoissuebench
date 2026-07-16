@@ -17,11 +17,13 @@ import argparse
 import csv
 import glob
 import json
+import os
 from pathlib import Path
 
 # Column / field names that may carry the response text or the join id, in priority order.
 TEXT_KEYS = ("response_text", "response", "generation", "output_text", "text")
 ID_KEYS = ("prompt_id", "id", "custom_id")
+MODELS = ("qwen", "gemma", "llama")
 
 
 def _first(d: dict, keys) -> str | None:
@@ -31,15 +33,27 @@ def _first(d: dict, keys) -> str | None:
     return None
 
 
-def build_index(patterns: list[str]) -> dict[str, str]:
-    """prompt_id -> response_text, scanning csv/jsonl response dumps."""
-    idx: dict[str, str] = {}
+def model_from_path(path: str) -> str:
+    """The gen dumps are per-model (gen_<model>_arm_*). prompt_id is NOT unique
+    across models (model lives in a separate field), so we must key on the model
+    too, and the filename is the reliable source of it."""
+    base = os.path.basename(path).lower()
+    for m in MODELS:
+        if m in base:
+            return m
+    raise SystemExit(f"Cannot infer model from filename: {path}")
+
+
+def build_index(patterns: list[str]) -> dict[tuple[str, str], str]:
+    """(prompt_id, model) -> response_text, scanning csv/jsonl response dumps."""
+    idx: dict[tuple[str, str], str] = {}
     files: list[str] = []
     for p in patterns:
         files.extend(glob.glob(p))
     if not files:
         raise SystemExit(f"No response files matched: {patterns}")
     for path in files:
+        model = model_from_path(path)
         if path.endswith(".jsonl"):
             with open(path) as fh:
                 for line in fh:
@@ -49,14 +63,14 @@ def build_index(patterns: list[str]) -> dict[str, str]:
                     d = json.loads(line)
                     pid, txt = _first(d, ID_KEYS), _first(d, TEXT_KEYS)
                     if pid and txt:
-                        idx[pid] = txt
+                        idx[(pid, model)] = txt
         else:  # csv
             with open(path, newline="") as fh:
                 for r in csv.DictReader(fh):
                     pid, txt = _first(r, ID_KEYS), _first(r, TEXT_KEYS)
                     if pid and txt:
-                        idx[pid] = txt
-        print(f"  scanned {path}: index now {len(idx)}")
+                        idx[(pid, model)] = txt
+        print(f"  scanned {path} (model={model}): index now {len(idx)}")
     return idx
 
 
@@ -77,9 +91,9 @@ def main() -> None:
         w = csv.DictWriter(fh, fieldnames=["item_id", "stance_target", "response_text"])
         w.writeheader()
         for r in keys:
-            txt = idx.get(r["prompt_id"])
+            txt = idx.get((r["prompt_id"], r["model"]))
             if txt is None:
-                missing.append(r["prompt_id"])
+                missing.append((r["prompt_id"], r["model"]))
                 continue
             w.writerow({
                 "item_id": r["item_id"],
