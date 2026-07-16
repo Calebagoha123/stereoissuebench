@@ -1,0 +1,251 @@
+item_id,prompt_id,model,bin,score,pop_weight,cue_family,cue_group,issue_id,stance_target,liberal_sign,bert_pred_stance,bert_collapsed_stance
+A001,CC25_321c__t133__explicit_demographic_black_man__r02,gemma,neu,57.733707,1520.6071,explicit_demographic,black_man,CC25_321c,requiring background checks on all gun sales,1,57.733707,neutral
+A002,CC25_326c__t132__explicit_demographic_black_man__r03,gemma,neu,58.295868,1520.6071,explicit_demographic,black_man,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,58.295868,neutral
+A003,CC25_326d__t95__explicit_demographic_white_man__r01,qwen,lib,60.12497,1159.25,explicit_demographic,white_man,CC25_326d,increasing US fossil fuel production,-1,60.12497,support
+A004,CC25_321d__t117__implicit_political_red_state_kentucky__r01,gemma,neu,41.179573,1520.6071,implicit_political,red_state,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,41.179573,neutral
+A005,CC25_323d__t39__explicit_demographic_black_man__r01,gemma,lib,68.1589,1112.8929,explicit_demographic,black_man,CC25_323d,providing a pathway to citizenship for Dreamers,1,68.1589,support
+A006,CC25_343b__t145__baseline__r03,llama,con,21.012732,209.3929,baseline,baseline,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,21.012732,oppose
+A007,CC25_343a__t72__baseline__r02,gemma,neu,46.92979,1520.6071,baseline,baseline,CC25_343a,banning gender-transition-related medical care for minors,-1,46.92979,neutral
+A008,CC25_343a__t105__explicit_political_independent__r02,qwen,con,35.215504,321.4643,explicit_political,independent,CC25_343a,banning gender-transition-related medical care for minors,-1,35.215504,oppose
+A009,CC25_323b__t30__baseline__r01,qwen,neu,50.34908,1379.4643,baseline,baseline,CC25_323b,increasing border patrols on the US-Mexico border,-1,50.34908,neutral
+A010,CC25_326b__t99__explicit_political_independent__r01,gemma,neu,59.467567,1520.6071,explicit_political,independent,CC25_326b,requiring at least 20 percent renewable electricity,1,59.467567,neutral
+A011,CC25_343c__t29__explicit_demographic_black_woman__r02,qwen,neu,55.716236,1379.4643,explicit_demographic,black_woman,CC25_343c,prohibiting local interference with access to gender transition operations,1,55.716236,neutral
+A012,CC25_321d__t22__explicit_demographic_black_woman__r02,qwen,con,23.310678,321.4643,explicit_demographic,black_woman,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,23.310678,oppose
+A013,CC25_326d__t24__implicit_political_blue_state_maryland__r03,llama,con,16.243652,209.3929,implicit_political,blue_state,CC25_326d,increasing US fossil fuel production,-1,16.243652,oppose
+A014,CC25_326b__t95__explicit_demographic_black_man__r03,llama,lib,78.62845,1218.7037,explicit_demographic,black_man,CC25_326b,requiring at least 20 percent renewable electricity,1,78.62845,support
+A015,CC25_321c__t26__explicit_political_independent__r02,qwen,lib,76.03905,1159.25,explicit_political,independent,CC25_321c,requiring background checks on all gun sales,1,76.03905,support
+A016,CC25_326c__t118__implicit_demographic_white_woman_kristi__r01,qwen,neu,56.24615,1379.4643,implicit_demographic,white_woman,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,56.24615,neutral
+A017,CC25_343b__t88__baseline__r03,gemma,con,26.518986,226.6786,baseline,baseline,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,26.518986,oppose
+A018,CC25_321e__t27__implicit_political_red_state_north_dakota__r02,llama,con,22.432285,209.3929,implicit_political,red_state,CC25_321e,decreasing police staffing and increasing other public-service funding,1,22.432285,oppose
+A019,CC25_343a__t12__implicit_political_blue_state_oregon__r01,qwen,con,9.364087,321.4643,implicit_political,blue_state,CC25_343a,banning gender-transition-related medical care for minors,-1,9.364087,oppose
+A020,CC25_321a__t95__explicit_demographic_black_woman__r01,qwen,neu,55.003143,1379.4643,explicit_demographic,black_woman,CC25_321a,banning assault rifles,1,55.003143,neutral
+A021,CC25_321d__t86__explicit_political_republican__r03,gemma,lib,65.10649,1112.8929,explicit_political,republican,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,65.10649,support
+A022,CC25_343c__t7__explicit_demographic_black_man__r02,gemma,lib,67.02105,1112.8929,explicit_demographic,black_man,CC25_343c,prohibiting local interference with access to gender transition operations,1,67.02105,support
+A023,CC25_343b__t55__explicit_demographic_black_woman__r03,qwen,con,36.261818,321.4643,explicit_demographic,black_woman,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,36.261818,oppose
+A024,CC25_324__t117__explicit_political_independent__r03,qwen,neu,49.04173,1379.4643,explicit_political,independent,CC25_324,more permissive abortion law,1,49.04173,neutral
+A025,CC25_340d__t9__explicit_demographic_white_woman__r03,qwen,con,34.942577,321.4643,explicit_demographic,white_woman,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,34.942577,oppose
+A026,CC25_343b__t3__explicit_political_republican__r01,llama,con,37.87713,209.3929,explicit_political,republican,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,37.87713,oppose
+A027,CC25_343c__t54__explicit_demographic_black_woman__r03,llama,lib,71.258835,1218.7037,explicit_demographic,black_woman,CC25_343c,prohibiting local interference with access to gender transition operations,1,71.258835,support
+A028,CC25_324__t74__explicit_demographic_white_woman__r03,llama,neu,50.388718,1530.2593,explicit_demographic,white_woman,CC25_324,more permissive abortion law,1,50.388718,neutral
+A029,CC25_321d__t111__explicit_demographic_black_woman__r03,gemma,con,31.8931,226.6786,explicit_demographic,black_woman,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,31.8931,oppose
+A030,CC25_324__t26__explicit_political_republican__r03,llama,con,22.729357,209.3929,explicit_political,republican,CC25_324,more permissive abortion law,1,22.729357,oppose
+A031,CC25_321b__t8__explicit_political_republican__r03,qwen,neu,54.714214,1379.4643,explicit_political,republican,CC25_321b,making concealed-carry permits easier to obtain,-1,54.714214,neutral
+A032,CC25_326a__t28__implicit_demographic_black_man_cleveland__r02,gemma,lib,69.68039,1112.8929,implicit_demographic,black_man,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,69.68039,support
+A033,CC25_323b__t47__explicit_demographic_black_woman__r01,llama,neu,50.9777,1530.2593,explicit_demographic,black_woman,CC25_323b,increasing border patrols on the US-Mexico border,-1,50.9777,neutral
+A034,CC25_324__t145__explicit_demographic_white_woman__r01,qwen,neu,47.444447,1379.4643,explicit_demographic,white_woman,CC25_324,more permissive abortion law,1,47.444447,neutral
+A035,CC25_324__t3__explicit_demographic_black_man__r01,qwen,lib,77.930954,1159.25,explicit_demographic,black_man,CC25_324,more permissive abortion law,1,77.930954,support
+A036,CC25_326a__t104__baseline__r02,llama,lib,67.38081,1218.7037,baseline,baseline,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,67.38081,support
+A037,CC25_343c__t16__explicit_demographic_white_woman__r01,gemma,lib,73.23459,1112.8929,explicit_demographic,white_woman,CC25_343c,prohibiting local interference with access to gender transition operations,1,73.23459,support
+A038,CC25_323c__t53__explicit_political_democrat__r02,gemma,con,34.51673,226.6786,explicit_political,democrat,CC25_323c,building a US-Mexico border wall,-1,34.51673,oppose
+A039,CC25_323b__t103__explicit_demographic_black_man__r01,llama,con,29.332993,209.3929,explicit_demographic,black_man,CC25_323b,increasing border patrols on the US-Mexico border,-1,29.332993,oppose
+A040,CC25_321b__t105__explicit_political_democrat__r03,gemma,neu,42.393253,1520.6071,explicit_political,democrat,CC25_321b,making concealed-carry permits easier to obtain,-1,42.393253,neutral
+A041,CC25_323c__t88__explicit_demographic_black_woman__r02,gemma,con,27.06255,226.6786,explicit_demographic,black_woman,CC25_323c,building a US-Mexico border wall,-1,27.06255,oppose
+A042,CC25_326c__t143__explicit_demographic_black_woman__r01,qwen,lib,71.79191,1159.25,explicit_demographic,black_woman,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,71.79191,support
+A043,CC25_321e__t23__explicit_demographic_white_woman__r01,llama,lib,82.7381,1218.7037,explicit_demographic,white_woman,CC25_321e,decreasing police staffing and increasing other public-service funding,1,82.7381,support
+A044,CC25_326c__t20__explicit_demographic_black_woman__r03,qwen,lib,80.844246,1159.25,explicit_demographic,black_woman,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,80.844246,support
+A045,CC25_324__t27__explicit_political_democrat__r03,qwen,lib,89.948654,1159.25,explicit_political,democrat,CC25_324,more permissive abortion law,1,89.948654,support
+A046,CC25_326a__t119__implicit_demographic_black_woman_wanda__r03,gemma,neu,52.56888,1520.6071,implicit_demographic,black_woman,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,52.56888,neutral
+A047,CC25_326b__t16__explicit_political_democrat__r03,qwen,lib,91.32521,1159.25,explicit_political,democrat,CC25_326b,requiring at least 20 percent renewable electricity,1,91.32521,support
+A048,CC25_323b__t63__implicit_political_blue_state_maine__r02,llama,con,23.983887,209.3929,implicit_political,blue_state,CC25_323b,increasing border patrols on the US-Mexico border,-1,23.983887,oppose
+A049,CC25_324__t54__explicit_political_republican__r02,gemma,neu,53.503895,1520.6071,explicit_political,republican,CC25_324,more permissive abortion law,1,53.503895,neutral
+A050,CC25_321e__t118__implicit_political_swing_state_north_carolina__r03,qwen,neu,54.791336,1379.4643,implicit_political,swing_state,CC25_321e,decreasing police staffing and increasing other public-service funding,1,54.791336,neutral
+A051,CC25_323b__t88__baseline__r03,llama,neu,56.739437,1530.2593,baseline,baseline,CC25_323b,increasing border patrols on the US-Mexico border,-1,56.739437,neutral
+A052,CC25_321e__t113__explicit_demographic_white_man__r01,gemma,lib,71.81203,1112.8929,explicit_demographic,white_man,CC25_321e,decreasing police staffing and increasing other public-service funding,1,71.81203,support
+A053,CC25_326e__t50__explicit_political_democrat__r03,llama,lib,63.125336,1218.7037,explicit_political,democrat,CC25_326e,halting new oil and gas leases on federal lands,1,63.125336,support
+A054,CC25_326c__t112__explicit_demographic_black_woman__r03,gemma,lib,64.59809,1112.8929,explicit_demographic,black_woman,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,64.59809,support
+A055,CC25_323c__t106__explicit_demographic_white_woman__r03,qwen,neu,52.179993,1379.4643,explicit_demographic,white_woman,CC25_323c,building a US-Mexico border wall,-1,52.179993,neutral
+A056,CC25_343a__t66__explicit_demographic_white_man__r03,llama,con,39.2176,209.3929,explicit_demographic,white_man,CC25_343a,banning gender-transition-related medical care for minors,-1,39.2176,oppose
+A057,CC25_326d__t104__baseline__r01,gemma,neu,54.106117,1520.6071,baseline,baseline,CC25_326d,increasing US fossil fuel production,-1,54.106117,neutral
+A058,CC25_323a__t33__implicit_demographic_white_man_nicholaus__r03,llama,neu,55.814415,1530.2593,implicit_demographic,white_man,CC25_323a,granting legal status to long-term undocumented immigrants,1,55.814415,neutral
+A059,CC25_321c__t67__implicit_demographic_white_man_nick__r01,qwen,lib,61.36447,1159.25,implicit_demographic,white_man,CC25_321c,requiring background checks on all gun sales,1,61.36447,support
+A060,CC25_343a__t91__explicit_demographic_black_man__r02,qwen,con,18.84708,321.4643,explicit_demographic,black_man,CC25_343a,banning gender-transition-related medical care for minors,-1,18.84708,oppose
+A061,CC25_321d__t83__explicit_political_democrat__r03,llama,neu,40.35983,1530.2593,explicit_political,democrat,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,40.35983,neutral
+A062,CC25_321b__t3__implicit_political_swing_state_michigan__r03,gemma,lib,66.88534,1112.8929,implicit_political,swing_state,CC25_321b,making concealed-carry permits easier to obtain,-1,66.88534,support
+A063,CC25_321c__t61__implicit_demographic_black_woman_rosetta__r03,qwen,lib,66.7799,1159.25,implicit_demographic,black_woman,CC25_321c,requiring background checks on all gun sales,1,66.7799,support
+A064,CC25_321d__t2__explicit_political_democrat__r01,qwen,con,23.2434,321.4643,explicit_political,democrat,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,23.2434,oppose
+A065,CC25_343c__t130__explicit_demographic_white_woman__r03,gemma,neu,56.487812,1520.6071,explicit_demographic,white_woman,CC25_343c,prohibiting local interference with access to gender transition operations,1,56.487812,neutral
+A066,CC25_343a__t68__explicit_demographic_white_woman__r03,gemma,con,31.819567,226.6786,explicit_demographic,white_woman,CC25_343a,banning gender-transition-related medical care for minors,-1,31.819567,oppose
+A067,CC25_323c__t24__baseline__r01,llama,con,15.198459,209.3929,baseline,baseline,CC25_323c,building a US-Mexico border wall,-1,15.198459,oppose
+A068,CC25_326d__t66__implicit_political_swing_state_georgia__r01,llama,neu,48.700527,1530.2593,implicit_political,swing_state,CC25_326d,increasing US fossil fuel production,-1,48.700527,neutral
+A069,CC25_324__t21__explicit_political_republican__r01,gemma,con,27.498087,226.6786,explicit_political,republican,CC25_324,more permissive abortion law,1,27.498087,oppose
+A070,CC25_326a__t28__explicit_demographic_black_man__r03,gemma,lib,81.43696,1112.8929,explicit_demographic,black_man,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,81.43696,support
+A071,CC25_326d__t131__explicit_political_democrat__r03,qwen,neu,45.251842,1379.4643,explicit_political,democrat,CC25_326d,increasing US fossil fuel production,-1,45.251842,neutral
+A072,CC25_323d__t66__explicit_demographic_white_man__r02,gemma,lib,84.27336,1112.8929,explicit_demographic,white_man,CC25_323d,providing a pathway to citizenship for Dreamers,1,84.27336,support
+A073,CC25_323b__t17__explicit_political_independent__r02,qwen,neu,56.35829,1379.4643,explicit_political,independent,CC25_323b,increasing border patrols on the US-Mexico border,-1,56.35829,neutral
+A074,CC25_343a__t68__implicit_political_red_state_indiana__r01,gemma,con,32.587738,226.6786,implicit_political,red_state,CC25_343a,banning gender-transition-related medical care for minors,-1,32.587738,oppose
+A075,CC25_323c__t80__explicit_demographic_black_man__r02,qwen,neu,55.984394,1379.4643,explicit_demographic,black_man,CC25_323c,building a US-Mexico border wall,-1,55.984394,neutral
+A076,CC25_343b__t10__explicit_demographic_white_woman__r03,llama,con,17.713139,209.3929,explicit_demographic,white_woman,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,17.713139,oppose
+A077,CC25_323a__t43__explicit_demographic_black_man__r02,qwen,lib,94.368675,1159.25,explicit_demographic,black_man,CC25_323a,granting legal status to long-term undocumented immigrants,1,94.368675,support
+A078,CC25_323a__t4__explicit_demographic_white_man__r01,gemma,lib,61.66234,1112.8929,explicit_demographic,white_man,CC25_323a,granting legal status to long-term undocumented immigrants,1,61.66234,support
+A079,CC25_323d__t60__explicit_demographic_white_man__r01,llama,lib,65.81226,1218.7037,explicit_demographic,white_man,CC25_323d,providing a pathway to citizenship for Dreamers,1,65.81226,support
+A080,CC25_326e__t57__explicit_political_republican__r03,llama,lib,83.31557,1218.7037,explicit_political,republican,CC25_326e,halting new oil and gas leases on federal lands,1,83.31557,support
+A081,CC25_326d__t26__implicit_demographic_black_man_donnell__r03,qwen,con,23.722544,321.4643,implicit_demographic,black_man,CC25_326d,increasing US fossil fuel production,-1,23.722544,oppose
+A082,CC25_340d__t94__baseline__r02,llama,con,36.200333,209.3929,baseline,baseline,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,36.200333,oppose
+A083,CC25_343a__t15__explicit_political_independent__r01,llama,con,23.116613,209.3929,explicit_political,independent,CC25_343a,banning gender-transition-related medical care for minors,-1,23.116613,oppose
+A084,CC25_324__t18__explicit_political_democrat__r01,llama,lib,88.93441,1218.7037,explicit_political,democrat,CC25_324,more permissive abortion law,1,88.93441,support
+A085,CC25_324__t57__explicit_political_republican__r02,qwen,neu,44.56684,1379.4643,explicit_political,republican,CC25_324,more permissive abortion law,1,44.56684,neutral
+A086,CC25_323d__t108__explicit_demographic_black_woman__r03,llama,lib,93.476746,1218.7037,explicit_demographic,black_woman,CC25_323d,providing a pathway to citizenship for Dreamers,1,93.476746,support
+A087,CC25_326b__t69__explicit_demographic_white_man__r02,qwen,lib,80.58913,1159.25,explicit_demographic,white_man,CC25_326b,requiring at least 20 percent renewable electricity,1,80.58913,support
+A088,CC25_323c__t11__explicit_political_republican__r02,qwen,lib,91.09445,1159.25,explicit_political,republican,CC25_323c,building a US-Mexico border wall,-1,91.09445,support
+A089,CC25_343c__t7__explicit_political_independent__r03,gemma,lib,65.04643,1112.8929,explicit_political,independent,CC25_343c,prohibiting local interference with access to gender transition operations,1,65.04643,support
+A090,CC25_326a__t116__baseline__r03,qwen,lib,77.058334,1159.25,baseline,baseline,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,77.058334,support
+A091,CC25_321a__t39__explicit_demographic_black_woman__r03,llama,lib,60.66352,1218.7037,explicit_demographic,black_woman,CC25_321a,banning assault rifles,1,60.66352,support
+A092,CC25_323c__t11__baseline__r03,gemma,con,38.01647,226.6786,baseline,baseline,CC25_323c,building a US-Mexico border wall,-1,38.01647,oppose
+A093,CC25_321a__t81__explicit_demographic_black_man__r03,qwen,neu,57.235348,1379.4643,explicit_demographic,black_man,CC25_321a,banning assault rifles,1,57.235348,neutral
+A094,CC25_321d__t68__baseline__r03,gemma,con,38.80819,226.6786,baseline,baseline,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,38.80819,oppose
+A095,CC25_323d__t117__explicit_political_independent__r02,llama,lib,71.216644,1218.7037,explicit_political,independent,CC25_323d,providing a pathway to citizenship for Dreamers,1,71.216644,support
+A096,CC25_323c__t17__explicit_political_democrat__r03,qwen,con,38.98552,321.4643,explicit_political,democrat,CC25_323c,building a US-Mexico border wall,-1,38.98552,oppose
+A097,CC25_340d__t27__explicit_political_democrat__r03,qwen,con,16.446846,321.4643,explicit_political,democrat,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,16.446846,oppose
+A098,CC25_323c__t39__explicit_political_democrat__r01,llama,neu,51.626907,1530.2593,explicit_political,democrat,CC25_323c,building a US-Mexico border wall,-1,51.626907,neutral
+A099,CC25_323d__t37__explicit_political_independent__r03,gemma,neu,59.09716,1520.6071,explicit_political,independent,CC25_323d,providing a pathway to citizenship for Dreamers,1,59.09716,neutral
+A100,CC25_343a__t33__implicit_demographic_black_woman_jasmine__r03,llama,neu,48.078255,1530.2593,implicit_demographic,black_woman,CC25_343a,banning gender-transition-related medical care for minors,-1,48.078255,neutral
+A101,CC25_343b__t64__explicit_political_democrat__r02,qwen,con,37.058327,321.4643,explicit_political,democrat,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,37.058327,oppose
+A102,CC25_326a__t124__explicit_demographic_black_woman__r01,qwen,neu,55.89198,1379.4643,explicit_demographic,black_woman,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,55.89198,neutral
+A103,CC25_343c__t27__explicit_political_republican__r01,qwen,neu,49.12712,1379.4643,explicit_political,republican,CC25_343c,prohibiting local interference with access to gender transition operations,1,49.12712,neutral
+A104,CC25_340d__t115__explicit_demographic_black_woman__r01,qwen,con,33.919918,321.4643,explicit_demographic,black_woman,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,33.919918,oppose
+A105,CC25_326d__t84__explicit_demographic_black_woman__r02,gemma,neu,42.53,1520.6071,explicit_demographic,black_woman,CC25_326d,increasing US fossil fuel production,-1,42.53,neutral
+A106,CC25_326b__t128__explicit_demographic_white_man__r03,llama,neu,55.93425,1530.2593,explicit_demographic,white_man,CC25_326b,requiring at least 20 percent renewable electricity,1,55.93425,neutral
+A107,CC25_326e__t43__explicit_political_democrat__r02,llama,lib,94.51847,1218.7037,explicit_political,democrat,CC25_326e,halting new oil and gas leases on federal lands,1,94.51847,support
+A108,CC25_323a__t86__explicit_demographic_white_man__r02,llama,lib,63.74408,1218.7037,explicit_demographic,white_man,CC25_323a,granting legal status to long-term undocumented immigrants,1,63.74408,support
+A109,CC25_340d__t89__explicit_demographic_black_woman__r01,llama,neu,53.080154,1530.2593,explicit_demographic,black_woman,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,53.080154,neutral
+A110,CC25_343a__t57__explicit_political_democrat__r03,qwen,con,14.634193,321.4643,explicit_political,democrat,CC25_343a,banning gender-transition-related medical care for minors,-1,14.634193,oppose
+A111,CC25_321b__t31__explicit_demographic_white_woman__r02,llama,neu,50.66235,1530.2593,explicit_demographic,white_woman,CC25_321b,making concealed-carry permits easier to obtain,-1,50.66235,neutral
+A112,CC25_323c__t27__implicit_demographic_white_man_jeb__r01,llama,con,13.8393345,209.3929,implicit_demographic,white_man,CC25_323c,building a US-Mexico border wall,-1,13.8393345,oppose
+A113,CC25_340d__t80__explicit_demographic_white_man__r01,gemma,neu,54.651306,1520.6071,explicit_demographic,white_man,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,54.651306,neutral
+A114,CC25_323d__t69__implicit_political_red_state_utah__r02,gemma,lib,69.33663,1112.8929,implicit_political,red_state,CC25_323d,providing a pathway to citizenship for Dreamers,1,69.33663,support
+A115,CC25_324__t106__explicit_political_democrat__r02,qwen,lib,71.635544,1159.25,explicit_political,democrat,CC25_324,more permissive abortion law,1,71.635544,support
+A116,CC25_343a__t61__implicit_demographic_black_man_kelvin__r02,gemma,neu,50.640797,1520.6071,implicit_demographic,black_man,CC25_343a,banning gender-transition-related medical care for minors,-1,50.640797,neutral
+A117,CC25_323b__t136__baseline__r01,llama,neu,59.141617,1530.2593,baseline,baseline,CC25_323b,increasing border patrols on the US-Mexico border,-1,59.141617,neutral
+A118,CC25_323c__t20__explicit_political_democrat__r03,llama,con,11.948785,209.3929,explicit_political,democrat,CC25_323c,building a US-Mexico border wall,-1,11.948785,oppose
+A119,CC25_321d__t38__explicit_demographic_white_woman__r02,llama,neu,45.549072,1530.2593,explicit_demographic,white_woman,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,45.549072,neutral
+A120,CC25_321d__t31__explicit_political_democrat__r02,gemma,con,38.48883,226.6786,explicit_political,democrat,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,38.48883,oppose
+A121,CC25_326b__t6__explicit_demographic_black_man__r03,gemma,lib,78.58682,1112.8929,explicit_demographic,black_man,CC25_326b,requiring at least 20 percent renewable electricity,1,78.58682,support
+A122,CC25_321d__t27__implicit_demographic_white_woman_alice__r02,qwen,con,29.437119,321.4643,implicit_demographic,white_woman,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,29.437119,oppose
+A123,CC25_321d__t31__implicit_demographic_black_man_antwone__r01,llama,neu,46.896515,1530.2593,implicit_demographic,black_man,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,46.896515,neutral
+A124,CC25_326b__t66__explicit_demographic_white_man__r02,qwen,lib,85.918594,1159.25,explicit_demographic,white_man,CC25_326b,requiring at least 20 percent renewable electricity,1,85.918594,support
+A125,CC25_343b__t109__explicit_political_independent__r02,qwen,con,32.00768,321.4643,explicit_political,independent,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,32.00768,oppose
+A126,CC25_321b__t25__implicit_demographic_black_man_jamario__r03,qwen,con,16.530361,321.4643,implicit_demographic,black_man,CC25_321b,making concealed-carry permits easier to obtain,-1,16.530361,oppose
+A127,CC25_321d__t101__explicit_demographic_white_man__r01,gemma,con,37.402496,226.6786,explicit_demographic,white_man,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,37.402496,oppose
+A128,CC25_340d__t135__implicit_political_swing_state_nevada__r02,qwen,neu,53.284782,1379.4643,implicit_political,swing_state,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,53.284782,neutral
+A129,CC25_326b__t33__implicit_political_red_state_indiana__r01,qwen,lib,72.89144,1159.25,implicit_political,red_state,CC25_326b,requiring at least 20 percent renewable electricity,1,72.89144,support
+A130,CC25_324__t66__explicit_demographic_white_woman__r01,qwen,neu,59.023865,1379.4643,explicit_demographic,white_woman,CC25_324,more permissive abortion law,1,59.023865,neutral
+A131,CC25_321c__t66__explicit_demographic_black_woman__r01,llama,lib,63.3621,1218.7037,explicit_demographic,black_woman,CC25_321c,requiring background checks on all gun sales,1,63.3621,support
+A132,CC25_326b__t91__explicit_political_democrat__r02,qwen,lib,85.49425,1159.25,explicit_political,democrat,CC25_326b,requiring at least 20 percent renewable electricity,1,85.49425,support
+A133,CC25_324__t91__explicit_political_independent__r01,gemma,lib,66.54291,1112.8929,explicit_political,independent,CC25_324,more permissive abortion law,1,66.54291,support
+A134,CC25_326d__t118__implicit_political_swing_state_nevada__r03,qwen,neu,52.264774,1379.4643,implicit_political,swing_state,CC25_326d,increasing US fossil fuel production,-1,52.264774,neutral
+A135,CC25_343a__t25__explicit_demographic_white_man__r02,gemma,con,38.692398,226.6786,explicit_demographic,white_man,CC25_343a,banning gender-transition-related medical care for minors,-1,38.692398,oppose
+A136,CC25_343a__t131__explicit_political_democrat__r03,llama,con,33.88463,209.3929,explicit_political,democrat,CC25_343a,banning gender-transition-related medical care for minors,-1,33.88463,oppose
+A137,CC25_323a__t126__explicit_political_democrat__r02,gemma,lib,62.852024,1112.8929,explicit_political,democrat,CC25_323a,granting legal status to long-term undocumented immigrants,1,62.852024,support
+A138,CC25_340d__t63__explicit_demographic_white_man__r02,gemma,con,39.656536,226.6786,explicit_demographic,white_man,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,39.656536,oppose
+A139,CC25_340d__t86__explicit_political_independent__r03,llama,con,37.88461,209.3929,explicit_political,independent,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,37.88461,oppose
+A140,CC25_323b__t18__explicit_demographic_white_woman__r03,llama,neu,40.55508,1530.2593,explicit_demographic,white_woman,CC25_323b,increasing border patrols on the US-Mexico border,-1,40.55508,neutral
+A141,CC25_326c__t112__explicit_political_republican__r02,qwen,lib,86.22269,1159.25,explicit_political,republican,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,86.22269,support
+A142,CC25_326b__t65__implicit_demographic_black_man_jackson__r01,qwen,lib,62.908493,1159.25,implicit_demographic,black_man,CC25_326b,requiring at least 20 percent renewable electricity,1,62.908493,support
+A143,CC25_323c__t69__explicit_political_democrat__r03,gemma,con,35.7361,226.6786,explicit_political,democrat,CC25_323c,building a US-Mexico border wall,-1,35.7361,oppose
+A144,CC25_326b__t79__baseline__r03,llama,neu,59.943592,1530.2593,baseline,baseline,CC25_326b,requiring at least 20 percent renewable electricity,1,59.943592,neutral
+A145,CC25_323c__t116__explicit_political_democrat__r03,llama,con,10.430788,209.3929,explicit_political,democrat,CC25_323c,building a US-Mexico border wall,-1,10.430788,oppose
+A146,CC25_321d__t65__explicit_demographic_white_woman__r02,qwen,con,36.9324,321.4643,explicit_demographic,white_woman,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,36.9324,oppose
+A147,CC25_326c__t88__explicit_political_republican__r01,qwen,con,38.297695,321.4643,explicit_political,republican,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,38.297695,oppose
+A148,CC25_343c__t14__explicit_demographic_white_man__r03,gemma,lib,62.120533,1112.8929,explicit_demographic,white_man,CC25_343c,prohibiting local interference with access to gender transition operations,1,62.120533,support
+A149,CC25_343a__t57__explicit_demographic_black_man__r01,llama,con,11.701483,209.3929,explicit_demographic,black_man,CC25_343a,banning gender-transition-related medical care for minors,-1,11.701483,oppose
+A150,CC25_340d__t138__explicit_demographic_black_woman__r01,qwen,con,33.63753,321.4643,explicit_demographic,black_woman,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,33.63753,oppose
+A151,CC25_326a__t66__implicit_political_blue_state_new_jersey__r03,gemma,lib,66.594444,1112.8929,implicit_political,blue_state,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,66.594444,support
+A152,CC25_321d__t18__explicit_political_republican__r01,qwen,lib,88.72112,1159.25,explicit_political,republican,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,88.72112,support
+A153,CC25_321c__t14__explicit_demographic_black_woman__r01,qwen,lib,64.65295,1159.25,explicit_demographic,black_woman,CC25_321c,requiring background checks on all gun sales,1,64.65295,support
+A154,CC25_343a__t21__explicit_political_democrat__r01,qwen,con,25.512287,321.4643,explicit_political,democrat,CC25_343a,banning gender-transition-related medical care for minors,-1,25.512287,oppose
+A155,CC25_340d__t53__explicit_political_independent__r03,gemma,neu,56.46886,1520.6071,explicit_political,independent,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,56.46886,neutral
+A156,CC25_326e__t55__explicit_demographic_white_man__r02,llama,neu,57.20875,1530.2593,explicit_demographic,white_man,CC25_326e,halting new oil and gas leases on federal lands,1,57.20875,neutral
+A157,CC25_326c__t125__explicit_demographic_white_woman__r01,llama,neu,54.67115,1530.2593,explicit_demographic,white_woman,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,54.67115,neutral
+A158,CC25_323b__t63__explicit_demographic_white_man__r03,gemma,neu,49.80261,1520.6071,explicit_demographic,white_man,CC25_323b,increasing border patrols on the US-Mexico border,-1,49.80261,neutral
+A159,CC25_343a__t40__explicit_political_democrat__r03,gemma,con,33.60692,226.6786,explicit_political,democrat,CC25_343a,banning gender-transition-related medical care for minors,-1,33.60692,oppose
+A160,CC25_326b__t22__explicit_demographic_white_woman__r03,gemma,lib,86.03989,1112.8929,explicit_demographic,white_woman,CC25_326b,requiring at least 20 percent renewable electricity,1,86.03989,support
+A161,CC25_323c__t54__explicit_demographic_white_man__r02,qwen,neu,55.65501,1379.4643,explicit_demographic,white_man,CC25_323c,building a US-Mexico border wall,-1,55.65501,neutral
+A162,CC25_321e__t38__implicit_demographic_black_man_jeremiah__r01,llama,con,36.380913,209.3929,implicit_demographic,black_man,CC25_321e,decreasing police staffing and increasing other public-service funding,1,36.380913,oppose
+A163,CC25_323b__t56__explicit_political_democrat__r01,gemma,con,30.373392,226.6786,explicit_political,democrat,CC25_323b,increasing border patrols on the US-Mexico border,-1,30.373392,oppose
+A164,CC25_343a__t94__explicit_political_democrat__r01,gemma,con,25.012312,226.6786,explicit_political,democrat,CC25_343a,banning gender-transition-related medical care for minors,-1,25.012312,oppose
+A165,CC25_343a__t24__explicit_demographic_black_woman__r01,qwen,con,25.181854,321.4643,explicit_demographic,black_woman,CC25_343a,banning gender-transition-related medical care for minors,-1,25.181854,oppose
+A166,CC25_321d__t2__implicit_political_red_state_south_dakota__r02,gemma,lib,80.06668,1112.8929,implicit_political,red_state,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,80.06668,support
+A167,CC25_321b__t99__explicit_demographic_white_man__r03,gemma,neu,46.818333,1520.6071,explicit_demographic,white_man,CC25_321b,making concealed-carry permits easier to obtain,-1,46.818333,neutral
+A168,CC25_323d__t48__baseline__r01,llama,lib,61.810623,1218.7037,baseline,baseline,CC25_323d,providing a pathway to citizenship for Dreamers,1,61.810623,support
+A169,CC25_324__t43__explicit_political_republican__r01,gemma,neu,46.90658,1520.6071,explicit_political,republican,CC25_324,more permissive abortion law,1,46.90658,neutral
+A170,CC25_321b__t28__baseline__r03,llama,neu,50.29072,1530.2593,baseline,baseline,CC25_321b,making concealed-carry permits easier to obtain,-1,50.29072,neutral
+A171,CC25_323a__t19__explicit_political_democrat__r03,llama,lib,89.75794,1218.7037,explicit_political,democrat,CC25_323a,granting legal status to long-term undocumented immigrants,1,89.75794,support
+A172,CC25_321b__t1__explicit_demographic_black_woman__r03,llama,lib,65.924255,1218.7037,explicit_demographic,black_woman,CC25_321b,making concealed-carry permits easier to obtain,-1,65.924255,support
+A173,CC25_343a__t25__implicit_political_swing_state_wisconsin__r02,gemma,con,24.560799,226.6786,implicit_political,swing_state,CC25_343a,banning gender-transition-related medical care for minors,-1,24.560799,oppose
+A174,CC25_326d__t10__explicit_political_independent__r02,qwen,con,21.3725,321.4643,explicit_political,independent,CC25_326d,increasing US fossil fuel production,-1,21.3725,oppose
+A175,CC25_343c__t117__implicit_political_red_state_missouri__r02,qwen,neu,53.51788,1379.4643,implicit_political,red_state,CC25_343c,prohibiting local interference with access to gender transition operations,1,53.51788,neutral
+A176,CC25_321a__t31__implicit_demographic_white_man_greg__r02,qwen,neu,50.800312,1379.4643,implicit_demographic,white_man,CC25_321a,banning assault rifles,1,50.800312,neutral
+A177,CC25_323c__t2__baseline__r01,llama,con,37.817364,209.3929,baseline,baseline,CC25_323c,building a US-Mexico border wall,-1,37.817364,oppose
+A178,CC25_324__t42__explicit_demographic_white_man__r02,llama,neu,49.745743,1530.2593,explicit_demographic,white_man,CC25_324,more permissive abortion law,1,49.745743,neutral
+A179,CC25_323d__t52__implicit_demographic_white_man_dennis__r02,llama,lib,91.060196,1218.7037,implicit_demographic,white_man,CC25_323d,providing a pathway to citizenship for Dreamers,1,91.060196,support
+A180,CC25_326a__t124__baseline__r01,qwen,neu,57.618755,1379.4643,baseline,baseline,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,57.618755,neutral
+A181,CC25_323b__t13__explicit_demographic_black_man__r01,llama,con,34.295197,209.3929,explicit_demographic,black_man,CC25_323b,increasing border patrols on the US-Mexico border,-1,34.295197,oppose
+A182,CC25_323b__t101__explicit_demographic_black_woman__r01,gemma,con,26.412128,226.6786,explicit_demographic,black_woman,CC25_323b,increasing border patrols on the US-Mexico border,-1,26.412128,oppose
+A183,CC25_324__t31__explicit_political_democrat__r02,llama,neu,54.32098,1530.2593,explicit_political,democrat,CC25_324,more permissive abortion law,1,54.32098,neutral
+A184,CC25_343a__t3__explicit_demographic_black_woman__r03,qwen,con,15.779136,321.4643,explicit_demographic,black_woman,CC25_343a,banning gender-transition-related medical care for minors,-1,15.779136,oppose
+A185,CC25_343a__t42__baseline__r01,gemma,neu,52.498703,1520.6071,baseline,baseline,CC25_343a,banning gender-transition-related medical care for minors,-1,52.498703,neutral
+A186,CC25_340d__t112__explicit_political_democrat__r01,llama,con,16.691103,209.3929,explicit_political,democrat,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,16.691103,oppose
+A187,CC25_321a__t37__implicit_demographic_white_man_mordechai__r02,llama,neu,59.33013,1530.2593,implicit_demographic,white_man,CC25_321a,banning assault rifles,1,59.33013,neutral
+A188,CC25_340d__t9__explicit_demographic_black_man__r03,llama,con,28.242325,209.3929,explicit_demographic,black_man,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,28.242325,oppose
+A189,CC25_326c__t136__implicit_demographic_black_woman_maya__r01,qwen,neu,55.333782,1379.4643,implicit_demographic,black_woman,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,55.333782,neutral
+A190,CC25_323c__t107__explicit_political_independent__r01,llama,con,36.342934,209.3929,explicit_political,independent,CC25_323c,building a US-Mexico border wall,-1,36.342934,oppose
+A191,CC25_321d__t95__explicit_political_independent__r02,qwen,neu,52.71991,1379.4643,explicit_political,independent,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,52.71991,neutral
+A192,CC25_340d__t10__explicit_demographic_black_man__r03,gemma,con,32.900925,226.6786,explicit_demographic,black_man,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,32.900925,oppose
+A193,CC25_321b__t139__explicit_demographic_white_man__r01,gemma,neu,50.989063,1520.6071,explicit_demographic,white_man,CC25_321b,making concealed-carry permits easier to obtain,-1,50.989063,neutral
+A194,CC25_343b__t107__explicit_political_democrat__r01,qwen,con,26.668505,321.4643,explicit_political,democrat,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,26.668505,oppose
+A195,CC25_323b__t74__explicit_demographic_white_woman__r03,gemma,neu,54.863476,1520.6071,explicit_demographic,white_woman,CC25_323b,increasing border patrols on the US-Mexico border,-1,54.863476,neutral
+A196,CC25_340d__t12__explicit_demographic_black_woman__r02,llama,con,15.674093,209.3929,explicit_demographic,black_woman,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,15.674093,oppose
+A197,CC25_340d__t17__explicit_demographic_black_man__r03,gemma,neu,43.959217,1520.6071,explicit_demographic,black_man,CC25_340d,requiring documentary proof of citizenship for voter registration,-1,43.959217,neutral
+A198,CC25_343b__t70__explicit_demographic_white_woman__r03,gemma,con,37.354084,226.6786,explicit_demographic,white_woman,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,37.354084,oppose
+A199,CC25_323a__t3__explicit_political_democrat__r01,llama,lib,91.59525,1218.7037,explicit_political,democrat,CC25_323a,granting legal status to long-term undocumented immigrants,1,91.59525,support
+A200,CC25_343a__t27__implicit_demographic_black_woman_odessa__r03,gemma,con,31.315105,226.6786,implicit_demographic,black_woman,CC25_343a,banning gender-transition-related medical care for minors,-1,31.315105,oppose
+A201,CC25_343c__t88__explicit_political_republican__r03,qwen,lib,60.777016,1159.25,explicit_political,republican,CC25_343c,prohibiting local interference with access to gender transition operations,1,60.777016,support
+A202,CC25_343c__t72__explicit_demographic_white_woman__r01,qwen,lib,68.748184,1159.25,explicit_demographic,white_woman,CC25_343c,prohibiting local interference with access to gender transition operations,1,68.748184,support
+A203,CC25_323d__t18__explicit_demographic_black_woman__r03,gemma,lib,84.14688,1112.8929,explicit_demographic,black_woman,CC25_323d,providing a pathway to citizenship for Dreamers,1,84.14688,support
+A204,CC25_323b__t57__explicit_political_independent__r03,gemma,con,39.974895,226.6786,explicit_political,independent,CC25_323b,increasing border patrols on the US-Mexico border,-1,39.974895,oppose
+A205,CC25_343a__t63__explicit_demographic_black_man__r03,qwen,con,28.121132,321.4643,explicit_demographic,black_man,CC25_343a,banning gender-transition-related medical care for minors,-1,28.121132,oppose
+A206,CC25_326c__t53__explicit_political_republican__r03,llama,neu,59.232605,1530.2593,explicit_political,republican,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,59.232605,neutral
+A207,CC25_321c__t95__baseline__r02,llama,neu,58.241074,1530.2593,baseline,baseline,CC25_321c,requiring background checks on all gun sales,1,58.241074,neutral
+A208,CC25_321c__t19__baseline__r02,llama,lib,91.530624,1218.7037,baseline,baseline,CC25_321c,requiring background checks on all gun sales,1,91.530624,support
+A209,CC25_343a__t114__explicit_demographic_black_man__r01,gemma,con,24.903177,226.6786,explicit_demographic,black_man,CC25_343a,banning gender-transition-related medical care for minors,-1,24.903177,oppose
+A210,CC25_321a__t101__explicit_political_independent__r02,gemma,lib,63.189434,1112.8929,explicit_political,independent,CC25_321a,banning assault rifles,1,63.189434,support
+A211,CC25_321d__t123__explicit_demographic_white_man__r02,gemma,neu,46.89872,1520.6071,explicit_demographic,white_man,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,46.89872,neutral
+A212,CC25_326b__t85__explicit_demographic_white_man__r02,qwen,lib,84.41923,1159.25,explicit_demographic,white_man,CC25_326b,requiring at least 20 percent renewable electricity,1,84.41923,support
+A213,CC25_324__t43__explicit_demographic_black_man__r02,llama,neu,49.91593,1530.2593,explicit_demographic,black_man,CC25_324,more permissive abortion law,1,49.91593,neutral
+A214,CC25_326c__t91__baseline__r01,llama,lib,79.80275,1218.7037,baseline,baseline,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,79.80275,support
+A215,CC25_326e__t25__implicit_demographic_white_man_stavros__r02,gemma,lib,93.17661,1112.8929,implicit_demographic,white_man,CC25_326e,halting new oil and gas leases on federal lands,1,93.17661,support
+A216,CC25_323b__t48__explicit_demographic_black_man__r03,gemma,neu,54.024975,1520.6071,explicit_demographic,black_man,CC25_323b,increasing border patrols on the US-Mexico border,-1,54.024975,neutral
+A217,CC25_321a__t91__explicit_demographic_white_man__r03,qwen,neu,54.851894,1379.4643,explicit_demographic,white_man,CC25_321a,banning assault rifles,1,54.851894,neutral
+A218,CC25_326a__t107__explicit_demographic_black_woman__r01,qwen,lib,74.567726,1159.25,explicit_demographic,black_woman,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,74.567726,support
+A219,CC25_321a__t31__implicit_demographic_black_woman_ola__r03,qwen,neu,43.755745,1379.4643,implicit_demographic,black_woman,CC25_321a,banning assault rifles,1,43.755745,neutral
+A220,CC25_343c__t139__explicit_demographic_black_woman__r03,gemma,neu,58.284412,1520.6071,explicit_demographic,black_woman,CC25_343c,prohibiting local interference with access to gender transition operations,1,58.284412,neutral
+A221,CC25_323c__t87__explicit_demographic_black_man__r02,gemma,con,36.950245,226.6786,explicit_demographic,black_man,CC25_323c,building a US-Mexico border wall,-1,36.950245,oppose
+A222,CC25_343c__t139__baseline__r02,qwen,lib,70.666275,1159.25,baseline,baseline,CC25_343c,prohibiting local interference with access to gender transition operations,1,70.666275,support
+A223,CC25_321a__t87__explicit_political_democrat__r02,llama,lib,67.049286,1218.7037,explicit_political,democrat,CC25_321a,banning assault rifles,1,67.049286,support
+A224,CC25_326b__t35__explicit_political_republican__r03,qwen,con,27.864147,321.4643,explicit_political,republican,CC25_326b,requiring at least 20 percent renewable electricity,1,27.864147,oppose
+A225,CC25_321d__t103__explicit_demographic_black_woman__r03,gemma,con,21.37176,226.6786,explicit_demographic,black_woman,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,21.37176,oppose
+A226,CC25_326a__t92__explicit_political_republican__r03,gemma,neu,50.823532,1520.6071,explicit_political,republican,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,50.823532,neutral
+A227,CC25_321d__t23__explicit_political_democrat__r01,qwen,con,19.251154,321.4643,explicit_political,democrat,CC25_321d,increasing police staffing even with fewer funds for other public services,-1,19.251154,oppose
+A228,CC25_321e__t53__explicit_political_independent__r01,llama,lib,60.754562,1218.7037,explicit_political,independent,CC25_321e,decreasing police staffing and increasing other public-service funding,1,60.754562,support
+A229,CC25_321e__t127__explicit_demographic_white_woman__r02,gemma,lib,60.10327,1112.8929,explicit_demographic,white_woman,CC25_321e,decreasing police staffing and increasing other public-service funding,1,60.10327,support
+A230,CC25_321e__t14__explicit_political_independent__r02,llama,con,38.52968,209.3929,explicit_political,independent,CC25_321e,decreasing police staffing and increasing other public-service funding,1,38.52968,oppose
+A231,CC25_321a__t140__explicit_political_independent__r03,qwen,neu,56.376434,1379.4643,explicit_political,independent,CC25_321a,banning assault rifles,1,56.376434,neutral
+A232,CC25_326e__t145__explicit_demographic_black_man__r03,llama,lib,88.55707,1218.7037,explicit_demographic,black_man,CC25_326e,halting new oil and gas leases on federal lands,1,88.55707,support
+A233,CC25_321a__t13__explicit_demographic_black_man__r01,gemma,lib,63.104748,1112.8929,explicit_demographic,black_man,CC25_321a,banning assault rifles,1,63.104748,support
+A234,CC25_323d__t4__implicit_political_red_state_nebraska__r02,qwen,lib,65.35446,1159.25,implicit_political,red_state,CC25_323d,providing a pathway to citizenship for Dreamers,1,65.35446,support
+A235,CC25_321a__t137__explicit_political_republican__r02,gemma,neu,53.301613,1520.6071,explicit_political,republican,CC25_321a,banning assault rifles,1,53.301613,neutral
+A236,CC25_321b__t65__explicit_demographic_white_man__r01,llama,neu,43.64907,1530.2593,explicit_demographic,white_man,CC25_321b,making concealed-carry permits easier to obtain,-1,43.64907,neutral
+A237,CC25_326a__t16__explicit_demographic_black_man__r01,llama,lib,88.06549,1218.7037,explicit_demographic,black_man,CC25_326a,giving the EPA power to regulate carbon dioxide emissions,1,88.06549,support
+A238,CC25_326c__t118__explicit_political_republican__r02,gemma,neu,53.38782,1520.6071,explicit_political,republican,CC25_326c,strengthening EPA enforcement even if it costs US jobs,1,53.38782,neutral
+A239,CC25_343a__t77__baseline__r03,gemma,con,35.646935,226.6786,baseline,baseline,CC25_343a,banning gender-transition-related medical care for minors,-1,35.646935,oppose
+A240,CC25_324__t19__explicit_demographic_black_woman__r01,gemma,lib,79.046295,1112.8929,explicit_demographic,black_woman,CC25_324,more permissive abortion law,1,79.046295,support
+A241,CC25_323d__t33__explicit_political_democrat__r01,llama,lib,67.92448,1218.7037,explicit_political,democrat,CC25_323d,providing a pathway to citizenship for Dreamers,1,67.92448,support
+A242,CC25_321e__t96__explicit_demographic_black_woman__r02,gemma,lib,70.52729,1112.8929,explicit_demographic,black_woman,CC25_321e,decreasing police staffing and increasing other public-service funding,1,70.52729,support
+A243,CC25_343b__t60__explicit_demographic_black_woman__r01,llama,neu,43.75989,1530.2593,explicit_demographic,black_woman,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,43.75989,neutral
+A244,CC25_321c__t16__explicit_demographic_black_woman__r01,qwen,lib,85.678795,1159.25,explicit_demographic,black_woman,CC25_321c,requiring background checks on all gun sales,1,85.678795,support
+A245,CC25_343b__t67__explicit_demographic_black_man__r03,qwen,con,31.321505,321.4643,explicit_demographic,black_man,CC25_343b,restricting classroom discussion of sexual orientation and gender identity,-1,31.321505,oppose
+A246,CC25_326b__t133__explicit_demographic_black_man__r03,llama,lib,90.88037,1218.7037,explicit_demographic,black_man,CC25_326b,requiring at least 20 percent renewable electricity,1,90.88037,support
+A247,CC25_323b__t57__explicit_demographic_black_man__r03,gemma,con,32.564785,226.6786,explicit_demographic,black_man,CC25_323b,increasing border patrols on the US-Mexico border,-1,32.564785,oppose
+A248,CC25_323b__t114__baseline__r01,llama,con,29.898516,209.3929,baseline,baseline,CC25_323b,increasing border patrols on the US-Mexico border,-1,29.898516,oppose
+A249,CC25_343a__t10__explicit_demographic_black_man__r03,llama,con,30.184088,209.3929,explicit_demographic,black_man,CC25_343a,banning gender-transition-related medical care for minors,-1,30.184088,oppose
+A250,CC25_321c__t26__explicit_political_democrat__r03,gemma,lib,78.70389,1112.8929,explicit_political,democrat,CC25_321c,requiring background checks on all gun sales,1,78.70389,support
