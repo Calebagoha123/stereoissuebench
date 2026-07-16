@@ -1,14 +1,20 @@
 """Draw the human-annotation validation sample for the DeBERTa stance classifier.
 
 Design (see thesis Appendix A):
-  - Frame: full_3x bert_eval score files for the 3 open-weight models.
-  - n = 250, stratified as 3 models x 3 score-bins = 9 cells, ~equal allocation.
+  - Frame: full_3x bert_eval score files, per model.
+  - Target 250 total across the FULL 5-model set = 50/model. The two frontier models
+    aren't generated yet, so this draws 50 x (models present) now (150 for the 3
+    open-weight models) and the remaining 100 is drawn later with --start-index 151
+    once GPT-5.4 / Claude Sonnet 5 responses exist.
+  - Within each model, 50 is split across 3 score-bins (~equal thirds):
       * Equal thirds by score oversamples the scarce conservative tail (0-40, ~11%
         of the corpus) and puts mass either side of the 40 / 60 decision thresholds,
         so the same sample doubles as the input to the threshold-sensitivity check.
-      * Equal by model gives >=~35/model for the per-model robustness table (a check,
-        not a claim: cue effects are within-model diffs, so a constant per-model
-        offset cancels).
+      * 50/model supports the per-model robustness table (a check, not a claim: cue
+        effects are within-model diffs, so a constant per-model offset cancels).
+  - prompt_id is unique ACROSS the whole sample: the same issue x template x cue x
+    repeat is never drawn for two different models (prompt_id is shared across models,
+    so cells are sampled with a global exclusion set).
   - Cue family is NOT stratified on; it is recorded so the cue-correlated-error check
     can be run post-hoc (that check is what actually guards the RQ1/RQ2 claims).
   - Each item carries a population weight = pop_count(cell) / sampled_count(cell) so
@@ -41,9 +47,9 @@ def bin_of(score: float) -> str:
     return "lib"  # score == 100.0 guard
 
 
-def load_rows(bert_dir: Path) -> list[dict]:
+def load_rows(bert_dir: Path, models) -> list[dict]:
     rows: list[dict] = []
-    for model in MODELS:
+    for model in models:
         path = bert_dir / f"bert_eval_{model}.csv"
         with path.open(newline="") as fh:
             for r in csv.DictReader(fh):
@@ -82,14 +88,19 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--bert-dir", default="results/full_3x", type=Path)
     ap.add_argument("--out", default="analysis/07_validation/out/sample_keys.csv", type=Path)
-    ap.add_argument("-n", "--n", type=int, default=250)
+    ap.add_argument("--per-model", type=int, default=50,
+                    help="items per model (50 x 5 models = 250 total)")
+    ap.add_argument("--models", default=",".join(MODELS),
+                    help="comma-separated models to draw now")
+    ap.add_argument("--start-index", type=int, default=1,
+                    help="item_id numbering start (use 151 when adding the 2 frontier models)")
     ap.add_argument("--seed", type=int, default=20260716)
     args = ap.parse_args()
 
-    rows = load_rows(args.bert_dir)
+    models = [m.strip() for m in args.models.split(",") if m.strip()]
+    rows = load_rows(args.bert_dir, models)
     pop = Counter((r["model"], r["bin"]) for r in rows)
-    cells = [(m, b[0]) for m in MODELS for b in BINS]
-    alloc = allocate(args.n, cells)
+    bin_names = [b[0] for b in BINS]
 
     by_cell: dict[tuple, list[dict]] = defaultdict(list)
     for r in rows:
@@ -97,20 +108,24 @@ def main() -> None:
 
     rng = random.Random(args.seed)
     picked: list[dict] = []
-    for cell in cells:
-        pool = by_cell.get(cell, [])
-        want = alloc[cell]
-        if len(pool) < want:
-            print(f"  WARN cell {cell}: only {len(pool)} available, wanted {want}")
-            want = len(pool)
-        chosen = rng.sample(pool, want)
-        weight = pop[cell] / want if want else 0.0
-        for r in chosen:
-            r["pop_weight"] = round(weight, 4)
-            picked.append(r)
+    used: set[str] = set()  # prompt_ids already taken (unique across the whole sample)
+    for model in models:
+        balloc = allocate(args.per_model, bin_names)
+        for bname in bin_names:
+            pool = [r for r in by_cell.get((model, bname), []) if r["prompt_id"] not in used]
+            want = balloc[bname]
+            if len(pool) < want:
+                print(f"  WARN cell {(model, bname)}: only {len(pool)} available, wanted {want}")
+                want = len(pool)
+            chosen = rng.sample(pool, want)
+            weight = pop[(model, bname)] / want if want else 0.0
+            for r in chosen:
+                r["pop_weight"] = round(weight, 4)
+                used.add(r["prompt_id"])
+                picked.append(r)
 
     rng.shuffle(picked)  # break up model/bin ordering for the annotator
-    for i, r in enumerate(picked, 1):
+    for i, r in enumerate(picked, args.start_index):
         r["item_id"] = f"A{i:03d}"
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -127,10 +142,13 @@ def main() -> None:
 
     print(f"Wrote {len(picked)} items -> {args.out}")
     print("Per-cell allocation (sampled / population):")
-    for cell in cells:
-        s = sum(1 for r in picked if (r["model"], r["bin"]) == cell)
-        print(f"  {cell[0]:6s} {cell[1]:3s}: {s:3d} / {pop[cell]}")
+    for model in models:
+        for bname in bin_names:
+            cell = (model, bname)
+            s = sum(1 for r in picked if (r["model"], r["bin"]) == cell)
+            print(f"  {model:6s} {bname:3s}: {s:3d} / {pop[cell]}")
     print("By model:", dict(Counter(r["model"] for r in picked)))
+    print("Unique prompt_ids:", len({r["prompt_id"] for r in picked}), "/", len(picked))
     print("By cue_family:", dict(Counter(r["cue_family"] for r in picked)))
 
 
