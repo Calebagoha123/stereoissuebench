@@ -53,15 +53,18 @@ plt.rcParams.update({
     "axes.spines.right": False,
 })
 
-# 3 open-source models (GPT arm not yet available). Order = legend order.
-MODELS = ["qwen", "gemma", "llama"]
-MODEL_LABEL = {"qwen": "Qwen-3.6-27B", "gemma": "Gemma-3-12B", "llama": "Llama-3.1-8B"}
+# 3 open-source (3-rep) models + 2 frontier (1-rep, API) models. Order = legend order.
+MODELS = ["qwen", "gemma", "llama", "gpt56terra", "sonnet5"]
+MODEL_LABEL = {"qwen": "Qwen-3.6-27B", "gemma": "Gemma-3-12B", "llama": "Llama-3.1-8B",
+               "gpt56terra": "GPT-5.6 Terra", "sonnet5": "Claude Sonnet 5"}
 # Okabe-Ito orange/green/blue: the CB-safe trio that stays separable under
 # deuteranopia/protanopia (-> yellow / grey / blue). Avoid the orange/green/pink
 # set, where green and reddish-purple both desaturate to the same grey.
-MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2"}
+# Frontier pair: reddish-purple + sky-blue (both CB-safe, distinct from the trio).
+MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2",
+                "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}
 # Redundant per-model marker shape so identity survives even total colour loss.
-MODEL_MARKER = {"qwen": "o", "gemma": "s", "llama": "^"}
+MODEL_MARKER = {"qwen": "o", "gemma": "s", "llama": "^", "gpt56terra": "D", "sonnet5": "v"}
 
 SCORE = "bert_liberal_score"
 

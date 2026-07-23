@@ -37,9 +37,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-MODELS = ["llama", "gemma", "qwen"]
-MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B"}
-MODEL_COLOUR = {"llama": "#2e6da4", "gemma": "#27915b", "qwen": "#c0392b"}
+# 3 open-source (3-rep) + 2 frontier (1-rep, API) models. The frontier arm is
+# single-generation, so rep-dependent checks (generation_variance) skip it; all
+# rep-agnostic RQ2 tables (model_shift, calibration, composition) include it.
+MODELS = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
+MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
+               "gpt56terra": "GPT-5.6 Terra", "sonnet5": "Claude Sonnet 5"}
+MODEL_COLOUR = {"llama": "#2e6da4", "gemma": "#27915b", "qwen": "#c0392b",
+                "gpt56terra": "#8e44ad", "sonnet5": "#2980b9"}
 
 FULL3X = Path("results/full_3x")
 ROBUST = Path("results/robustness")

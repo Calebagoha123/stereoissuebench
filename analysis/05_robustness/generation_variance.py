@@ -46,6 +46,12 @@ def main():
     per_rep = []
     for m in MODELS:
         d = load_model(m)
+        # Test-retest / generation-noise needs >=2 reps; the frontier arm is
+        # single-generation (1 rep), so it has no within-prompt variance to
+        # decompose. Skip it here (it still enters the rep-agnostic RQ2 tables).
+        if d["rep"].nunique() < 2:
+            print(f"  skip {m}: single-generation arm (no test-retest)")
+            continue
         vc = variance_components(d)
         recs.append({"model": m, **vc})
         # per-replicate cue effects
