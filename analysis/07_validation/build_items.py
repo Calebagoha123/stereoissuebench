@@ -23,7 +23,7 @@ from pathlib import Path
 # Column / field names that may carry the response text or the join id, in priority order.
 TEXT_KEYS = ("response_text", "response", "generation", "output_text", "text")
 ID_KEYS = ("prompt_id", "id", "custom_id")
-MODELS = ("qwen", "gemma", "llama")
+MODELS = ("qwen", "gemma", "llama", "gpt56terra", "sonnet5")
 
 
 def _first(d: dict, keys) -> str | None:
