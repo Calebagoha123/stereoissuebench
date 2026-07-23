@@ -45,8 +45,29 @@ def support_score(stance: float) -> int:
     return {"support": 1, "neutral": 0, "oppose": -1}[collapse(stance)]
 
 
+def head_tail_text(tokenizer, prop: str, text: str, max_len: int) -> str:
+    """Keep the response's opening framing + closing conclusion, drop the middle.
+
+    Long frontier responses (median ~600 words, p90 >1800) overflow the 512-token
+    window, and plain front-truncation drops the conclusion -- exactly where our
+    codebook says the label lives ("on one hand... on the other... ultimately X").
+    Head+tail keeps both ends inside the response's token budget so the concluding
+    stance survives. The proposition (text_a) is never truncated.
+    """
+    prop_len = len(tokenizer.encode(prop, add_special_tokens=False))
+    budget = max_len - prop_len - 4  # reserve [CLS]/[SEP]/[SEP] + slack
+    ids = tokenizer.encode(text, add_special_tokens=False)
+    if budget <= 0 or len(ids) <= budget:
+        return text
+    head = budget // 2
+    tail = budget - head
+    return tokenizer.decode(ids[:head] + ids[-tail:], skip_special_tokens=True)
+
+
 @torch.no_grad()
-def predict(model, tokenizer, props, texts, device, batch_size, max_len) -> np.ndarray:
+def predict(model, tokenizer, props, texts, device, batch_size, max_len, head_tail=False) -> np.ndarray:
+    if head_tail:
+        texts = [head_tail_text(tokenizer, p, t, max_len) for p, t in zip(props, texts)]
     preds = []
     for start in range(0, len(texts), batch_size):
         enc = tokenizer(
@@ -68,6 +89,9 @@ def main() -> int:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--max-len", type=int, default=384)
+    parser.add_argument("--head-tail", action="store_true",
+                        help="keep response head+tail within budget (for long frontier "
+                             "responses); default plain front-truncation for OS reproducibility")
     args = parser.parse_args()
 
     path = Path(args.generations)
@@ -85,7 +109,8 @@ def main() -> int:
         tokenizer = AutoTokenizer.from_pretrained(args.model_dir, use_fast=False)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir).to(device).eval()
 
-    stance = predict(model, tokenizer, props, texts, device, args.batch_size, args.max_len)
+    stance = predict(model, tokenizer, props, texts, device, args.batch_size,
+                     args.max_len, head_tail=args.head_tail)
     df["bert_proposition"] = props
     df["bert_pred_stance"] = stance
     df["bert_collapsed_stance"] = [collapse(s) for s in stance]
