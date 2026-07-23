@@ -20,7 +20,7 @@ omitted deliberately (a LaTeX caption carries the takeaway).
                          2025 subgroup shift (subgroup - population). y = x is
                          perfect calibration; steeper than the line = exaggerates
                          the real gap, flatter (toward y = 0) = flattens it.
-                         Colour = model, marker shape = cue family.
+                         Marker shape = model, colour = cue family.
   fig3_composition.png   Baseline (no-cue) Liberal / Neutral / Conservative
                          response mix (liberal on the LEFT, conservative on the
                          RIGHT), one row per issue, one column per model, as
@@ -67,6 +67,91 @@ MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2",
 MODEL_MARKER = {"qwen": "o", "gemma": "s", "llama": "^", "gpt56terra": "D", "sonnet5": "v"}
 
 SCORE = "bert_liberal_score"
+
+# --- company logos as point markers + legend keys ---------------------------
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib.legend_handler import HandlerBase
+import matplotlib.image as _mpimg
+import os as _os
+
+# Thesis = clean shape markers (Okabe-Ito). Public-facing = company logos.
+# Toggle with THESIS_LOGOS=1; the logo build writes to its own figures dir.
+USE_LOGOS = _os.environ.get("THESIS_LOGOS", "0") == "1"
+
+_LOGO_DIR = Path(__file__).resolve().parents[2] / "figures" / "logos" / "png"
+_LOGO_CACHE: dict = {}
+
+
+def _logo(model: str):
+    if model not in _LOGO_CACHE:
+        _LOGO_CACHE[model] = _mpimg.imread(_LOGO_DIR / f"{model}.png")
+    return _LOGO_CACHE[model]
+
+
+def place_logo(ax, x, y, model, target_px=14, zorder=5):
+    """Drop a company logo at (x, y) in data coords, sized to ~target_px tall."""
+    oi = OffsetImage(_logo(model), zoom=target_px / _logo(model).shape[0])
+    ax.add_artist(AnnotationBbox(oi, (x, y), frameon=False, pad=0.0, zorder=zorder,
+                                 box_alignment=(0.5, 0.5), clip_on=False))
+
+
+class _HandlerLogo(HandlerBase):
+    """Legend handler that renders a model's logo instead of a marker glyph."""
+    def __init__(self, model, target_px=16, **kw):
+        super().__init__(**kw)
+        self.model, self.target_px = model, target_px
+
+    def create_artists(self, legend, orig, xd, yd, width, height, fontsize, trans):
+        oi = OffsetImage(_logo(self.model), zoom=self.target_px / _logo(self.model).shape[0])
+        ab = AnnotationBbox(oi, (width / 2.0 - xd, height / 2.0 - yd), frameon=False,
+                            pad=0.0, box_alignment=(0.5, 0.5))
+        ab.set_transform(trans)
+        return [ab]
+
+
+def logo_legend(ax, models, extra_handles=None, target_px=16, **legend_kw):
+    """A legend whose model rows are company logos (points-and-legend request)."""
+    handles = [plt.Line2D([], [], ls="", label=MODEL_LABEL[m]) for m in models]
+    hmap = {h: _HandlerLogo(m, target_px) for h, m in zip(handles, models)}
+    if extra_handles:
+        handles += extra_handles
+    return ax.legend(handles=handles, handler_map=hmap, **legend_kw)
+
+
+class _HandlerLogoShape(HandlerBase):
+    """Legend key = the model's marker shape next to its logo (for figures where the
+    point encodes model-by-shape but we still want the logo in the legend)."""
+    def __init__(self, model, marker, target_px=14, **kw):
+        super().__init__(**kw)
+        self.model, self.marker, self.target_px = model, marker, target_px
+
+    def create_artists(self, legend, orig, xd, yd, width, height, fontsize, trans):
+        ln = plt.Line2D([width * 0.30 - xd], [height / 2.0 - yd], marker=self.marker,
+                        ls="", color="#444444", mec="white", mew=0.5, markersize=7)
+        ln.set_transform(trans)
+        oi = OffsetImage(_logo(self.model), zoom=self.target_px / _logo(self.model).shape[0])
+        oi.set_offset((width * 0.74 - xd, height / 2.0 - yd))
+        oi.set_transform(trans)
+        return [ln, oi]
+
+
+def logo_shape_legend(ax, models, markers, target_px=14, **legend_kw):
+    handles = [plt.Line2D([], [], ls="", label=MODEL_LABEL[m]) for m in models]
+    hmap = {h: _HandlerLogoShape(m, markers[m], target_px) for h, m in zip(handles, models)}
+    return ax.legend(handles=handles, handler_map=hmap, **legend_kw)
+
+
+def _logo_point(ax, x, xerr, edge, y, colour, model):
+    """Logo marker + CI if on-scale; off-scale falls back to a colored star at the
+    edge (keeps model colour + the 'clamped' signal, which a logo can't convey)."""
+    if abs(x) <= edge:
+        if xerr is not None:
+            ax.errorbar(x, y, xerr=xerr, fmt="none", ecolor=colour,
+                        elinewidth=1.3, capsize=0, zorder=3)
+        place_logo(ax, x, y, model)
+    else:
+        ax.plot(np.copysign(edge, x), y, marker="*", ms=13, color=colour,
+                mec="white", mew=0.7, zorder=4, clip_on=False)
 
 
 def _tcrit(n: int) -> float:
@@ -245,6 +330,24 @@ def _forest_point(ax, x, xerr, edge, y, colour, marker):
                 mec="white", mew=0.7, zorder=4, clip_on=False)
 
 
+def _model_point(ax, x, xerr, edge, y, colour, m):
+    """One model's point: a company logo (public build) or a shape (thesis)."""
+    if USE_LOGOS:
+        _logo_point(ax, x, xerr, edge, y, colour, m)
+    else:
+        _forest_point(ax, x, xerr, edge, y, colour, MODEL_MARKER[m])
+
+
+def _model_legend(ax, models, extra_handles=None, **legend_kw):
+    if USE_LOGOS:
+        return logo_legend(ax, models, extra_handles=extra_handles, **legend_kw)
+    handles = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", color=MODEL_COLOUR[m],
+                          label=MODEL_LABEL[m], mec="white", mew=0.7) for m in models]
+    if extra_handles:
+        handles += extra_handles
+    return ax.legend(handles=handles, **legend_kw)
+
+
 def _frame_rows(ax, rows, bands, ylabels: bool):
     """Shared row scaffolding: cue-group bands, row ticks, and orientation."""
     # Direction (liberal left / conservative right) is carried by the axis-edge
@@ -298,7 +401,7 @@ def _draw_stance_panel(ax, data, base_lvl, offs, rows, bands, ylabels=True, lege
                     np.full(len(im), yy + off), ls="", marker="o", ms=2.6,
                     color=MODEL_COLOUR[m], alpha=0.30, mec="none", zorder=2)
             lv, _ = level_ci(df, cm)
-            _forest_point(ax, lv, None, STANCE_EDGE, yy + off, MODEL_COLOUR[m], MODEL_MARKER[m])
+            _model_point(ax, lv, None, STANCE_EDGE, yy + off, MODEL_COLOUR[m], m)
 
     # Dashed per-model line = that model's own no-cue anchor (where it starts).
     # Contrast the shift panel's solid zero, which is a null.
@@ -321,15 +424,13 @@ def _draw_stance_panel(ax, data, base_lvl, offs, rows, bands, ylabels=True, lege
     # No CI is named here: the cheapest signal that this panel makes no claim.
     ax.set_xlabel(r"Model stance  ($\bar{Y}_k$)", fontsize=11.5)
     if legend:
-        handles = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", color=MODEL_COLOUR[m],
-                              label=MODEL_LABEL[m], mec="white", mew=0.7) for m in MODELS]
-        handles += [
+        extra = [
             plt.Line2D([], [], marker="o", ls="", ms=3.4, color="#777777", alpha=0.45,
                        label="per-issue mean (19 issues)"),
             plt.Line2D([], [], color="#999999", ls="--", lw=1.1,
                        label=r"model baseline ($\bar{Y}_{\mathrm{baseline}}$)")]
-        ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=9,
-                  labelspacing=0.7)
+        _model_legend(ax, MODELS, extra_handles=extra, loc="lower right", frameon=False,
+                      fontsize=9, labelspacing=0.7)
 
 
 def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True):
@@ -339,7 +440,7 @@ def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True):
             df = data[m]
             cm = cue_mask(df, fam, grp)
             sh, se = shift_ci(df, cm, baseline_for(df, cm))
-            _forest_point(ax, sh, se, SHIFT_EDGE, yy + off, MODEL_COLOUR[m], MODEL_MARKER[m])
+            _model_point(ax, sh, se, SHIFT_EDGE, yy + off, MODEL_COLOUR[m], m)
 
     ax.axvline(0, color="#222222", lw=1.5, zorder=2)  # the null
     ax.set_xlim(-SHIFT_EDGE * 1.06, SHIFT_EDGE * 1.06)
@@ -347,14 +448,12 @@ def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True):
     _direction_tags(ax, "←  more liberal", "more conservative  →")
     ax.set_xlabel(r"Shift vs. no-cue baseline  ($\hat{\Delta}_k$), 95% CI", fontsize=11.5)
     if legend:
-        handles = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", color=MODEL_COLOUR[m],
-                              label=MODEL_LABEL[m], mec="white", mew=0.7) for m in MODELS]
         # The off-scale star only matters here (only the shift is clamped).
-        handles.append(plt.Line2D([], [], marker="*", ls="", ms=12, color="#777777",
-                                  mec="white", mew=0.7,
-                                  label=f"$\\hat{{\\Delta}}_k < -{SHIFT_EDGE:g}$"))
-        ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=9,
-                  labelspacing=0.7)
+        extra = [plt.Line2D([], [], marker="*", ls="", ms=12, color="#777777",
+                            mec="white", mew=0.7,
+                            label=f"off scale: $|\\hat{{\\Delta}}_k| > {SHIFT_EDGE:g}$")]
+        _model_legend(ax, MODELS, extra_handles=extra, loc="lower right", frameon=False,
+                      fontsize=9, labelspacing=0.7)
 
 
 def _panel_header(ax, title, subtitle):
@@ -436,6 +535,13 @@ FAM_MARKER = {
     "implicit_political": "^",
     "implicit_demographic": "D",
 }
+# Fig 2 encodes MODEL by marker shape and CUE FAMILY by colour (Okabe-Ito, CB-safe).
+FAM_COLOUR = {
+    "explicit_political": "#D55E00",    # vermillion  — party labels
+    "explicit_demographic": "#0072B2",  # blue        — race x gender
+    "implicit_political": "#009E73",    # green       — location
+    "implicit_demographic": "#CC79A7",  # purple      — name
+}
 FAM_MARKER_LABEL = {
     "explicit_political": "Party labels",
     "explicit_demographic": "Race × gender",
@@ -478,10 +584,10 @@ def fig_calibration(data, ces_table: Path, out: Path, fmts, robust_dir: Path):
         for m in MODELS:
             df = data[m]
             sh, se = shift_ci(df, cue_mask(df, fam, grp), base_mask(df))  # 95% half-width
-            ax.errorbar(x, sh, xerr=xerr, yerr=se, fmt="none", ecolor=MODEL_COLOUR[m],
+            ax.errorbar(x, sh, xerr=xerr, yerr=se, fmt="none", ecolor=FAM_COLOUR[fam],
                         elinewidth=0.9, alpha=0.4, zorder=2, capsize=0)
-            ax.scatter(x, sh, marker=FAM_MARKER[fam], s=64,
-                       color=MODEL_COLOUR[m], edgecolor="white", linewidth=0.6,
+            ax.scatter(x, sh, marker=MODEL_MARKER[m], s=70,
+                       color=FAM_COLOUR[fam], edgecolor="white", linewidth=0.6,
                        zorder=3, alpha=0.9)
             xs_all.append(x); ys_all.append(sh)
 
@@ -529,14 +635,19 @@ def fig_calibration(data, ces_table: Path, out: Path, fmts, robust_dir: Path):
                   fontsize=11.5)
     ax.set_ylabel(r"Model stance shift  ($\bar{Y}_k-\bar{Y}_{baseline}$)", fontsize=11.5)
 
-    model_handles = [plt.Line2D([], [], marker="o", ls="", color=MODEL_COLOUR[m],
-                                label=MODEL_LABEL[m], mec="white", mew=0.5)
-                     for m in MODELS]
-    fam_handles = [plt.Line2D([], [], marker=FAM_MARKER[f], ls="", color="#555555",
+    # Model = marker shape; cue family = colour. Public build adds the logo to the key.
+    if USE_LOGOS:
+        leg1 = logo_shape_legend(ax, MODELS, MODEL_MARKER, loc="upper left", frameon=False,
+                                 fontsize=9.5, handlelength=2.6, handletextpad=0.6,
+                                 labelspacing=0.7)
+    else:
+        mh = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", color="#444444",
+                         mec="white", mew=0.5, label=MODEL_LABEL[m]) for m in MODELS]
+        leg1 = ax.legend(handles=mh, loc="upper left", frameon=False, fontsize=9.5)
+    ax.add_artist(leg1)
+    fam_handles = [plt.Line2D([], [], marker="s", ls="", color=FAM_COLOUR[f], ms=9,
                               label=FAM_MARKER_LABEL[f], mec="white", mew=0.5)
                    for f in FAM_MARKER]
-    leg1 = ax.legend(handles=model_handles, loc="upper left", frameon=False, fontsize=9.5)
-    ax.add_artist(leg1)
     ax.legend(handles=fam_handles, loc="lower right", frameon=False, fontsize=9.5)
     fig.tight_layout()
     _save(fig, out, "fig2_calibration", fmts)
@@ -663,6 +774,9 @@ def main() -> int:
     args = ap.parse_args()
     fmts = ["pdf", "png"] if args.format == "both" else [args.format]
     rd, fd = Path(args.results_dir), Path(args.figures_dir)
+    # Public/logo build writes to its own dir so the shape-based thesis figures stay put.
+    if USE_LOGOS and args.figures_dir == "figures/full_3x":
+        fd = Path("figures/full_3x_logos")
     fd.mkdir(parents=True, exist_ok=True)
     data = load(rd)
     fig_forest(data, fd, fmts)

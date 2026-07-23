@@ -44,7 +44,7 @@ MODELS = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
 MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
                "gpt56terra": "GPT-5.6 Terra", "sonnet5": "Claude Sonnet 5"}
 MODEL_COLOUR = {"llama": "#2e6da4", "gemma": "#27915b", "qwen": "#c0392b",
-                "gpt56terra": "#8e44ad", "sonnet5": "#2980b9"}
+                "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}  # Okabe-Ito frontier pair
 
 FULL3X = Path("results/full_3x")
 ROBUST = Path("results/robustness")
