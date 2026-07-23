@@ -36,7 +36,7 @@ FULL = Path("results/full")
 def load_eval(model):
     d = pd.read_csv(FULL / f"eval_{model}.csv", low_memory=False,
                     usecols=["arm", "cue_family", "cue_group", "cue_condition",
-                             "eval_label", "liberal_score"])
+                             "template_id", "eval_label", "liberal_score"])
     d["refusal"] = (d["eval_label"] == "refusal")
     d["lib"] = pd.to_numeric(d["liberal_score"], errors="coerce")
     return d
@@ -54,14 +54,19 @@ def main():
     recs = []
     for m in MODELS:
         d = load_eval(m)
-        base = d[d["cue_family"] == "baseline"]
-        nb, rb, sb = group_stats(base)
-        base_obs = sb / (nb - rb) if nb > rb else np.nan
+        base_all = d[d["cue_family"] == "baseline"]
         for fam, grp in CUE_ORDER:
             cue = d[(d["cue_family"] == fam) & (d["cue_group"] == grp)]
             if cue.empty:
                 continue
-            # arm-B cues have no baseline within arm; use the shared baseline
+            # Arm-B cues run on a 35-template SUBSET of the 145 baseline templates,
+            # and that subset is more liberal than the full bank (~0.039 on the
+            # liberal score). Contrasting them against the whole baseline charges
+            # that composition difference to the cue. Match on template, as
+            # _common.py and make_thesis_figures.py do; a no-op for arm A.
+            base = base_all[base_all["template_id"].isin(cue["template_id"].unique())]
+            nb, rb, sb = group_stats(base)
+            base_obs = sb / (nb - rb) if nb > rb else np.nan
             nc, rc, sc = group_stats(cue)
             cue_obs = sc / (nc - rc) if nc > rc else np.nan
             delta_obs = cue_obs - base_obs

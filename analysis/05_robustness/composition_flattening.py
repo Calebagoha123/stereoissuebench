@@ -194,6 +194,8 @@ def main():
 def make_figure(merged, summary):
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
     focus = [("explicit_political", "democrat", "Democrat (label)"),
@@ -223,6 +225,7 @@ def make_figure(merged, summary):
     p = Path("figures/robustness/composition_flattening.png")
     p.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(p, dpi=200, bbox_inches="tight")
+    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
     print(f"Wrote {p}")
 
 

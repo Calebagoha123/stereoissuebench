@@ -79,6 +79,8 @@ def main():
 def make_figure(df):
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
     groups = [("implicit_demographic", "black_woman", "“Black-female” names"),
@@ -111,6 +113,7 @@ def make_figure(df):
     p = Path("figures/robustness/instance_breakdown.png")
     p.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(p, dpi=200)
+    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
     print(f"Wrote {p}")
 
 

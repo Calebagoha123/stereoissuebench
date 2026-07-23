@@ -155,41 +155,78 @@ def main():
     make_figure(df, out)
 
 
+# Match fig2_calibration: colour = model (Okabe-Ito), marker shape = cue family.
+FIG2_MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#CC79A7"}
+FIG2_MODEL_LABEL = {"qwen": "Qwen-3.6-27B", "gemma": "Gemma-3-12B", "llama": "Llama-3.1-8B"}
+FAM_MARKER = {"explicit_political": "o", "explicit_demographic": "s",
+              "implicit_political": "^", "implicit_demographic": "D"}
+FAM_MARKER_LABEL = {"explicit_political": "Explicit political",
+                    "explicit_demographic": "Explicit demographic",
+                    "implicit_political": "Implicit political",
+                    "implicit_demographic": "Implicit demographic"}
+
+
 def make_figure(df, fits):
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(8.2, 7.6))
+    fig, ax = plt.subplots(figsize=(8.6, 8.2))
     lim = 0.72
     xs = np.linspace(-lim, lim, 100)
-    ax.plot(xs, xs, "--", color="#888", lw=1.1, zorder=1, label="calibration (y = x)")
-    ax.axhline(0, color="#ccc", lw=0.7, zorder=0)
-    ax.axvline(0, color="#ccc", lw=0.7, zorder=0)
-    for m in MODELS:
+    ax.plot(xs, xs, "--", color="#444", lw=1.2, zorder=1)          # y = x
+    ax.axhline(0, color="#bbbbbb", lw=0.8, zorder=0)
+    ax.axvline(0, color="#bbbbbb", lw=0.8, zorder=0)
+
+    # one errorbar call per (model, cue family) so colour encodes model and marker
+    # shape encodes the cue family (matching fig2_calibration).
+    for m in ["qwen", "gemma", "llama"]:
         sub = df[df["model"] == m]
-        ax.errorbar(sub["ces_shift_mean"], sub["model_shift"],
-                    yerr=[sub["model_shift"] - sub["model_shift_lo"], sub["model_shift_hi"] - sub["model_shift"]],
-                    xerr=[sub["ces_shift_mean"] - sub["ces_shift_ci_low"], sub["ces_shift_ci_high"] - sub["ces_shift_mean"]],
-                    fmt="o", ms=6, color=MODEL_COLOUR[m], ecolor=MODEL_COLOUR[m],
-                    elinewidth=0.7, capsize=1.5, alpha=0.85, label=MODEL_LABEL[m], zorder=3)
+        for fam, g in sub.groupby("cue_family"):
+            ax.errorbar(g["ces_shift_mean"], g["model_shift"],
+                        yerr=[g["model_shift"] - g["model_shift_lo"], g["model_shift_hi"] - g["model_shift"]],
+                        xerr=[g["ces_shift_mean"] - g["ces_shift_ci_low"], g["ces_shift_ci_high"] - g["ces_shift_mean"]],
+                        fmt=FAM_MARKER[fam], ms=7, color=FIG2_MODEL_COLOUR[m],
+                        ecolor=FIG2_MODEL_COLOUR[m], elinewidth=0.7, capsize=1.5,
+                        alpha=0.9, mec="white", mew=0.5, zorder=3)
+
     pooled = fits[fits["scope"] == "pooled"].iloc[0]
-    ax.plot(xs, pooled["deming_slope"] * xs + pooled["deming_intercept"] if "deming_intercept" in pooled else pooled["deming_slope"] * xs,
-            color="#111", lw=2.0, zorder=4,
-            label=f"Deming slope = {pooled['deming_slope']:.2f}")
-    ax.plot(xs, pooled["ols_origin_slope"] * xs, color="#111", lw=1.2, ls=":", zorder=4,
-            label=f"OLS(origin) = {pooled['ols_origin_slope']:.2f}")
-    ax.set_xlim(-lim, lim)
-    ax.set_ylim(-lim, lim)
-    ax.set_aspect("equal")
-    ax.set_xlabel("Real CES group shift  (subgroup − population)")
-    ax.set_ylabel("Model stance shift  (cued − baseline)")
-    ax.legend(loc="lower right", fontsize=8.5, frameon=True)
+    b_dem = pooled["deming_slope"]
+    a_dem = pooled["deming_intercept"] if "deming_intercept" in pooled else 0.0
+    ax.plot(xs, b_dem * xs + a_dem, color="#111", lw=2.0, zorder=4)
+    ax.plot(xs, pooled["ols_origin_slope"] * xs, color="#111", lw=1.2, ls=":", zorder=4)
+    ax.text(0.60 * lim, 0.72 * lim, "perfect calibration\n(model shift = real shift)",
+            color="#666666", fontsize=9, ha="center", va="center", rotation=45,
+            rotation_mode="anchor")
+
+    ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
+    ax.set_xlabel(r"Real CES group shift  ($\mu_k^{CES}-\mu_{pop}^{CES}$)", fontsize=11.5)
+    ax.set_ylabel(r"Model stance shift  ($\bar{Y}_k-\bar{Y}_{baseline}$)", fontsize=11.5)
+
+    # legends: fit lines + models (upper-left), cue-family markers (lower-right)
+    line_handles = [
+        plt.Line2D([], [], ls="--", color="#444", label="calibration ($y=x$)"),
+        plt.Line2D([], [], ls="-", color="#111", lw=2, label=f"Deming slope = {b_dem:.2f}"),
+        plt.Line2D([], [], ls=":", color="#111", label=f"OLS(origin) = {pooled['ols_origin_slope']:.2f}"),
+    ]
+    model_handles = [plt.Line2D([], [], marker="o", ls="", color=FIG2_MODEL_COLOUR[m],
+                                label=FIG2_MODEL_LABEL[m], mec="white", mew=0.5)
+                     for m in ["qwen", "gemma", "llama"]]
+    fam_handles = [plt.Line2D([], [], marker=FAM_MARKER[f], ls="", color="#555555",
+                              label=FAM_MARKER_LABEL[f], mec="white", mew=0.5)
+                   for f in FAM_MARKER]
+    leg1 = ax.legend(handles=line_handles + model_handles, loc="upper left",
+                     frameon=False, fontsize=9)
+    ax.add_artist(leg1)
+    ax.legend(handles=fam_handles, loc="lower right", frameon=False, fontsize=9)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     p = Path("figures/robustness/rq2_regression.png")
     p.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(p, dpi=200)
+    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
     print(f"Wrote {p}")
 
 

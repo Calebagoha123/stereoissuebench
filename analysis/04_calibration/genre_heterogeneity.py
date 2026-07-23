@@ -84,6 +84,8 @@ def main():
 def make_figure(out):
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
     cues = [c[2] for c in KEY_CUES]
@@ -106,6 +108,7 @@ def make_figure(out):
     fig.tight_layout()
     p = Path("figures/robustness/genre_heterogeneity.png")
     fig.savefig(p, dpi=200, bbox_inches="tight")
+    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
     print(f"Wrote {p}")
 
 

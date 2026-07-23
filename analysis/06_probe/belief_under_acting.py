@@ -123,6 +123,8 @@ def main():
 def make_figure(out, sd):
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 6.0), sharex=True, sharey=True)
@@ -151,6 +153,7 @@ def make_figure(out, sd):
     p = Path("figures/probe_thesis/belief_under_acting_common_ruler.png")
     p.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(p, dpi=200, bbox_inches="tight")
+    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
     print(f"Wrote {p}")
 
 

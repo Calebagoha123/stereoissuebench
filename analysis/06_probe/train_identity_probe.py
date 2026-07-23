@@ -43,7 +43,7 @@ import pandas as pd
 try:
     from sklearn.decomposition import PCA
     from sklearn.linear_model import LogisticRegression
-    from sklearn.metrics import balanced_accuracy_score
+    from sklearn.metrics import balanced_accuracy_score, recall_score
     from sklearn.model_selection import GroupKFold
     from sklearn.pipeline import make_pipeline
     from sklearn.preprocessing import StandardScaler
@@ -104,10 +104,15 @@ def fit_eval_cv(X, y, groups, seed=0):
     return balanced_accuracy_score(y, preds)
 
 
-def transfer_acc(Xtr, ytr, Xte, yte):
+def transfer_pred(Xtr, ytr, Xte):
+    """Fit on one cue family, predict on the other; return raw predictions."""
     clf = make_probe(len(Xtr))
     clf.fit(Xtr, ytr)
-    return balanced_accuracy_score(yte, clf.predict(Xte))
+    return clf.predict(Xte)
+
+
+def transfer_acc(Xtr, ytr, Xte, yte):
+    return balanced_accuracy_score(yte, transfer_pred(Xtr, ytr, Xte))
 
 
 def run_decodability(npz, layers, meta, rng) -> pd.DataFrame:
@@ -132,20 +137,34 @@ def run_decodability(npz, layers, meta, rng) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run_transfer(npz, layers, meta) -> pd.DataFrame:
-    """Train race x gender on explicit labels, test on names (and reverse)."""
+def run_transfer(npz, layers, meta) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Train race x gender on explicit labels, test on names (and reverse).
+
+    Returns (overall, by_group): `overall` is the 4-class balanced accuracy per
+    layer (mean of the per-group recalls); `by_group` is per-name-group recall
+    per layer, so the plot can show which names are recovered from the name cue
+    alone. Balanced accuracy == mean of these recalls, so the two agree exactly.
+    """
     exp = meta["cue_family"].eq("explicit_demographic") & meta["cue_group"].isin(RACE_GENDER)
     nam = meta["cue_family"].eq("implicit_demographic") & meta["cue_group"].isin(RACE_GENDER)
     ei, ni = np.where(exp.to_numpy())[0], np.where(nam.to_numpy())[0]
     ye, yn = meta.loc[exp, "cue_group"].to_numpy(), meta.loc[nam, "cue_group"].to_numpy()
-    rows = []
+    rows, grp_rows = [], []
     for layer in layers:
         li = int(layer.split("_")[1])
         XL = layer_X(npz, layer); Xe, Xn = XL[ei], XL[ni]
+        pred_n = transfer_pred(Xe, ye, Xn)   # label -> name
+        pred_e = transfer_pred(Xn, yn, Xe)   # name -> label
         rows.append({"layer": li, "chance": 0.25,
-                     "label_to_name": transfer_acc(Xe, ye, Xn, yn),
-                     "name_to_label": transfer_acc(Xn, yn, Xe, ye)})
-    return pd.DataFrame(rows)
+                     "label_to_name": balanced_accuracy_score(yn, pred_n),
+                     "name_to_label": balanced_accuracy_score(ye, pred_e)})
+        rec_l2n = recall_score(yn, pred_n, labels=RACE_GENDER, average=None, zero_division=0)
+        rec_n2l = recall_score(ye, pred_e, labels=RACE_GENDER, average=None, zero_division=0)
+        for g, rl, rn in zip(RACE_GENDER, rec_l2n, rec_n2l):
+            grp_rows.append({"layer": li, "cue_group": g, "chance": 0.25,
+                             "label_to_name_recall": float(rl),
+                             "name_to_label_recall": float(rn)})
+    return pd.DataFrame(rows), pd.DataFrame(grp_rows)
 
 
 def run_political_axis(npz, layers, meta) -> tuple[pd.DataFrame, int]:
@@ -206,8 +225,9 @@ def main() -> int:
 
     deco = run_decodability(npz, layers, meta, rng)
     deco.to_csv(out_dir / f"{args.tag}_decodability_by_layer.csv", index=False)
-    transfer = run_transfer(npz, layers, meta)
+    transfer, transfer_grp = run_transfer(npz, layers, meta)
     transfer.to_csv(out_dir / f"{args.tag}_cross_cue_transfer.csv", index=False)
+    transfer_grp.to_csv(out_dir / f"{args.tag}_transfer_by_group.csv", index=False)
     proj, best_layer = run_political_axis(npz, layers, meta)
     proj.to_csv(out_dir / f"{args.tag}_political_projection.csv", index=False)
 
@@ -221,6 +241,17 @@ def main() -> int:
         "transfer_label_to_name_max": float(transfer["label_to_name"].max()),
         "transfer_name_to_label_max": float(transfer["name_to_label"].max()),
         "transfer_chance": 0.25,
+    }
+    # per-name-group recall at the layer where label->name transfer peaks (the
+    # same layer transfer_label_to_name_max is read off), so the grouped-bar
+    # figure and the headline number are consistent.
+    best_l2n_layer = int(transfer.loc[transfer["label_to_name"].idxmax(), "layer"])
+    grp_best = transfer_grp[transfer_grp["layer"].eq(best_l2n_layer)]
+    summary["transfer_label_to_name_best_layer"] = best_l2n_layer
+    summary["transfer_by_group_best_layer"] = {
+        r.cue_group: {"label_to_name_recall": float(r.label_to_name_recall),
+                      "name_to_label_recall": float(r.name_to_label_recall)}
+        for r in grp_best.itertuples()
     }
     if args.stance:
         med = run_mediation(proj, best_layer, args.stance)

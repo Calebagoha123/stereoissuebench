@@ -28,6 +28,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 import sys
 import pathlib
@@ -37,7 +38,14 @@ from _common import MODELS, MODEL_LABEL, MODEL_COLOUR, ROBUST
 CES_DTA = "/Users/calebagoha/Desktop/SDS/thesis-experiments/CES/CES25_Common.dta"
 ISSUES = "data/input/issues_experiment.csv"
 STATES = "data/input/states/state_bank.csv"
-Z = 1.96
+# t on 18 df, not 1.96: the model-side SE is a cluster bootstrap over the 19 CES
+# issues, and the issue count -- not the ~8k generations per cell -- sets the df.
+# The CES design SE has effectively infinite df, so the propagated interval is
+# strictly a Satterthwaite case; t_18 is the conservative end of that range and
+# the model side carries the propagated variance anyway (median CI widening from
+# adding CES is 4.1%). See _tcrit in analysis/plotting/make_thesis_figures.py.
+N_ISSUES = 19
+T_CRIT = float(stats.t.ppf(0.975, N_ISSUES - 1))  # 2.101
 
 
 def leading_ints(cell):
@@ -137,8 +145,8 @@ def main():
     # model-only interval (published) vs propagated
     df["se_model_only"] = df["model_shift_se"]
     df["se_did_propagated"] = np.sqrt(df["model_shift_var"] + df["ces_design_var"])
-    df["did_lo"] = df["did"] - Z * df["se_did_propagated"]
-    df["did_hi"] = df["did"] + Z * df["se_did_propagated"]
+    df["did_lo"] = df["did"] - T_CRIT * df["se_did_propagated"]
+    df["did_hi"] = df["did"] + T_CRIT * df["se_did_propagated"]
     df["ci_widening_pct"] = 100 * (df["se_did_propagated"] / df["se_model_only"] - 1)
 
     cols = ["model", "cue_family", "cue_group", "cue_display", "subgroup_n",
@@ -166,6 +174,8 @@ def main():
 def make_figure(df):
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["pdf.fonttype"] = 42
+    matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(8.2, 7.6))
@@ -177,8 +187,9 @@ def make_figure(df):
     for m in MODELS:
         sub = df[df["model"] == m]
         ax.errorbar(sub["ces_shift_mean"], sub["model_shift"],
-                    yerr=Z * sub["se_model_only"],
-                    xerr=Z * sub["ces_design_se"],
+                    yerr=T_CRIT * sub["se_model_only"],
+                    # CES x-errors: respondent-level, large df, so 1.96 is right here
+                    xerr=1.96 * sub["ces_design_se"],
                     fmt="o", ms=6, color=MODEL_COLOUR[m], ecolor=MODEL_COLOUR[m],
                     elinewidth=0.8, capsize=2, alpha=0.85, label=MODEL_LABEL[m])
     ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
@@ -190,6 +201,7 @@ def make_figure(df):
     p = Path("figures/robustness/did_calibration_propagated.png")
     p.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(p, dpi=200)
+    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
     print(f"Wrote {p}")
 
 
