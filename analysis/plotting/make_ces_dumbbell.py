@@ -296,15 +296,40 @@ def write_slope_table(slopes: dict, shift_table: Path, out: Path) -> None:
     (out / "calibration_slope_table.md").write_text("\n".join(md) + note + "\n")
 
     def texcell(t):
-        return rf"{t[0]:.2f}\,$[{t[1]:.2f},\,{t[2]:.2f}]$"
+        return rf"{t[0]:.2f} $[{t[1]:.2f},\,{t[2]:.2f}]$"
 
-    tex = [r"\begin{tabular}{lcc}", r"\toprule",
-           r"Model & $\beta$ (all cues) & $\beta$ (party labels removed) \\",
-           r"\midrule"]
+    tex = [
+        r"\begin{table}[H]",
+        r"\centering",
+        r"\caption{Errors-in-variables calibration slopes by model}",
+        r"\label{tab:calibration_slopes}",
+        r"\small",
+        r"\setlength{\tabcolsep}{8pt}",
+        r"\begin{tabular}{lcc}",
+        r"\toprule",
+        (r"\textbf{Model} & \shortstack{\textbf{All cues} \\ $\beta$ [95\% CI]} "
+         r"& \shortstack{\textbf{Party labels removed} \\ $\beta$ [95\% CI]} \\"),
+        r"\midrule",
+    ]
     for name, allc, nop in rows:
-        pre = r"\midrule " if name.startswith("All models") else ""
-        tex.append(rf"{pre}{name} & {texcell(allc)} & {texcell(nop)} \\")
-    tex += [r"\bottomrule", r"\end{tabular}"]
+        if name.startswith("All models"):
+            tex.append(r"\midrule")
+        tex.append(rf"{name} & {texcell(allc)} & {texcell(nop)} \\")
+    tex += [
+        r"\bottomrule",
+        r"\end{tabular}",
+        "",
+        r"\vspace{3pt}",
+        r"\begin{minipage}{0.92\linewidth}",
+        (r"\footnotesize\textit{Note:} Entries report Deming errors-in-variables "
+         r"slopes with cue-clustered bootstrap 95\% confidence intervals. "
+         r"$\beta=1$ denotes perfect calibration; $\beta<1$ indicates that model "
+         r"shifts flatten the corresponding CES subgroup differences. The "
+         r"right-hand column re-estimates each slope after excluding the Democrat, "
+         r"Independent, and Republican cues."),
+        r"\end{minipage}",
+        r"\end{table}",
+    ]
     (out / "calibration_slope_table.tex").write_text("\n".join(tex) + "\n")
     print("\n".join(md) + note)
 

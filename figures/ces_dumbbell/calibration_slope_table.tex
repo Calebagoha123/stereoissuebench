@@ -1,12 +1,25 @@
+\begin{table}[H]
+\centering
+\caption{Errors-in-variables calibration slopes by model}
+\label{tab:calibration_slopes}
+\small
+\setlength{\tabcolsep}{8pt}
 \begin{tabular}{lcc}
 \toprule
-Model & $\beta$ (all cues) & $\beta$ (party labels removed) \\
+\textbf{Model} & \shortstack{\textbf{All cues} \\ $\beta$ [95\% CI]} & \shortstack{\textbf{Party labels removed} \\ $\beta$ [95\% CI]} \\
 \midrule
-Qwen-3.6-27B & 0.91\,$[0.24,\,1.23]$ & 0.32\,$[0.12,\,0.53]$ \\
-Gemma-3-12B & 0.94\,$[0.33,\,1.18]$ & 0.47\,$[0.12,\,0.82]$ \\
-Llama-3.1-8B & 0.38\,$[0.17,\,0.49]$ & 0.26\,$[0.00,\,0.54]$ \\
-GPT-5.6 Terra & 0.47\,$[0.13,\,0.68]$ & 0.24\,$[0.10,\,0.39]$ \\
-Claude Sonnet 5 & 0.76\,$[0.26,\,1.04]$ & 0.35\,$[0.11,\,0.60]$ \\
-\midrule All models (pooled) & 0.72\,$[0.25,\,0.98]$ & 0.33\,$[0.11,\,0.60]$ \\
+Qwen-3.6-27B & 0.91 $[0.24,\,1.23]$ & 0.32 $[0.12,\,0.53]$ \\
+Gemma-3-12B & 0.94 $[0.33,\,1.18]$ & 0.47 $[0.12,\,0.82]$ \\
+Llama-3.1-8B & 0.38 $[0.17,\,0.49]$ & 0.26 $[0.00,\,0.54]$ \\
+GPT-5.6 Terra & 0.47 $[0.13,\,0.68]$ & 0.24 $[0.10,\,0.39]$ \\
+Claude Sonnet 5 & 0.76 $[0.26,\,1.04]$ & 0.35 $[0.11,\,0.60]$ \\
+\midrule
+All models (pooled) & 0.72 $[0.25,\,0.98]$ & 0.33 $[0.11,\,0.60]$ \\
 \bottomrule
 \end{tabular}
+
+\vspace{3pt}
+\begin{minipage}{0.92\linewidth}
+\footnotesize\textit{Note:} Entries report Deming errors-in-variables slopes with cue-clustered bootstrap 95\% confidence intervals. $\beta=1$ denotes perfect calibration; $\beta<1$ indicates that model shifts flatten the corresponding CES subgroup differences. The right-hand column re-estimates each slope after excluding the Democrat, Independent, and Republican cues.
+\end{minipage}
+\end{table}
