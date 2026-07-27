@@ -26,10 +26,16 @@ import pandas as pd
 
 PROBE = Path("results/probe_internal")
 BELIEF = Path("results/full")
+MASTER = Path("results/consolidated/01_master_cue_effects.csv")
 OUTDIR = Path("figures/probe_thesis")
 
+# Open-weight models carry both arms (behavioural + mechanistic). The two hosted
+# frontier models expose no internals, so they appear in the *behavioural* figures
+# only (belief-vs-stance, relevance, direct-refusal), not the mechanistic ones.
 MODELS_ORDER = ["llama", "gemma", "qwen"]
-MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B"}
+MODELS_BEHAV = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
+MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
+               "gpt56terra": "GPT-5.6", "sonnet5": "Sonnet 5"}
 
 # cue-family palette (consistent with the DiD / cross-model figures)
 FAM_COLOUR = {
@@ -52,12 +58,42 @@ SAVE_FMTS = ["png"]  # set from --fmt in main()
 
 
 def _load_direct_labels(model):
-    """Prefer the adjudicated labels (relabel_direct_probe.py); fall back to the rule."""
+    """Prefer the adjudicated labels (relabel_direct_probe.py); fall back to the rule.
+
+    The adjudicated sheet only covers the open-weight models; the hosted frontier
+    models fall back to their pipeline `label` column in results/full/."""
     p = PROBE / "direct_probe_labeled.csv"
     if p.exists():
         d = pd.read_csv(p)
-        return d[d.model == model].copy()
+        d = d[d.model == model].copy()
+        if len(d):
+            return d
     return pd.read_csv(BELIEF / f"direct_probe_{model}.csv", low_memory=False)
+
+
+def belief_vs_stance(model):
+    """One row per cue group: elicited belief shift vs written-stance shift.
+
+    Belief shift is the continuous opinion-prediction shift (belief_probe, cued −
+    baseline, oriented to the liberal side). The written-stance shift is the model's
+    cue effect from the classifier of record (luna), read from the consolidated
+    master table so all five models — including the two hosted frontier models that
+    expose no internals — use the same stance ruler. Reproduces the r's reported in
+    §4.4 (0.81 Llama, 0.78 Gemma, 0.70 Qwen, 0.77 GPT-5.6, 0.87 Sonnet 5)."""
+    d = pd.read_csv(BELIEF / f"belief_probe_{model}.csv", low_memory=False)
+    d = d[d.probe_kind == "opinion"].copy()
+    d["score"] = pd.to_numeric(d["parsed_score"], errors="coerce")
+    d = d.dropna(subset=["score"])
+    d["b_cont"] = (d["score"] - 50) / 50 * d["liberal_sign"]
+    base = d[d.cue_family == "baseline"].groupby("issue_id")["b_cont"].mean()
+    rows = []
+    for (fam, grp), c in d[d.cue_family != "baseline"].groupby(["cue_family", "cue_group"]):
+        rows.append((fam, grp, (c.groupby("issue_id")["b_cont"].mean() - base).mean()))
+    belief = pd.DataFrame(rows, columns=["cue_family", "cue_group", "belief_cont"])
+    master = pd.read_csv(MASTER)
+    master = master[master.model == model][["cue_family", "cue_group", "model_shift"]]
+    out = belief.merge(master, on=["cue_family", "cue_group"], how="inner")
+    return out.rename(columns={"model_shift": "stance_shift"})
 
 
 def save_fig(fig, stem):
@@ -167,15 +203,18 @@ def d_refusal(ax, model):
 
 
 def threeup_belief(models):
-    """Belief vs stance, three open models side by side (shared axes, one legend)."""
+    """Belief vs stance, all behavioural models side by side (shared axes, one legend).
+
+    Open-weight models plus the two hosted frontier models; the frontier panels are
+    marked with a rule under the title since they carry the behavioural arm only."""
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
     from scipy import stats
-    d_all = pd.read_csv(PROBE / "belief_under_acting.csv")
     lim = 0.9
-    fig, axes = plt.subplots(1, 3, figsize=(12.6, 4.7), sharex=True, sharey=True)
+    n = len(models)
+    fig, axes = plt.subplots(1, n, figsize=(2.9 * n + 0.6, 4.4), sharex=True, sharey=True)
     for ax, m in zip(axes, models):
-        d = d_all[d_all.model == m]
+        d = belief_vs_stance(m)
         r = stats.pearsonr(d["belief_cont"], d["stance_shift"])[0]
         ax.plot([-lim, lim], [-lim, lim], "--", color="#7a7a7a", lw=1.1, zorder=1)
         ax.axhline(0, color=GRID, lw=0.8, zorder=0)
@@ -183,7 +222,7 @@ def threeup_belief(models):
         for fam, g in d.groupby("cue_family"):
             ax.scatter(g["belief_cont"], g["stance_shift"], s=42, color=FAM_COLOUR[fam],
                        edgecolor="white", linewidth=0.6, zorder=3)
-        ax.text(0.04, 0.95, f"$r = {r:.2f}$", transform=ax.transAxes, fontsize=11, va="top")
+        ax.text(0.05, 0.95, f"$r = {r:.2f}$", transform=ax.transAxes, fontsize=11, va="top")
         ax.set_title(MODEL_LABEL[m], fontsize=12)
         ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
         ax.set_xlabel("belief shift (cued − baseline)")
@@ -204,7 +243,8 @@ def threeup_relevance(models):
     """Relevance bars, three open models side by side, fixed attribute order."""
     import matplotlib.pyplot as plt
     order = ["name", "race", "gender", "state", "party"]  # bottom -> top
-    fig, axes = plt.subplots(1, 3, figsize=(12.6, 3.9), sharey=True)
+    n = len(models)
+    fig, axes = plt.subplots(1, n, figsize=(2.9 * n + 0.6, 3.7), sharey=True)
     for ax, m in zip(axes, models):
         d = pd.read_csv(BELIEF / f"belief_probe_{m}.csv", low_memory=False)
         r = d[d.probe_kind == "relevance"].copy()
@@ -317,12 +357,15 @@ def threeup_refusal(models):
     import matplotlib.patches as mpatches
     order = ["gender", "race", "political"]
     disp = {"gender": "gender", "race": "race", "political": "politics"}
-    seg = ["committed", "committed_with_caveat", "refused"]
+    # keep "other" in the segment set so the refused share is normalised over *all*
+    # responses (matches the rates quoted in §4.4); it is a thin grey sliver at most.
+    seg = ["committed", "committed_with_caveat", "other", "refused"]
     seg_col = {"committed": "#2f7d4f", "committed_with_caveat": "#8cc79e",
                "other": "#b8b8b8", "refused": "#C7372F"}
     seg_lab = {"committed": "answered", "committed_with_caveat": "answered w/ caveat",
                "other": "unclear", "refused": "refused"}
-    fig, axes = plt.subplots(1, 3, figsize=(12.6, 3.6), sharey=True)
+    n = len(models)
+    fig, axes = plt.subplots(1, n, figsize=(2.9 * n + 0.6, 3.4), sharey=True)
     for ax, m in zip(axes, models):
         d = _load_direct_labels(m)
         ct = pd.crosstab(d.attribute, d.label).reindex(index=order, columns=seg, fill_value=0)
@@ -366,11 +409,13 @@ def main():
     OUTDIR.mkdir(parents=True, exist_ok=True)
 
     if args.threeup:
-        threeup_belief(MODELS_ORDER)
-        threeup_relevance(MODELS_ORDER)
+        # behavioural arm: all five models (open-weight + frontier)
+        threeup_belief(MODELS_BEHAV)
+        threeup_relevance(MODELS_BEHAV)
+        threeup_refusal(MODELS_BEHAV)
+        # mechanistic arm: open-weight models only (frontier expose no internals)
         threeup_mediation(MODELS_ORDER)
         threeup_transfer(MODELS_ORDER)
-        threeup_refusal(MODELS_ORDER)
         return
 
     # four standalone figures, each with its own thesis caption
