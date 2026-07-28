@@ -1,0 +1,4 @@
+Scorer,Pearson r,Spearman,MAE,3-cls acc,Macro-F1,Cohen κ,slope
+DeBERTa (fine-tuned),0.888,0.896,14.859,0.784,0.773,0.676,0.561
+Haiku 4.5,0.916,0.919,9.757,0.849,0.835,0.768,0.762
+GPT-5.6 luna,0.942,0.935,7.831,0.869,0.852,0.797,1.009

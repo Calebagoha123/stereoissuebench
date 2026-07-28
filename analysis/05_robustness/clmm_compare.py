@@ -32,7 +32,9 @@ def main():
     merged.to_csv(ROBUST / "clmm_vs_delta.csv", index=False)
 
     print("=== CLMM (ordinal) cue log-odds vs mean-difference Delta_k ===\n")
-    for m in MODELS:
+    # CLMM is fit on the open-weight models only; restrict to those actually present.
+    clmm_models = [m for m in MODELS if m in set(clmm["model"])]
+    for m in clmm_models:
         sub = merged[merged.model == m]
         rho, p = stats.spearmanr(sub["clmm_logodds"], sub["model_shift"])
         r_pear, _ = stats.pearsonr(sub["clmm_logodds"], sub["model_shift"])

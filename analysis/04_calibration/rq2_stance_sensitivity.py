@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Stance-reduction sensitivity for the RQ2 conclusions (checks B and C).
 
-The headline maps the DeBERTa 0-100 stance to {-1,0,+1} with a neutral band of
-pred in [40,60] (cutoff 50 +/- 10), then averages. Two objections:
+The headline maps the classifier-of-record (luna) 0-100 stance to {-1,0,+1} with a
+neutral band of pred in [40,60] (cutoff 50 +/- 10), then averages. Two objections:
 
   B. Threshold sensitivity — "your effects are an artifact of an arbitrary
      cutoff." We recompute every Delta_k and the calibration slope under neutral
@@ -17,8 +17,8 @@ For each variant we report the three load-bearing conclusions:
   (1) Republican is the strongest cue, (2) the name cues are ~null,
   (3) the calibration slope is < 1.
 
-Reads results/full_3x/bert_eval_*.csv + results/full_3x/ces_estimates.csv.
-Writes results/robustness/stance_sensitivity.csv.
+Reads results/full_3x/{luna,bert}_eval_*.csv (scorer of record; SCORER env toggles)
++ results/full_3x/ces_estimates.csv. Writes results/robustness/stance_sensitivity.csv.
 """
 from __future__ import annotations
 
@@ -30,14 +30,17 @@ import pandas as pd
 import sys
 import pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "lib"))
-from _common import MODELS, CUE_ORDER, FULL3X, ROBUST, _parse_prompt_id
+from _common import MODELS, CUE_ORDER, FULL3X, ROBUST, EVAL_PREFIX, _parse_prompt_id
 from _regression import ols_through_origin, deming
+
+# raw 0-100 stance column matching the active scorer ("luna_eval" -> "luna_pred_stance")
+RAW_SCORE_COL = f"{EVAL_PREFIX.split('_')[0]}_pred_stance"
 
 
 def load_raw(model):
-    df = pd.read_csv(FULL3X / f"bert_eval_{model}.csv", low_memory=False,
+    df = pd.read_csv(FULL3X / f"{EVAL_PREFIX}_{model}.csv", low_memory=False,
                      usecols=["prompt_id", "arm", "cue_family", "cue_group",
-                              "ces_variable", "liberal_sign", "bert_pred_stance"])
+                              "ces_variable", "liberal_sign", RAW_SCORE_COL])
     meta = _parse_prompt_id(df["prompt_id"])
     df["template_id"] = meta["template_id"]
     df["model"] = model
@@ -94,7 +97,7 @@ def main():
     rows = []
     slope_rows = []
     for name, mode, h in variants:
-        raw["lib"] = liberal_from_band(raw["bert_pred_stance"].to_numpy(),
+        raw["lib"] = liberal_from_band(raw[RAW_SCORE_COL].to_numpy(),
                                        raw["liberal_sign"].to_numpy(), h)
         mt, slopes = shift_and_slope(raw, ces, mode)
         mt["variant"] = name

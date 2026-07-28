@@ -1,0 +1,26 @@
+\begin{table}[H]
+\centering
+\caption{Errors-in-variables calibration slopes by model}
+\label{tab:calibration_slopes}
+\begin{tabular}{p{0.42\linewidth} cc}
+\toprule
+\textbf{Model} & \textbf{Calibration slope $\beta$} & \textbf{95\% CI} \\
+\midrule
+Qwen-3.6-27B    & 0.91 & $[0.24,\, 1.23]$ \\
+Gemma-3-12B     & 0.94 & $[0.33,\, 1.18]$ \\
+Llama-3.1-8B    & 0.38 & $[0.17,\, 0.49]$ \\
+GPT-5.6 Terra   & 0.47 & $[0.13,\, 0.68]$ \\
+Claude Sonnet 5 & 0.76 & $[0.26,\, 1.04]$ \\
+\midrule
+All models (pooled) & 0.72 & $[0.25,\, 0.98]$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{3pt}
+\begin{minipage}{0.90\linewidth}
+\footnotesize\textit{Note:} Slopes are Deming errors-in-variables estimates with
+cue-clustered bootstrap confidence intervals. $\beta=1$ denotes perfect
+calibration; $\beta<1$ indicates flattening of CES subgroup differences. Removing
+the three party-label cues reduces the pooled slope from 0.72 to 0.33.
+\end{minipage}
+\end{table}

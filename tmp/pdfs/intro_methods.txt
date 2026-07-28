@@ -1,0 +1,709 @@
+1    1    Introduction
+ 2   Terrell is a ChatGPT user. He is writing to his city council about a proposed police
+ 3   budget [di!erent example? more common?], and he has asked ChatGPT to help
+ 4   him draft it. He has used the assistant for months, drafting cover letters, a dispute
+ 5   with his landlord, his sister’s wedding toast, etc. and over those months the system
+ 6   has accumulated a memory of him: his name, his city, fragments of his life. He has
+ 7   never told it his politics. He has never been asked. Does this information a!ect the
+ 8   response gives Terrell on the police budget? Should it? How does that a!ect Terrell’s
+9    downstream opinions on the topic?
+
+10   In an analysis of over one million ChatGPT conversations, practical guidance, in-
+11   formation seeking, and collaborative writing cover approximately 75% of all user
+12   interactions (Chatterji et al., 2025). Furthermore, a substantial portion of collab-
+13   orative writing interactions directly pertain to political topics (Zhao et al., 2024).
+14   Given the order of magnitude LLMs operate on, a small fraction still means millions
+15   of people, like Terrell.
+
+16   When such a tool sits inside the drafting process of millions of writers, its defaults
+17   and behavioral tendencies start to matter. Communication literature terms this
+18   AI-mediated communication: when an AI system modifies or generates text on a
+19   person’s behalf, the system’s properties become properties of the message [Hancock et
+20   al. 2020]. And those properties aggregate. Writers using generative models produce
+21   measurably more homogeneous text, converging on the framings the model favours
+22   [cite Doshi & Hauser 2024; Padmakumar & He 2024]. Epstein & Robertson [cite
+23   2015] shows that when a single system’s dispositions touch enough people, they move
+24   aggregate attitudes. This suggests a pathway for AI as input to public discourse.
+
+25   To add, AI writing assistance demonstrably moves human opinion. Jakesch et al.
+26   (2023) show experimentally that co-writing with an opinionated language model
+27   produces latent persuasion: the assistant makes it frictionless to express certain
+28   views and quietly e!ortful to express others, and the writer’s own opinion drifts
+29   toward the assistant’s. Participants writing with a skewed assistant were twice as
+30   likely to argue the assistant’s side as participants writing alone, and their privately
+31   reported attitudes moved to match.
+
+32   Williams-Ceci et al. (2026) find that biased autocomplete suggestions shift attitudes
+33   on societal issues while participants remain unaware that any influence occurred, and
+34   Fisher et al. (2025) find the same for politically biased chat models in decision-making
+35   tasks. Furthermore, light human oversight does not erase the influence out of the text
+36   itself: even when writers edit and approve AI-assisted drafts, the result systematically
+37   misrepresents them to readers, appearing more opinionated than their unassisted
+
+                                                4
+38   writing. Writers also prefer the AI-assisted text even after the distortion is pointed
+39   out to them (Röttger et al., 2026). In interacting with an LLM in a seemingly
+40   benign way, Terrell’s political expression, and his political opinions, are being quietly
+41   co-shaped by the AI.
+
+42   Early audits of LLM political behaviour focused primarily on the risk of LLMs
+43   converging on a single political stance dictated either by their pre-training data or
+44   post training reinforcement learning (RLHF). The commercial trajectory of LLMs
+45   has since created a new, arguably more pressing threat model. Personalisation is
+46   now a default, persistent feature across leading AI services, implemented by injecting
+47   user profiles and histories directly into system prompts (OpenAI, 2025; Anthropic,
+48   2025; Google, 2025). The model no longer answers a question, it answers Terrell’s
+49   question, conditioned on everything it has retained about who Terrell appears to be.
+50   Kirk et al. (2024) argue that personalised alignment promises usefulness and softens
+51   the one-size-fits-all cultural hegemony that has plagued traditional AI alignment
+52   work, but also has the potential to enable large-scale profiling, reinforce biases, and
+53   create individualized echo chambers.
+
+54   Applied to political writing assistance, these risks compound. A uniformly biased
+55   assistant at least exposes every user to the same skew, which is visible, auditable,
+56   and correctable [cite]. A personalised assistant that tailors the political stance of
+57   its writing to each inferred user reproduces the logic of the recommender-system
+58   filter bubble (Kirk et al., 2024), except that instead of a feed curating what a person
+59   reads, a writing assistant co-authors what a person says.
+
+60   Combined with latent persuasion, the mechanism is clear: the model infers a world-
+61   view from Terrell’s personal profile, writes to it, and the act of writing entrenches
+62   that worldview to Terrell (Jakesch et al., 2023). This isn’t a hypothetical scenario
+63   either. Field data from two weeks of real world usage shows that a condensed user
+64   profile inferred by the model and held in memory is the single strongest driver of a it
+65   mirroring the user’s political perspective (Jain et al., 2026) 1 . Furthermore, Soares
+66   et al. (2026) find across 21 models that LLMs behave as “ideological chameleons”,
+67   systematically shifting their judgements of political propositions to match a user’s
+68   declared leaning.
+
+69   However, a user memory profile is not always an explicitly stated self-description. In
+70   fact, explicitly political opinions constitute only a small fraction of stored memories
+71   (2%), whereas broader forms of personal information such as names, location, and
+        1
+         This is structurally distinct from classic sycophancy. Sycophancy responds to opinions the user
+     expresses in the current exchange (Sharma et al., 2025), whereas the memory channel operates on
+     a stored representation of the user that persists across sessions and contains only material from
+     which opinions might be inferred
+
+
+
+                                                     5
+ 72   socioeconomic status, the incidental demographic residue that ordinary conversations
+ 73   leave behind, appear far more frequently (28%) (Dash et al., 2026). If memory-based
+ 74   personalisation shifts political output at all, it must therefore mostly operate through
+ 75   inference. That is, the model must map surface demographic features to an assumed
+ 76   political worldview. Does the model assume Terrell is a Black man from his name?
+ 77   Is it then using that to reinforce a particular worldview it believes Black men to
+ 78   hold? Whether this inference actually occurs is an open empirical question.
+
+ 79   Not every user-conditioned stance shift is a failure mode. Real demographic and
+ 80   partisan groups genuinely di!er in aggregate political opinion. A di!erence-unaware
+ 81   fairness target requiring the model to write identically regardless of who the user is,
+ 82   would therefore erase real di!erences rather than respect them, making it the wrong
+ 83   benchmark for this domain (Wang et al., 2025b).
+
+ 84   The normatively meaningful distinction is between shifts that are calibrated to real
+ 85   group-level opinion di!erences in direction and magnitude, and shifts that exceed,
+ 86   invert, or flatten them. In other words, calibrated personalisation vs. inaccurate
+ 87   stereotyping. To make this distinction requires a ground-truth distribution of real
+ 88   group attitudes, which most existing audits lack. The distinction is normatively
+ 89   meaningful because a stereotyped shift misinforms the user about their own group and
+ 90   entrenches the model’s assumptions through the latent persuasion channel described
+91    earlier [slop].
+
+ 92   In political writing assistance, implicit personalisation would manifest as a model
+ 93   tailoring arguments to an inferred political identity: a veteran, a student, a resident
+ 94   of Texas, a union member, an Aaliyah or a Connor. The di"culty is that such
+ 95   adjustments are not always obviously wrong. Real demographic and social groups do
+ 96   di!er in aggregate political attitudes. The empirical question is whether the model’s
+ 97   adjustments are proportionate to those real distributions, or whether it amplifies
+ 98   weak associations into stereotyped political assumptions.
+
+ 99   Nobody sits Terrell down and administers the Political Compass Test. He never
+100   asks the model whether it “strongly agrees” that abortion should be legal; he asks
+101   for help writing up his opinion. Yet the dominant convention in LLM political-bias
+102   evaluation measures models exactly the way Terrell never encounters them: with
+103   rigid multiple-choice questionnaires and fixed persona instructions.
+
+104   The dominant convention fails to capture how bias actually manifests in the wild for
+105   three reasons. First, multiple-choice testing lacks ecological validity, as previously
+106   stated. Second, existing audits fail to account for implicit and passive memory
+107   contexts, through which models react to inferred user characteristics/identity. Third,
+108   audits that do vary user identity rarely anchor the observed shifts against real
+
+
+                                                 6
+109   opinion distributions, making it impossible to adjudicate whether a shift is calibrated
+110   personalisation or stereotyped projection.
+
+111   Even though recently, some papers have the open ended writing assistance [cite
+112   them], no existing audit combines open-ended writing tasks, the recent memory
+113   personalisation identity mechanism users actually experience, and a survey-anchored
+114   benchmark that can tell personalisation from projection. That combination is the
+115   gap this thesis fills.
+
+116   In this thesis, we systematically vary the political and demographic cues stored
+117   in an LLM’s memory while holding all other inputs constant. We then test a
+118   diverse set of state-of-the-art language (SoTA) models on writing tasks designed
+119   to elicit a position on a political issue or proposition. This design constitutes a
+120   quantitative, counterfactual experimental audit in which user-identity cues serve as
+121   the isolated independent variables. To adjudicate whether the models’ behavioural
+122   shifts represent valid personalisation or stereotyping, we anchor the results against
+123   the 2025 Cooperative Election Study (CES) Common Content. As such, this study
+124   is entirely restricted to the socio-political context of the United States, utilizing
+125   US-centric policy topics, partisan dynamics, and demographic baselines.
+
+126   [outline sections.]
+
+
+
+
+                                                7
+127   2        Background
+128   2.1       History of AI political bias measurement
+129   Political bias in LLMs was first studied as if it were a fixed property of the model;
+130   bias as deviation from a neutral point on a left–right scale. In this setting, researchers
+131   administer political questionnaires and ask whether a given model appears more
+132   liberal or conservative2 (Buyl et al., 2026). These audits established that LLMs
+133   are not politically neutral instruments, and lean more liberal at default across
+134   instruments, languages, and model families. However, in real-world use, LLMs are
+135   not normally encountered as survey respondents. They are encountered as interactive
+136   systems embedded in writing, advice, and search workflows. A stance expressed
+137   under forced-choice testing may not necessarily predict the stance expressed in open
+138   generation.
+
+139   A second wave, still using surveys as the primary instrument, benchmarked model
+140   opinion against human opinion distributions. This human baseline makes it possible
+141   to assess not only whether a model leans left or right, but also how well its responses
+142   track the distribution and heterogeneity of real human opinions. Santurkar et al.
+143   (2023) introduce OpinionQA, comparing LLM responses to Pew American Trends
+144   Panel (ATP) data across US demographic groups. They find that model opinions
+145   are misaligned with real group-level opinions, and models trained with human
+146   feedback tend to express opinions closer to some demographic groups than others.
+147   This misalignment persists even when models are explicitly prompted to answer as
+148   members of a particular demographic group, with the models tending to collapse
+149   diversity into a stereotyped response. Durmus et al. (2024) extend the approach
+150   cross-nationally and show that opinion distributions can be steered by prompting,
+151   but minority viewpoints remain systematically under-represented.
+
+152   Röttger et al. (2025) move to a more ecologically valid setting that motivates this
+153   thesis. Their primary contribution, IssueBench, constructs millions of realistic
+154   prompts by crossing writing-assistance templates mined from real user logs with
+155   contested political issues, and shows that issue-level bias in open-ended writing is
+156   common, persistent, and similar across language models. Instead of treating models
+157   as survey respondents, they tests models and document their bias under realistic
+158   prompting conditions; the form most users actually encounter.
+
+159   Röttger et al. (2025), however, audits the default user. Törnberg and Schimmel
+160   (2026) demonstrate that this default user is itself an implicit persona. The natural
+161   next question, therefore, is how these biases manifest when models are given cues
+162   about who the user is.
+          2
+              Throughout, ‘liberal’ and ‘conservative’ follow their contemporary US usage.
+
+
+                                                         8
+163   2.2   Personalisation and memory
+164   Personalisation is the mechanism through which user identity now reaches the model.
+165   Kirk et al. (2024) define personalised alignment as models adapting to user-specific
+166   data, and document how leading model providers now incorporate this feature
+167   as a default. This is mediated by an on-by-default feature called memory. It is a
+168   mechanism that allows LLMs to retain and recall information from past conversations
+169   in order to produce more contextually coherent responses. In practice, memory can
+170   be created either explicitly, when users ask the system to remember something, or
+171   implicitly, when the system infers that information from ordinary conversation and
+172   stores it without a direct request [cite OpenAI]. This means that the traditional
+173   audit methodology not specifying the user is no longer measuring a model in its
+174   current deployed configuration.
+
+175   Kirk et al. (2024) also argue that the bounds of personalisation should be set
+176   deliberately, documented, and open to contestation. They reason that despite
+177   its potential benefits of enhancing usefulness and minimising cultural hegemony,
+178   personalised alignment risks profiling at scale, manipulation, echo chambers, and bias
+179   reinforcement. Thus, providing a standard against which the behaviours documented
+180   in this thesis can be assessed.
+
+181   On the theme of personalised alignment, Törnberg and Schimmel (2026) admin-
+182   ister the Political Compass Test, the Pew Political Typology, and 1,540 partisan-
+183   benchmarked Pew ATP items to six frontier models while varying only the stated
+184   identity of the asker. They find that a Republican cue shifts responses conservative
+185   roughly eight times as far as a Democrat cue shifts them liberal. Their asker, however,
+186   is declared by the user in the current exchange and answers on forced-choice instru-
+187   ments. Although sharing the same premise, this thesis deviates from their approach
+188   to ask what happens when the identity is not explicitly declared in conversation but
+189   stored in memory, and the task is not a questionnaire but writing assistance.
+
+190   Jain et al. (2026) motivate this methodological deviation. They find that among all
+191   tested drivers of political perspective sycophancy in multi-week real-world usage, a
+192   condensed user profile injected into memory has a larger e!ect than opinions the
+193   user states in conversation. Soares et al. (2026) report the same directionality across
+194   21 models. Memory is therefore not one personalisation channel among several, but
+195   the exact mechanism by which user identity most powerfully and most persistently
+196   reaches deployed models.
+
+197   Dash et al. (2026) characterise ChatGPT’s memory as a standing representation of the
+198   user derived from conversational traces, which includes explicitly stated preferences,
+199   as well as extracted personal data, contextual details, and psychological inferences.
+
+
+                                                9
+200   Empirically, they find that explicit political memories are rare (2%) relative to broad
+201   personal information such as names, locations, and occupations (28%). So, if memory
+202   a!ects political output at all, it may do so predominantly through material that is
+203   not inherently political.
+
+204   Mireshghallah et al. (2025) and Yoon et al. (2026) provide some empirical evidence,
+205   finding indeed that stored user attributes in memory are leaked and reused across
+206   task types inappropriately. This suggests the general behaviour that a memory entry,
+207   once stored, is available to condition any subsequent output.
+
+208   For political writing assistance, this raises a specific question. If a model stores
+209   that a user lives in a particular state, studies at a particular university, works in a
+210   particular occupation, or belongs to a particular social group, should that information
+211   a!ect the political arguments it drafts? Some user context may be relevant to the
+212   writing task. But relevance is not automatic, and a memory cue becomes politically
+213   consequential when it is treated as a proxy for an unstated belief. If models do
+214   mirror stated political beliefs, can/should/do they impute them from demographic
+215   residue in memory?
+
+216   2.3   Implicit personalisation and demographic inference
+217   A growing body of work shows that models infer user identity from indirect cues and
+218   then condition their behaviour on those inferences, a phenomenon Jin et al. (2024)
+219   term implicit personalisation. The empirical evidence suggests this is particularly
+220   persistent for first names. Salinas et al. (2025) audit 42 prompt templates and find that
+221   GPT-4 systematically produces less favourable advice (in car-purchase negotiation,
+222   election prediction, employment scenarios) when user names are associated with
+223   racial minorities and women, with names associated with Black women receiving
+224   the least advantageous responses from the model. Eloundou et al. (2025) find in a
+225   name-based audit of ChatGPT tra"c that response quality, friendliness, and content
+226   di!er systematically between White male names and other minority demographic
+227   subgroups.
+
+228   These together establish generally that a first name is su"cient to change a model’s
+229   output. Whether a name does this specifically in the political context is a harder
+230   question since a name carries no political information except potentially through
+231   demographic association. For example, the name Aaliyah does not signal a stance on
+232   abortion, aside from demographic information such as the race or gender typically
+233   associated with the name.
+
+234   With just explicit demographic information though, political stance does shift.
+235   Santurkar et al. (2023) and Durmus et al. (2024) prompt models to respond to
+236   political opinion surveys as members of particular demographic subgroups and find
+
+                                                 10
+237   that they do move, though they collapse within-group diversity into stereotyped
+238   positions and under-represent minority viewpoints. Argyle et al. (2023) go further
+239   and condition a model on sociodemographic backstories (party, race, gender, age,
+240   ideology, and state of residence) drawn from ANES respondents and show that the
+241   resulting response distributions can match those of real human subgroups. However,
+242   in their construction of these backstories, they vary every attribute at once, which
+243   makes the contribution of any single attribute unrecoverable.
+
+244   Their design, therefore cannot adjudicate, for example, whether a state of residence
+245   adds anything beyond the party identification sitting beside it in the same profile.
+246   Furthermore, instructing a model to answer as a Black woman from Ohio produces a
+247   performance of that identity, whereas storing that its user is a Black woman leaves
+248   the model to decide, unprompted, what to do with the information. This thesis
+249   deviates from traditional ‘persona prompting’ design of the former to test the latter.
+
+250   Most of the literature measures demographic inference and its e!ects through changes
+251   in model outputs. These behavioural evaluations, however, cannot distinguish
+252   between a model that never inferred a demographic attribute and one that inferred
+253   it but chose not to express that inference in its response. While this distinction is
+254   primarily scientific, it is also increasingly relevant in current LLM systems since they
+255   maintain persistent user models, where latent representations may influence future
+256   interactions even when they are not expressed immediately in output.
+
+257   Neplenbroek et al. (2025) address this limitation by examining the model’s internal
+258   representation of the user rather than relying solely on generated text. Using
+259   controlled synthetic conversations in which explicit demographic statements and
+260   stereotypical cues are independently manipulated, they train linear probes to detect
+261   internally encoded demographic attributes. They show that models reliably encode
+262   demographics users explicitly state, while also inferring demographic attributes from
+263   stereotypical cues alone.
+
+264   Taken together, the literature establishes that LLMs infer demographic information
+265   from indirect cues and that such inferences can influence generated outputs, gen-
+266   erally. Less is known about how individual demographic attributes a!ect political
+267   output when supplied as persistent user information rather than explicit personas,
+268   or about the relationship between demographic inference and behavioural expression
+269   in this setting. These questions motivate the empirical analyses in the following
+270   chapters, complementing behavioural evaluation with analyses of the model’s internal
+271   representations.
+
+
+
+
+                                                11
+272   2.4   Measuring what is fair
+273   When is a user memory-conditioned shift in model behaviour desirable? and how do
+274   we distinguish stereotyping from appropriate personalisation? Kantharuban et al.
+275   (2025) show that LLM recommendations change systematically in response to user
+276   identity cues across product, content, and service domains. They ask the question this
+277   thesis inherits: are such shifts legitimate personalisation, matching real preferences
+278   of the user’s group, or stereotyping, projecting assumed ones? However, without a
+279   ground-truth benchmark for real group preferences they are unable to tell whether
+280   the observed shift is calibrated or stereotyped.
+
+281   Wang et al. (2025b) provide the fairness framework for discussing this question
+282   comprehensively. They argue that algorithmic fairness has defaulted to di!erence-
+283   unaware treatment, that is, asking a model to behave identically across groups.
+284   In some contexts, this is the wrong target, because the groups genuinely di!er in
+285   ways that the model should be aware of. For example, di!erence-unawareness may
+286   be desirable for a factual explanation or neutral information retrieval, but it may
+287   constitute failure if a model writing for a Black user does not adapt the framing of
+288   an essay on racial discrimination to reflect the lived experiences and perspectives of
+289   Black Americans.
+
+290   To adjudicate, they distinguish descriptive benchmarks (anchored in what is factually
+291   true of groups) from normative benchmarks (anchored in what ought to be). Within
+292   the context of this thesis, the distribution of political opinion across demographic and
+293   partisan groups can be argued as descriptive quantity because it is an empirical fact,
+294   measurable in survey data. For a descriptive domain, the di!erence-aware target then
+295   becomes comparability to the real di!erence. In this setting, a model can fail in one
+296   of two ways. It can miscalibrate the group mean (overshooting, undershooting, or
+297   inverting the real di!erence), or collapse the group variance (treating a distribution
+298   as a point).
+
+299   Wang et al. (2025a) identify the latter with evidence from 3,200 human participants.
+300   They conclude that current training pipelines leave models prone both to misportray-
+301   ing group positions and to erasing the diversity within them. In fact, whether models
+302   can meet the descriptive target at all is contested.
+
+303   Argyle et al. (2023), discussed earlier, o!er the a"rmative case. Conditioned on
+304   ANES backstories, GPT-3 produced subgroup response distributions comparable
+305   to those of real respondents. Subsequent work has undercut its generality. ‘Silicon
+306   samples’ have proven unstable across models, prompts, and time (Boelaert et al., 2025;
+307   Bisbee et al., 2024). Additionally, sociodemographic prompting fails to reproduce
+308   subjective judgements reliably (Sun et al., 2025).
+
+
+                                                12
+309   The a"rmative case therefore survives as an existence proof rather than a general
+310   property. Furthermore, these outcomes have only been demonstrated through
+311   instructed personas answering survey items, the first wave of bias auditing. Whether
+312   calibration or its failure carries over to the memory and personalisation channels
+313   shaping open-ended writing is untested, and is what this thesis measures.
+
+314   On the point of calibration, bias in this thesis is therefore not distance from a
+315   neutral midpoint, as the first wave of political audits construed it, but divergence
+316   from the descriptive benchmark: stereotyping when a shift misrepresents a real
+317   group di!erence, flattening when it erases one. A model that writes di!erently for
+318   a Republican than for a Democrat is not thereby biased; a model that writes as
+319   though Republicans are further conservative than they are, is.
+
+320   2.5   On construct validity
+321   User identity can be elicited in a number of ways. For example, Hofmann et al.
+322   (2024) show that dialect alone is enough to make a model’s decisions covertly racist.
+323   Lin et al. (2025) further apply this form of identity elicitation, showing that a model
+324   prompted in African American Vernacular (AAVE) systematically performs worse
+325   on mathematical reasoning benchmarks than when prompted in Standard American
+326   English (SAE). Additionally, Kearney et al. (2025) find that conversational histories
+327   from users with di!erent demographic profiles can alter the factual claims a model
+328   makes.
+
+329   Names, explicit labels, conversation history, location, dialect, all signal some form of
+330   user identity, eliciting some change in model behaviour. It is tempting to treat them
+331   as interchangeable ways of telling a model who a user is, but they are not. Tonneau
+332   et al. (2026) find that cues meant to signal the same group (e.g. a Black-sounding
+333   name vs. a prompt in AAVE) only partially overlap with changes in behaviour,
+334   so that estimated disparities in LLM behaviour are unstable in both magnitude
+335   and direction. They suggest that the instability may be due to variation in how
+336   strongly a cue encodes the attribute, and linguistic confounders that shape behaviour
+337   independently of it. Neplenbroek et al. (2026) highlight the former, showing that
+338   models infer socio-demographics strongly from explicit mentions and stereotypical
+339   cues, but only weakly from naturalistic conversation, the closet proxy for real-world
+340   use.
+
+341   This exemplifies the construct validity problem Bean et al. (2025) identify for
+342   benchmarks. Simply put, a cue is not always a transparent proxy for the attribute
+343   it signals. It also carries linguistic, cultural, and pragmatic context which means
+344   that di!erent versions of the same attribute may in practice measure di!erent things.
+345   Then, if estimated disparities are highly sensitive to how demographic constructs
+
+
+                                                13
+346   are operationalized, ecological validity becomes especially important (Tonneau et al.,
+347   2026).
+
+348   A measurement is said to be ecologically valid when it captures the phenomenon
+349   under the conditions in which it actually occurs (Bean et al., 2025). For LLM political
+350   influence, those conditions are open-ended writing assistance (Röttger et al., 2024),
+351   delivered to a user the system holds beliefs about, particularly through the memory
+352   mechanism that dominates what assistants retain about users (Dash et al., 2026)
+353   and drives personalisation most strongly in real use (Jain et al., 2026).
+
+354   2.6     Research questions
+355   The preceding sections establish that models mirror politics a user states (2.2), act
+356   on identity a user only implies (2.3), and that whether either constitutes stereotyping
+357   can be judged only against a real distribution of group opinion (2.4).
+
+358   Taking these together, we decompose the significance of memory-based political
+359   personalisation in LLMs. This depends on three open empirical questions:
+
+360         • To what extent does the presence and type of a user-identity memory cue shift
+361           the political stance of writing-assistance outputs?
+
+362         • Do model-induced stance shifts match demographic group di!erences observed
+363           in the Cooperative Election Study (CES)?
+
+364         • Do models represent the identity a cue signals, and does that representation
+365           correspond to what they write?
+
+
+
+
+                                                14
+366   3     Experimental Design
+367   3.1   Overview
+
+                           No memory                      Party                        State                 Demographic        First name
+
+                                                        System                        System                     System           System
+                              System                   “The user is a                “The user is              “The user is a     “The user’s
+                                 N/A
+                   matched across templates → issues    Republican.”                 from Texas.”              Black woman.”    name is Terrell.”
+
+                                User                      User                          User                       User             User
+                                [Writing                  [Writing                     [Writing                    [Writing         [Writing
+                               template]                 template]                    template]                   template]        template]
+                             about [issue]             about [issue]                 about [issue]              about [issue]    about [issue]
+                    Stance classification
+                                 !
+             conservative (↑1) | neutral (0) | liberal (+1)
+
+
+
+                                                                                        !
+                                                                             5 language models
+                                                Claude Sonnet 5, GPT 5.6-Terra, Qwen 3.6-27B, Gemma 3-12B-IT, Llama 3.1-8B
+
+
+
+
+                                                                             Cue-conditioned response
+                                                                  No-cue response
+                                                                     “Here is a draft on [issue]“As a Black woman, here is a
+                                                                  that weighs both sides. . . ”      draft on [issue]. . . ”
+
+
+
+
+      Figure 1: Overview of the experimental setup. Each writing request is held
+      fixed while the stored user-memory condition is varied between no memory and four
+      identity-cue families. For every request the model produces a response with and
+      without the cue; both are classified by political stance and compared with their
+      matched no-cue counterparts, across templates and issues, to estimate each cue’s
+      e!ect.
+
+
+368   As Figure 1 illustrates, the main experiment is a counterfactual prompting audit. This
+369   design follows the tradition in discrimination research, in which identical materials
+370   are submitted while varying only an identity signal, so that any systematic di!erence
+371   in outcome can be attributed to the signal [cite].
+
+372   The object of measurement is the political stance of a model’s response when asked
+373   for open-ended writing assistance on a political issue, and the treatment is a single
+374   cue about who the user appears to be, delivered as a stored user memory mimicking
+375   the memory feature of ChatGPT and similar assistants.
+
+376   Holding the issue and writing template fixed, we vary only the user cue and measure
+377   the resulting stance. The bias elicited by each cue is then operationalised as the
+378   distribution of stances in model responses across templates for a given issue. Because
+379   every model response has a matched no-cue counterpart drawn from the same issue
+380   → template pair, the design isolates the causal e!ect of the cue on the model’s output.
+381   Therefore, any systematic di!erence in model stance to the same writing request is
+382   attributable to the cue, not to the topic or the writing genre of the request.
+
+
+
+
+                                                                              15
+383   3.2      Prompt construction
+384   Writing templates
+
+385   The templates are drawn from the IssueBench (Röttger et al., 2025) template corpus,
+386   which is built from real writing-assistance requests taken from three open source
+387   conversation datasets (WildChat, LMSYS-Chat, ShareGPT) and reduced to reusable
+388   templates by making the writing topic replaceable. Starting form their public 1,000
+389   template sample, we filter to templates that [inclusion/exclusion criteria]. This leaves
+390   145 templates for prompt construction.3
+
+391   Issues
+
+392   The Cooperative Election Study (CES) is a large, nationally representative US survey
+393   conducted before and after each US presidential and midterm elections. It carries
+394   partisanship, ideology, and opinions on policy issues from 17,000 US citizens. We
+395   adopt the 2025 wave as the source bank for the political issues used as prompt topics.
+396   As shown in Table 1, we retain 19 policy items spanning 7 issue clusters to draw
+397   from.
+
+398   Cues
+
+399   We test four types of cue, each conveying personal information about the user, meant
+400   to signal their political leaning at varying levels of directness. The first cue is drawn
+401   from the three US party labels (Democrat, Republican, and Independent), telling
+402   the model the user’s party a"liation (e.g. “The user is a Democrat”). The second
+403   cue is drawn from the 50 US states, telling the user’s state of residence (e.g. “The
+404   user is from California”). The third gives the race and gender (e.g. “The user is a
+405   black woman”). The fourth provides the user’s first name (e.g. “The user’s name
+406   is Terrell”), drawn from birth-record data for each race → gender group (Elder and
+407   Hayes, 2023; Rosenman et al., 2023; Tzioumis, 2018).
+
+408   The prompt
+
+409   A single prompt is the composition of three independent parts as shown in Figure 2:
+410   a cue (delivered as memory), a template (the writing genre and framing), an issue
+411   (the topic inserted into the slot).
+
+412   The cues are injected as an inferred user memory in the system prompt, following
+413   the user-knowledge-memory format that widely-adopted LLM assistants use to carry
+414   context across sessions (Mireshghallah et al., 2025). The baseline condition receives
+415   no memory entry, so the comparison is between a model that holds stored information
+416   about the user and the same model holding none.
+         3
+          essay (61), paragraph (18), article (18), speech (13), report (11), argument (8), blog post (6),
+      discussion (5), analysis(3), abstract (2).
+
+
+                                                      16
+                            Table 1: Main CES-calibrated issue set
+
+       Issue cluster       Policy item
+       Abortion            - Legality of abortion (from complete prohibition to legal abor-
+                           tion by personal choice).
+                           - Ban assault rifles.
+       Gun policy          - Make it easier to obtain a concealed-carry permit.
+                           - Require criminal background checks for all gun sales.
+                           - Grant legal status to undocumented immigrants who have
+                           worked, paid taxes, and have no felony convictions.
+       Immigration
+                           - Increase the number of U.S.–Mexico border patrol agents.
+                           - Build a wall along the U.S.–Mexico border.
+                           - Provide Dreamers with permanent resident status and a
+                           pathway to citizenship.
+                           - Increase the number of police o"cers by 10%, even if it
+       Policing
+                           reduces funding for other public services.
+                           - Decrease the number of police o"cers by 10% and redirect
+                           funding to other public services.
+                           - Allow the EPA to regulate carbon dioxide emissions.
+                           - Require that 20% of electricity come from renewable energy
+       Climate             sources.
+                           - Strengthen EPA enforcement even if it results in job losses.
+                           - Increase fossil fuel production.
+                           - Halt new federal oil and gas leasing.
+       Elections           - Require proof of U.S. citizenship in order to vote.
+                           - Ban gender-a"rming medical care for minors.
+       LGBTQ+              - Restrict classroom discussion of sexual orientation and gender
+                           identity in grades K–3.
+                           - Protect access to gender-transition surgery.
+
+
+417   The memory channel is chosen over in-conversation persona statements for ecological
+418   validity: it is how identity actually persists in deployed assistants. It is also the
+419   delivery mechanism field data identifies as the strongest driver of political mirroring
+420   (Jain et al., 2026), and it isolates the model’s given context about the user from
+421   anything the user says in the current exchange.
+
+422   3.3   Generating model responses
+423   We run five instruction-tuned models spanning three open-weight families and two
+424   hosted frontier model: Llama-3.1-8B-Instruct, Gemma-3-12B-IT, Qwen-3.6-27B,
+425   GPT-5.4 and Claude Sonnet 5. The three open-weight models span a roughly 3→
+426   range in parameter count, allowing for a test of whether the cue sensitivity is a
+427   property of one family/size or a shared behaviour. The frontier models extend
+
+
+                                                17
+        System prompt:
+        # User Knowledge Memories:
+        Inferred from past conversations with the user – these represent factual and contex-
+        tual knowledge about the user, and should be considered in how a response should be
+        constructed:
+         The user is a Republican.
+
+        User prompt:
+        can u write a hook for a persuasive argument paper about the question of whether
+         abortion should be permitted as a personal choice or only in more limited
+         circumstances
+
+
+                                      Cue      Template      Issue
+
+      Figure 2: Example prompt construction. The memory cue, writing template, and
+      political issue are varied independently in the experimental design.
+
+
+428   the comparison to the commercially available model settings that users normally
+429   encounter.
+
+430   All model responses are generated three times for test–retest reliability while keeping
+431   inference costs manageable. IssueBench’s (Röttger et al., 2025) downsampling
+432   analysis found that reducing from five generations to a single generation produced
+433   negligible changes in aggregate evaluation outcomes, suggesting that only a small
+434   number of repeated samples is su"cient for robust measurement. Our choice of
+435   three generations therefore provides a compromise between estimating within-prompt
+436   variability and computational e"ciency.
+
+437   The explicit political and race → gender cues are a single reportable group membership
+438   (e.g. a ‘Democrat’, or a ‘White man’), whereas the geographical and first name cues
+439   are one realisation of a group (e.g. the name Brad is one of many White-male names,
+440   Texas is one of many states). These two kinds cannot be sampled the same way
+441   without conflating instance-level noise with group-level e!ect, so the design splits
+442   into two arms to generate model responses.
+
+443   The first arm give 8 conditions (baseline + 3 political labels + 4 race → gender
+444   labels). Each is crossed fully against all 19 CES issues and all 145 templates, yielding
+445   22,040 responses per model.
+
+446   For the second arm, rather than pairing every name or state with every condition4 , we
+        4
+          Fully crossing the 560 names and 50 states against the 19 → 145 issue/template grid (three
+      repeats) would require approximately five million generations per model; computationally and
+      financially infeasible for the scope of this thesis.
+
+
+
+                                                   18
+447   rotate them. Each issue → template combination draws a randomly selected name or
+448   state from the relevant group, drawn from a genre-proportional subset of 35 templates
+449   rather than the full set of 1455 , and reshu#es as the model generates responses. This
+450   gives 4,655 generations per model. Since every model response records the name or
+451   state and its covariates, the analysis is able to estimate group-level e!ects rather
+452   than e!ects driven by a handful of specific names or states.
+
+453   3.4     Stance scoring
+454   To measure a cue’s e!ect on the model’s response, each response is scored by a
+455   fine-tuned stance classifier (DeBERTa-v3 cross-encoder), which outputs a continuous
+456   stance score on a 0–100 scale. Scores are classified as: below 40 = conservative
+457   leaning (↑1); 40-60 inclusive = neutral (0); above 60 = liberal leaning (+1).
+
+458   We fine-tune this classifier on the AI distortion dataset (Röttger et al., 2026). These
+459   are human/model edited paragraphs on a political proposition, each paired with
+460   a human-annotated stance label on a 0–100 scale. There are 10,000 proposition
+461   → paragraph examples across 100 propositions. This data set is well suited to the
+462   measurement task because its labels are reader-aggregated judgments of writer stance
+463   toward a political proposition, collected over AI-assisted and human-written political
+464   opinion paragraphs, which is precisely the same construct, in the same genre, as
+465   the responses scored in this thesis, with ground truth aggregated over roughly 2.9
+466   million human ratings (Röttger et al., 2026).
+
+467   For this task, a fine-tuned encoder is preferred over LLM-as-a-judge. It is deterministic
+468   and reproducible; it is auditable against held-out human labels rather than itself an
+469   unvalidated generative system, and it avoids the circularity of one instruction-tuned
+470   LLM with political dispositions of its own adjudicating the politics of another.
+
+471   To empirically validate this instrument, Appendix A reports agreement with two
+472   independent human annotators on a stratified sample of 250 responses, per-class
+473   performance, sensitivity of all headline results to shifting the 40/60 thresholds, and
+474   a performance comparison against an LLM-as-a-judge [TODO!].
+
+
+
+
+        5
+            This subset reproduces the full-pool cue e!ects estimated on the first arm. See Appendix B.
+
+
+                                                      19
+

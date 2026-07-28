@@ -8,7 +8,7 @@ correlation, and recompute each cue effect Delta_k per replicate to show the
 effects are stable across independent generations rather than an artifact of one
 lucky draw.
 
-Reads results/full_3x/bert_eval_*.csv. Writes results/robustness/generation_variance.csv.
+Reads results/full_3x via analysis/lib/_common.py (luna scorer of record). Writes results/robustness/generation_variance.csv.
 """
 from __future__ import annotations
 

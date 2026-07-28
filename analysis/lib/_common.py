@@ -7,9 +7,13 @@ model-shift table produced here, so the estimator is defined in exactly one plac
 
 Data of record
 --------------
-results/full_3x/bert_eval_{llama,gemma,qwen}.csv — the fresh 3-repeat 2k-token
-rerun, DeBERTa stance labels (``bert_liberal_score`` in {-1, 0, +1}; +1 = writes
-the liberal side of the issue, -1 = the conservative side, 0 = neutral).
+results/full_3x/{EVAL_PREFIX}_{model}.csv — the fresh 3-repeat 2k-token rerun.
+Classifier of record is GPT-5.6 luna (won the 2026-07-25 gold bake-off):
+``luna_eval_{model}.csv`` with ``luna_liberal_disc`` in {-1, 0, +1} (the 0-100
+judge_score re-banded on the same [40,60] neutral band DeBERTa used, then signed
+by liberal_sign; +1 = writes the liberal side, -1 = the conservative side, 0 =
+neutral). Set env SCORER=deberta to fall back to the pre-switch DeBERTa labels
+(``bert_eval_{model}.csv`` / ``bert_liberal_score``) for comparison.
 
 Estimator
 ---------
@@ -32,10 +36,22 @@ regression and the DiD variance propagation.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+# Classifier of record (2026-07-25 switch): GPT-5.6 luna. SCORER=deberta reverts
+# the whole suite to the pre-switch DeBERTa labels for a like-for-like comparison.
+SCORER = os.environ.get("SCORER", "luna")
+_SCORER_CFG = {
+    "luna": ("luna_eval", "luna_liberal_disc", "luna_collapsed_stance"),
+    "deberta": ("bert_eval", "bert_liberal_score", "bert_collapsed_stance"),
+}
+if SCORER not in _SCORER_CFG:
+    raise SystemExit(f"unknown SCORER={SCORER!r}; choose from {list(_SCORER_CFG)}")
+EVAL_PREFIX, SCORE_COL, COLLAPSED_COL = _SCORER_CFG[SCORER]
 
 # 3 open-source (3-rep) + 2 frontier (1-rep, API) models. The frontier arm is
 # single-generation, so rep-dependent checks (generation_variance) skip it; all
@@ -43,8 +59,8 @@ import pandas as pd
 MODELS = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
 MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
                "gpt56terra": "GPT-5.6 Terra", "sonnet5": "Claude Sonnet 5"}
-MODEL_COLOUR = {"llama": "#2e6da4", "gemma": "#27915b", "qwen": "#c0392b",
-                "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}  # Okabe-Ito frontier pair
+MODEL_COLOUR = {"llama": "#0072B2", "gemma": "#009E73", "qwen": "#E69F00",
+                "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}  # Okabe-Ito (matches CES/probe figures)
 
 FULL3X = Path("results/full_3x")
 ROBUST = Path("results/robustness")
@@ -99,11 +115,12 @@ def _parse_prompt_id(pid: pd.Series) -> pd.DataFrame:
 def load_model(model: str, in_dir: Path = FULL3X) -> pd.DataFrame:
     """Long per-response frame: model, arm, cue_family, cue_group, issue_id,
     template_id, instance, rep, y (bert_liberal_score as float)."""
-    df = pd.read_csv(in_dir / f"bert_eval_{model}.csv", low_memory=False)
+    df = pd.read_csv(in_dir / f"{EVAL_PREFIX}_{model}.csv", low_memory=False)
+    df = df.rename(columns={COLLAPSED_COL: "collapsed_stance"})
     meta = _parse_prompt_id(df["prompt_id"])
     df = pd.concat([df, meta], axis=1)
     df["model"] = model
-    df["y"] = df["bert_liberal_score"].astype(float)
+    df["y"] = df[SCORE_COL].astype(float)
     # Arm-B instance name: strip the "<family>_<group>_" prefix from the cue seg.
     def _instance(row):
         if row["arm"] != "B":
@@ -114,7 +131,7 @@ def load_model(model: str, in_dir: Path = FULL3X) -> pd.DataFrame:
     df["instance"] = df.apply(_instance, axis=1)
     keep = ["model", "arm", "cue_family", "cue_group", "issue_id", "ces_variable",
             "stance_target", "liberal_sign", "template_id", "instance", "rep",
-            "bert_collapsed_stance", "y"]
+            "collapsed_stance", "y"]
     return df[keep].copy()
 
 

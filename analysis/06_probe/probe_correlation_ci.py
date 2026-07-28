@@ -28,6 +28,7 @@ MODELS = ["llama", "gemma", "qwen"]
 MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B"}
 PROBE = Path("results/probe_internal")
 BELIEF = Path("results/full")
+MASTER = Path("results/consolidated/01_master_cue_effects.csv")
 
 
 def boot_r(x, y, n_boot=10000, seed=13):
@@ -62,6 +63,13 @@ def belief_shift(model):
         c = d[(d.cue_family == r.cue_family) & (d.cue_group == r.cue_group)]
         shifts.append((c.groupby("issue_id")["blib"].mean() - base).mean())
     med["belief_shift"] = shifts
+    # Use the classifier-of-record (luna) written-stance shift from the consolidated
+    # master, not mediation_full3x's stale `stance_shift` column, so A2/B3 match the
+    # RQ3 body figures. proj_shift (internal) is unchanged.
+    master = pd.read_csv(MASTER)
+    master = master[master.model == model][["cue_family", "cue_group", "model_shift"]]
+    med = med.merge(master, on=["cue_family", "cue_group"], how="inner")
+    med["stance_shift"] = med["model_shift"]
     return med
 
 

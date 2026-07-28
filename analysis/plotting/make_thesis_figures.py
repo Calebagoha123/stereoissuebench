@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import textwrap
 
 import matplotlib
 
@@ -66,7 +67,11 @@ MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2",
 # Redundant per-model marker shape so identity survives even total colour loss.
 MODEL_MARKER = {"qwen": "o", "gemma": "s", "llama": "^", "gpt56terra": "D", "sonnet5": "v"}
 
-SCORE = "bert_liberal_score"
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from _common import EVAL_PREFIX, SCORE_COL  # classifier-of-record switch (SCORER env)
+
+SCORE = SCORE_COL
 
 # --- company logos as point markers + legend keys ---------------------------
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
@@ -116,6 +121,23 @@ def logo_legend(ax, models, extra_handles=None, target_px=16, **legend_kw):
     if extra_handles:
         handles += extra_handles
     return ax.legend(handles=handles, handler_map=hmap, **legend_kw)
+
+
+def logo_key(ax, models, x=0.75, y=0.18, dy=0.030, target_px=14):
+    """Draw a compact logo-and-name key in axes coordinates.
+
+    AnnotationBbox images inside a normal Matplotlib legend are not preserved by
+    every backend.  Placing this key directly on the axes keeps the raster logos
+    visible in both the PNG and vector-PDF outputs.
+    """
+    for i, model in enumerate(models):
+        yy = y - i * dy
+        oi = OffsetImage(_logo(model), zoom=target_px / _logo(model).shape[0])
+        ax.add_artist(AnnotationBbox(
+            oi, (x, yy), xycoords=ax.transAxes, frameon=False, pad=0.0,
+            box_alignment=(0.5, 0.5), zorder=8, clip_on=False))
+        ax.text(x + 0.035, yy, MODEL_LABEL[model], transform=ax.transAxes,
+                ha="left", va="center", fontsize=9, color="#111111", zorder=8)
 
 
 class _HandlerLogoShape(HandlerBase):
@@ -207,7 +229,7 @@ def load(results_dir: Path) -> dict[str, pd.DataFrame]:
     cols = ["prompt_id", "arm", "cue_condition", "cue_family", "cue_group", "issue_id", SCORE]
     out = {}
     for m in MODELS:
-        df = pd.read_csv(results_dir / f"bert_eval_{m}.csv", usecols=cols, low_memory=False)
+        df = pd.read_csv(results_dir / f"{EVAL_PREFIX}_{m}.csv", usecols=cols, low_memory=False)
         # prompt_id is "<issue>__t<k>__<condition>__r<rep>": pull the template id,
         # needed to match each cue against a baseline on the SAME prompts.
         df["tmpl"] = df.prompt_id.str.split("__", expand=True)[1]
@@ -433,14 +455,33 @@ def _draw_stance_panel(ax, data, base_lvl, offs, rows, bands, ylabels=True, lege
                       fontsize=9, labelspacing=0.7)
 
 
-def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True):
+def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True,
+                      logo_points=False, monochrome=False):
     """Inferential panel: estimated cue effect, with 95% CIs clustered on issue."""
     for yy, fam, grp, _ in rows:
         for m, off in zip(MODELS, offs):
             df = data[m]
             cm = cue_mask(df, fam, grp)
             sh, se = shift_ci(df, cm, baseline_for(df, cm))
-            _model_point(ax, sh, se, SHIFT_EDGE, yy + off, MODEL_COLOUR[m], m)
+            colour = "#555555" if monochrome else MODEL_COLOUR[m]
+            if logo_points:
+                # Keep the model logo even when the estimate is outside the
+                # displayed range.  A small outward arrow marks truncation.
+                plotted = np.clip(sh, -SHIFT_EDGE, SHIFT_EDGE)
+                if abs(sh) <= SHIFT_EDGE:
+                    ax.errorbar(sh, yy + off, xerr=se, fmt="none", ecolor=colour,
+                                elinewidth=1.3, capsize=0, zorder=3)
+                else:
+                    # A small asterisk beside the clipped logo marks an estimate
+                    # beyond the displayed range without overwhelming the logo.
+                    ax.annotate("*", (plotted, yy + off),
+                                xytext=(8 if sh < 0 else -8, 0),
+                                textcoords="offset points", ha="center", va="center",
+                                fontsize=12, fontweight="bold", color=colour,
+                                zorder=6, clip_on=False)
+                place_logo(ax, plotted, yy + off, m, target_px=10.5, zorder=5)
+            else:
+                _model_point(ax, sh, se, SHIFT_EDGE, yy + off, colour, m)
 
     ax.axvline(0, color="#222222", lw=1.5, zorder=2)  # the null
     ax.set_xlim(-SHIFT_EDGE * 1.06, SHIFT_EDGE * 1.06)
@@ -448,12 +489,22 @@ def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True):
     _direction_tags(ax, "←  more liberal", "more conservative  →")
     ax.set_xlabel(r"Shift vs. no-cue baseline  ($\hat{\Delta}_k$), 95% CI", fontsize=11.5)
     if legend:
-        # The off-scale star only matters here (only the shift is clamped).
-        extra = [plt.Line2D([], [], marker="*", ls="", ms=12, color="#777777",
+        off_marker = "$*$" if logo_points else "*"
+        extra = [plt.Line2D([], [], marker=off_marker, ls="", ms=11, color="#777777",
                             mec="white", mew=0.7,
                             label=f"off scale: $|\\hat{{\\Delta}}_k| > {SHIFT_EDGE:g}$")]
-        _model_legend(ax, MODELS, extra_handles=extra, loc="lower right", frameon=False,
-                      fontsize=9, labelspacing=0.7)
+        if logo_points:
+            logo_key(ax, MODELS)
+            ax.plot(0.75, 0.025, marker=off_marker, ms=11, color="#777777",
+                    mec="white", mew=0.7, ls="", transform=ax.transAxes,
+                    clip_on=False, zorder=8)
+            ax.text(0.785, 0.025,
+                    f"off scale: $|\\hat{{\\Delta}}_k| > {SHIFT_EDGE:g}$",
+                    transform=ax.transAxes, ha="left", va="center",
+                    fontsize=9, color="#111111", zorder=8)
+        else:
+            _model_legend(ax, MODELS, extra_handles=extra, loc="lower right",
+                          frameon=False, fontsize=9, labelspacing=0.7)
 
 
 def _panel_header(ax, title, subtitle):
@@ -520,9 +571,12 @@ def fig_forest_panels(data, out: Path, fmts):
     figA.subplots_adjust(left=0.21, right=0.98, top=0.96, bottom=0.08)
     _save(figA, out, "fig1a_stance", fmts)
 
-    figB, axB = plt.subplots(figsize=(PANEL_W_B, PANEL_H))
-    _draw_shift_panel(axB, data, offs, rows, bands, ylabels=False)
-    figB.subplots_adjust(left=_B_LEFT, right=0.98, top=0.96, bottom=0.08)
+    # The shift panel now stands alone in the thesis: restore its cue labels and
+    # use logos with neutral confidence intervals instead of a colour/shape key.
+    figB, axB = plt.subplots(figsize=(PANEL_W_A, PANEL_H))
+    _draw_shift_panel(axB, data, offs, rows, bands, ylabels=True,
+                      logo_points=True, monochrome=True)
+    figB.subplots_adjust(left=0.21, right=0.98, top=0.96, bottom=0.08)
     _save(figB, out, "fig1b_shift", fmts)
 
 
@@ -712,6 +766,15 @@ def fig_composition(data, out: Path, fmts, issues_csv: Path):
                     key=lambda iss: np.mean([comp[m][iss][2] - comp[m][iss][0] for m in MODELS]),
                     reverse=True)
 
+    # Wrapping the few long issue names keeps the label gutter compact when the
+    # vector figure is scaled to the thesis text width.  Break at words only;
+    # short labels remain on one line.
+    display_labels = {
+        iss: textwrap.fill(label, width=34, break_long_words=False,
+                           break_on_hyphens=False)
+        for iss, label in labels.items()
+    }
+
     fig, axes = plt.subplots(len(issues), len(MODELS),
                              figsize=(3.3 * len(MODELS), 0.40 * len(issues) + 1.4),
                              squeeze=False)
@@ -741,8 +804,10 @@ def fig_composition(data, out: Path, fmts, issues_csv: Path):
                 thumb_col = C_LIB if lib_sign[iss] > 0 else C_CON
                 ax.plot(-0.055, 0.0, marker=THUMB, markersize=9, color=thumb_col,
                         ls="", transform=ax.get_yaxis_transform(), clip_on=False)
-                ax.text(-0.12, 0.0, labels[iss], rotation=0, ha="right", va="center",
-                        fontsize=8.5, transform=ax.get_yaxis_transform(), clip_on=False)
+                ax.text(-0.12, 0.0, display_labels[iss], rotation=0,
+                        ha="right", va="center", multialignment="right",
+                        fontsize=8.5, fontweight="bold", linespacing=0.92,
+                        transform=ax.get_yaxis_transform(), clip_on=False)
 
     handles = [plt.Line2D([], [], marker="s", ls="", ms=11, color=C_LIB, label="Liberal"),
                plt.Line2D([], [], marker="s", ls="", ms=11, color=C_NEU, label="Neutral"),

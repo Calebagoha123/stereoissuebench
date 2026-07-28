@@ -31,6 +31,10 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "lib"))
 from _common import MODELS, MODEL_LABEL, CUE_ORDER, CUE_DISPLAY, ROBUST
 
 FULL = Path("results/full")
+# Refusal labels + response text live only in the judge-scored full/ run, which
+# covers the open-weight models; the frontier models (Batch API) are not scored
+# here, so restrict the refusal check to models with a local eval file.
+MODELS = [m for m in MODELS if (FULL / f"eval_{m}.csv").exists()]
 
 
 def load_eval(model):

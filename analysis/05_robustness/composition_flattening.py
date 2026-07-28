@@ -25,7 +25,7 @@ Diagnostics per (model, cue group):
     > 0  => model is more one-sided than the real group (variance collapse)
   * share of issues where the model is strictly more extreme than the population
 
-Reads the CES microdata + results/full_3x/bert_eval_*.csv. Writes a per-issue
+Reads the CES microdata + results/full_3x via analysis/lib/_common.py (luna scorer of record). Writes a per-issue
 table, a per-group summary, and a figure.
 """
 from __future__ import annotations
@@ -219,8 +219,6 @@ def make_figure(merged, summary):
         ax.spines[["top", "right"]].set_visible(False)
     axes[0].set_ylabel("Model liberal share\n(among directional responses)")
     axes[-1].legend(fontsize=8, frameon=True, loc="lower right")
-    fig.suptitle("Composition, not just means: model directional share vs real group share, per issue.  "
-                 "Points pushed to 0/1 = within-group variance collapse.", y=1.02, fontsize=11)
     fig.tight_layout()
     p = Path("figures/robustness/composition_flattening.png")
     p.parent.mkdir(parents=True, exist_ok=True)

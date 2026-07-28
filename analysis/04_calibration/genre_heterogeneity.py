@@ -103,8 +103,6 @@ def make_figure(out):
         ax.set_xlabel("Δ vs baseline")
         ax.spines[["top", "right"]].set_visible(False)
     axes[0].legend(fontsize=8, frameon=False)
-    fig.suptitle("Cue effect by template genre — the sign is consistent across genres, "
-                 "not driven by one persuasive genre", y=1.02, fontsize=11)
     fig.tight_layout()
     p = Path("figures/robustness/genre_heterogeneity.png")
     fig.savefig(p, dpi=200, bbox_inches="tight")

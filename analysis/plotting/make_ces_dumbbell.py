@@ -176,7 +176,12 @@ def _draw_panel(ax, key, model, rows, bands, xlim, ylabels: bool):
     ax.tick_params(axis="y", length=0)
     ax.spines["left"].set_visible(False)
     if ylabels:
-        ax.set_yticklabels([r[3] for r in rows], fontsize=9.5)
+        # Slanted cue labels: they take less horizontal room than upright text, so
+        # the left gutter shrinks and the plotting area (the data) grows. The four
+        # cue types are still read off the alternating band shading, so the
+        # overarching band labels are dropped.
+        ax.set_yticklabels([r[3] for r in rows], fontsize=10.5, rotation=28,
+                           ha="right", va="center", rotation_mode="anchor")
     else:
         ax.tick_params(axis="y", labelleft=False)
 
@@ -184,15 +189,13 @@ def _draw_panel(ax, key, model, rows, bands, xlim, ylabels: bool):
     ax.text(0.5, 1.045, MODEL_LABEL[model], transform=ax.transAxes, ha="center",
             va="bottom", fontsize=11, fontweight="bold", color=colour)
     _direction_tags(ax)
-    ax.set_xlabel(r"Shift in liberal score  ($\hat{\Delta}$)", fontsize=10)
 
 
-def _band_labels(fig, ax_left, bands):
-    """Cue-type band labels in the far-left gutter, aligned to each band's centre."""
-    for band, yc, _, _ in bands:
-        ax_left.text(-0.56, yc, band, transform=ax_left.get_yaxis_transform(),
-                     ha="center", va="center", fontsize=8.5, fontweight="bold",
-                     color="#666666", linespacing=0.9, rotation=0)
+# Symbols: the miscalibration gap δ_k names the x-axis; each of its two component
+# shifts is spelled out on the legend entry for the marker that carries it.
+X_LABEL = r"Shift from baseline  ($\hat{\Delta}_k$)"
+CES_MATH = r"$\mu^{\mathrm{CES}}_{k} - \mu^{\mathrm{CES}}_{\mathrm{pop}}$"
+MODEL_MATH = r"$\bar{Y}_k - \bar{Y}_{\mathrm{baseline}}$"
 
 
 def fig_dumbbell(df: pd.DataFrame, out: Path, fmts) -> None:
@@ -200,30 +203,116 @@ def fig_dumbbell(df: pd.DataFrame, out: Path, fmts) -> None:
     rows, bands, _ = _layout_rows(BANDS)
     xlim = _xlim(df)
 
-    fig, axes = plt.subplots(1, len(MODELS), figsize=(3.05 * len(MODELS) + 1.1, 8.2),
+    fig, axes = plt.subplots(1, len(MODELS), figsize=(3.05 * len(MODELS) + 0.7, 8.2),
                              squeeze=False, gridspec_kw={"wspace": 0.10})
     axes = axes[0]
     for j, m in enumerate(MODELS):
         _draw_panel(axes[j], key, m, rows, bands, xlim, ylabels=(j == 0))
-    _band_labels(fig, axes[0], bands)
 
-    # Figure-level legend: what the two markers and the connector mean. Model
-    # identity is carried by the coloured panel headers, so the filled swatch is
-    # shown neutral here (its shape/colour vary by panel).
+    # Figure-level legend: each marker labelled with the shift it plots (CES real
+    # shift vs. model shift); their difference is δ_k, the x-axis. Model identity is
+    # carried by the coloured panel headers, so the filled swatch is neutral here.
     handles = [
         plt.Line2D([], [], marker="o", ls="", ms=8.5, mfc="white", mec=CES_COLOUR,
-                   mew=1.6, label="CES 2025 subgroup — real-world shift (target)"),
+                   mew=1.6, label=f"CES subgroup shift  ({CES_MATH})"),
         plt.Line2D([], [], marker="o", ls="", ms=7.5, color="#666666", mec="white",
-                   mew=0.8, label="Model shift (cued − no-cue baseline)"),
+                   mew=0.8, label=f"Model shift  ({MODEL_MATH})"),
         plt.Line2D([], [], color=GAP_COLOUR, lw=2.4, solid_capstyle="round",
-                   label="miscalibration gap"),
+                   label=r"miscalibration gap  ($\delta_k$)"),
     ]
     fig.legend(handles=handles, loc="lower center", ncol=3, frameon=False,
-               fontsize=9.5, bbox_to_anchor=(0.5, -0.012))
-    fig.subplots_adjust(left=0.135, right=0.99, top=0.93, bottom=0.11)
+               fontsize=10, bbox_to_anchor=(0.5, 0.02))
+    left, right = 0.085, 0.99
+    fig.subplots_adjust(left=left, right=right, top=0.93, bottom=0.135)
+    fig.text((left + right) / 2.0, 0.082, X_LABEL, ha="center", va="center",
+             fontsize=13, color="#1a1a1a")
 
     for ext in fmts:
         fig.savefig(out / f"fig_ces_dumbbell.{ext}", bbox_inches="tight")
+    plt.close(fig)
+
+
+# --------------------------------------------------------------------------- #
+# Levels figure — per-issue absolute stance: model default vs. the US public
+# --------------------------------------------------------------------------- #
+# Companion to the dumbbell. The dumbbell compares SHIFTS (cue reactions); this
+# compares LEVELS: on each issue, where does the model's no-cue default sit vs.
+# where the American public actually sits (CES 2025)? It's the ceiling/floor
+# context for flattening — a model already saturated on one side has no room to
+# move for a same-side cue. Metric = liberal share AMONG OPINIONATED output, the
+# only comparison that's fair to a survey with no "neutral" option; the model's
+# (large) neutral-refusal rate is reported separately on the right.
+import textwrap as _tw
+
+
+def fig_levels(detail_csv: Path, out: Path, fmts) -> None:
+    d = pd.read_csv(detail_csv)
+    b = d[(d.cue_family == "baseline") & (d.model.isin(MODELS))]
+    ces = b.groupby("issue").ces_lib_share.first()
+    issues = ces.sort_values(ascending=False).index.tolist()  # most-liberal public on top
+    yof = {iss: i for i, iss in enumerate(issues)}
+    neutral = b.groupby("issue").neutral_rate.mean()  # mean across models (caveat strip)
+
+    fig, ax = plt.subplots(figsize=(10.4, 9.2))
+    for i in range(len(issues)):
+        if i % 2 == 0:
+            ax.axhspan(i - 0.5, i + 0.5, color="#000000", alpha=0.04, zorder=0)
+    ax.axvline(0.5, color="#222222", lw=1.2, zorder=1)  # even lib/con split
+
+    # Small vertical dodge so the five model markers stay distinct where they pile
+    # up (many issues saturate all models near 100% liberal). The public anchor and
+    # the cluster span stay on the row centre.
+    dodge = dict(zip(MODELS, np.linspace(0.19, -0.19, len(MODELS))))
+    for iss in issues:
+        yy = yof[iss]
+        c = float(ces[iss])
+        sub = b[b.issue == iss]
+        shares = [float(sub[sub.model == m].model_lib_share.iloc[0]) for m in MODELS
+                  if (sub.model == m).any()]
+        # faint span across the model cluster: its offset from the CES anchor is the
+        # story (cluster left of anchor = models more liberal than the public).
+        ax.plot([min(shares), max(shares)], [yy, yy], color="#E1E1E1", lw=2.2,
+                solid_capstyle="round", zorder=2)
+        for m in MODELS:
+            r = sub[sub.model == m]
+            if len(r):
+                ax.plot(float(r.model_lib_share.iloc[0]), yy + dodge[m], marker=MODEL_MARKER[m],
+                        ms=6.5, color=MODEL_COLOUR[m], mec="white", mew=0.7, ls="", zorder=4)
+        ax.plot(c, yy, marker="o", ms=11, mfc="white", mec=CES_COLOUR, mew=1.8,
+                ls="", zorder=5)  # the public anchor
+        # mean neutral-refusal rate for this issue, at the right margin
+        ax.text(1.045, yy, f"{neutral[iss]*100:.0f}%", transform=ax.get_yaxis_transform(),
+                ha="left", va="center", fontsize=8, color="#999999")
+
+    ax.set_xlim(-0.03, 1.03)  # pad so markers at 0%/100% aren't clipped at the spine
+    ax.invert_xaxis()  # liberal share high -> plotted on the LEFT (matches other figs)
+    ax.set_ylim(len(issues) - 0.6, -0.6)
+    ax.set_yticks(range(len(issues)))
+    ax.set_yticklabels([_tw.fill(iss, 34, break_long_words=False) for iss in issues],
+                       fontsize=8.8, linespacing=0.9)
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
+    ax.set_xticklabels(["100%", "75%", "50%", "25%", "0%"])
+    ax.set_xlabel("Liberal share of stance (among opinionated responses)", fontsize=11)
+    ax.text(0.0, 1.006, "←  more liberal", transform=ax.transAxes, ha="left",
+            va="bottom", fontsize=9, color="#888888")
+    ax.text(1.0, 1.006, "more conservative  →", transform=ax.transAxes, ha="right",
+            va="bottom", fontsize=9, color="#888888")
+    ax.text(1.045, 1.006, "neutral", transform=ax.transAxes, ha="left", va="bottom",
+            fontsize=8, color="#999999")
+
+    handles = [plt.Line2D([], [], marker="o", ls="", ms=11, mfc="white", mec=CES_COLOUR,
+                          mew=1.8, label="US public (CES 2025)")]
+    handles += [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", ms=7.5,
+                           color=MODEL_COLOUR[m], mec="white", mew=0.7, label=MODEL_LABEL[m])
+                for m in MODELS]
+    ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.135),
+              ncol=6, frameon=False, fontsize=9.5, columnspacing=1.3, handletextpad=0.4)
+    fig.subplots_adjust(left=0.235, right=0.90, top=0.95, bottom=0.11)
+
+    for ext in fmts:
+        fig.savefig(out / f"fig_ces_levels.{ext}", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -337,6 +426,7 @@ def write_slope_table(slopes: dict, shift_table: Path, out: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--table", default="results/consolidated/01_master_cue_effects.csv")
+    ap.add_argument("--detail", default="results/consolidated/08_issue_level_detail.csv")
     ap.add_argument("--slopes", default="results/robustness/rq2_regression.csv")
     ap.add_argument("--shift-table", default="results/robustness/model_shift_table.csv")
     ap.add_argument("--figures-dir", default="figures/ces_dumbbell")
@@ -348,8 +438,9 @@ def main() -> int:
     df = pd.read_csv(args.table)
     df = df[df.model.isin(MODELS)].copy()
     fig_dumbbell(df, fd, fmts)
+    fig_levels(Path(args.detail), fd, fmts)
     write_slope_table(load_slopes(Path(args.slopes)), Path(args.shift_table), fd)
-    print(f"\nWrote fig_ces_dumbbell + calibration_slope_table.{{md,tex}} to {fd}")
+    print(f"\nWrote fig_ces_dumbbell + fig_ces_levels + calibration_slope_table.{{md,tex}} to {fd}")
     return 0
 
 

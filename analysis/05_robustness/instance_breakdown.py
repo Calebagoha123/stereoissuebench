@@ -10,7 +10,7 @@ the group intervals reflect group-level (not instance-level) uncertainty.
 
 For each Arm-B group we compute every instance's mean liberal score minus the
 model's baseline, and summarise the within-group spread. Reads
-results/full_3x/bert_eval_*.csv. Writes results/robustness/instance_effects.csv
+results/full_3x via analysis/lib/_common.py (luna scorer of record). Writes results/robustness/instance_effects.csv
 and a strip/forest figure.
 """
 from __future__ import annotations

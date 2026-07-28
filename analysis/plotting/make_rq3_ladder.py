@@ -37,12 +37,13 @@ MODELS_BEHAV = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
 MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
                "gpt56terra": "GPT-5.6", "sonnet5": "Sonnet 5"}
 
-# cue-family palette (consistent with the DiD / cross-model figures)
+# cue-family palette: Okabe-Ito, chosen distinct from the model colours (below) so
+# fill=family / edge=model encodings never collide.
 FAM_COLOUR = {
-    "explicit_political": "#1F3A93",    # Oxford navy
-    "explicit_demographic": "#C7372F",
-    "implicit_political": "#58A9DE",
-    "implicit_demographic": "#F0821E",
+    "explicit_political": "#D55E00",    # vermillion
+    "explicit_demographic": "#CC79A7",  # reddish purple
+    "implicit_political": "#56B4E9",    # sky blue
+    "implicit_demographic": "#000000",  # black (the focal name cue / null)
 }
 FAM_LABEL = {
     "explicit_political": "Explicit political",
@@ -148,7 +149,7 @@ def b_relevance(ax, model):
     m = r.groupby("attribute")["s"].mean().sort_values()
     disp = {"party": "party", "state": "state", "gender": "gender", "race": "race", "name": "name"}
     labels = [disp.get(a, a) for a in m.index]
-    colours = ["#C7372F" if a == "name" else "#5b6673" for a in m.index]
+    colours = ["#D55E00" if a == "name" else "#7A7A7A" for a in m.index]
     ax.barh(range(len(m)), m.values, color=colours, height=0.68)
     for i, v in enumerate(m.values):
         ax.text(v + 1.5, i, f"{v:.0f}", va="center", fontsize=8.5, color=INK)
@@ -164,15 +165,15 @@ def c_transfer(ax, model):
     chance = float(summ.get("transfer_chance", 0.25))
     label_to_name = float(summ.get("transfer_label_to_name_max", tr["label_to_name"].max()))
     within = 1.0  # within-family decodability ceiling (summary decodability_best)
-    bars = [("within-family\n(race×gender)", within, "#5b6673"),
-            ("cross-cue transfer\n(label → name)", label_to_name, "#1F3A93")]
+    bars = [("within-family\n(race×gender)", within, "#7A7A7A"),
+            ("cross-cue transfer\n(label → name)", label_to_name, "#0072B2")]
     x = range(len(bars))
     ax.bar(x, [b[1] for b in bars], color=[b[2] for b in bars], width=0.6)
     for i, (_, v, _) in enumerate(bars):
         ax.text(i, v + 0.02, f"{v:.2f}", ha="center", fontsize=9, color=INK)
-    ax.axhline(chance, color="#C7372F", ls="--", lw=1.2)
+    ax.axhline(chance, color="#D55E00", ls="--", lw=1.2)
     ax.text(len(bars) - 0.5, chance + 0.015, f"chance = {chance:.2f}", ha="right",
-            fontsize=8, color="#C7372F")
+            fontsize=8, color="#D55E00")
     ax.set_xticks(list(x)); ax.set_xticklabels([b[0] for b in bars], fontsize=8.5)
     ax.set_ylim(0, 1.08)
     ax.set_ylabel("balanced accuracy")
@@ -183,8 +184,8 @@ def d_refusal(ax, model):
     order = ["gender", "race", "political"]
     disp = {"gender": "gender", "race": "race", "political": "politics"}
     seg = ["committed", "committed_with_caveat", "refused"]
-    seg_col = {"committed": "#2f7d4f", "committed_with_caveat": "#8cc79e",
-               "other": "#b8b8b8", "refused": "#C7372F"}
+    seg_col = {"committed": "#009E73", "committed_with_caveat": "#7FCBB4",
+               "other": "#BBBBBB", "refused": "#D55E00"}
     seg_lab = {"committed": "answered", "committed_with_caveat": "answered w/ caveat",
                "other": "unclear", "refused": "refused"}
     ct = pd.crosstab(d.attribute, d.label).reindex(index=order, columns=seg, fill_value=0)
@@ -251,7 +252,7 @@ def threeup_relevance(models):
         r["s"] = pd.to_numeric(r["parsed_score"], errors="coerce")
         mean = r.groupby("attribute")["s"].mean()
         vals = [mean.get(a, float("nan")) for a in order]
-        colours = ["#C7372F" if a == "name" else "#5b6673" for a in order]
+        colours = ["#D55E00" if a == "name" else "#7A7A7A" for a in order]
         ax.barh(range(len(order)), vals, color=colours, height=0.66)
         for i, v in enumerate(vals):
             ax.text(v + 2, i, f"{v:.0f}", va="center", fontsize=9, color=INK)
@@ -267,14 +268,20 @@ def threeup_mediation(models):
     """Internal political-axis shift vs written-stance shift, 3 models side by side.
 
     B3 mediation: projection of each cue group onto the per-layer Democrat-Republican
-    activation direction (proj_shift) predicts the written-stance shift.
+    activation direction (proj_shift) predicts the written-stance shift. The stance
+    side is the classifier-of-record (luna) shift from the consolidated master, not
+    mediation_full3x's stale `stance_shift` column, so the panel r's match §4.4.
     """
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
     from scipy import stats
+    master = pd.read_csv(MASTER)
     fig, axes = plt.subplots(1, 3, figsize=(12.6, 4.6), sharey=False)
     for ax, m in zip(axes, models):
-        d = pd.read_csv(PROBE / f"{m}_mediation_full3x.csv")
+        d = pd.read_csv(PROBE / f"{m}_mediation_full3x.csv").drop(columns=["stance_shift"])
+        mm = master[master.model == m][["cue_family", "cue_group", "model_shift"]]
+        d = d.merge(mm, on=["cue_family", "cue_group"], how="inner").rename(
+            columns={"model_shift": "stance_shift"})
         raw, y = d["proj_shift"].to_numpy(), d["stance_shift"].to_numpy()
         # projection units are model-specific (activation scale); standardise x so the
         # three panels are comparable. Correlation and fit are unchanged by z-scoring.
@@ -309,45 +316,55 @@ NAME_GROUP_LABEL = {"black_man": "Black man", "black_woman": "Black woman",
 NAME_GROUP_ORDER = ["black_man", "black_woman", "white_man", "white_woman"]
 
 
-def threeup_transfer(models):
-    """Per-name-group cross-cue transfer (label → name) as a depth heatmap.
+# rows ordered by pooled decodability (women top, men bottom) so the gendered
+# gradient reads top-to-bottom; see threeup_transfer docstring.
+TRANSFER_ROW_ORDER = ["white_woman", "black_woman", "white_man", "black_man"]
+# Okabe-Ito model palette, matched to the CES dumbbell / other thesis figures.
+MODEL_COLOUR = {"llama": "#0072B2", "gemma": "#009E73", "qwen": "#E69F00"}
 
-    Rows = race×gender name groups, columns = layer depth, colour = recall of a
-    probe trained on the *explicit* demographic label and tested on the *name*
-    cue alone (3-layer smoothed). The colour scale diverges around 4-class chance
-    (0.25): red = the group's identity is linearly recoverable from its names at
-    that depth, blue = not. A single "best layer" bar is unstable — the same
-    4-class balanced accuracy is reached at layers with very different per-group
-    confusions (e.g. qwen Black-man recall swings 0.02→0.94 by depth) — so the
-    full depth profile is shown. It reveals that *which* name group is decodable,
-    and *where*, is model-specific rather than a fixed name hierarchy.
+
+def threeup_transfer(models):
+    """Per-name-group cross-cue transfer (label → name) as a group breakdown.
+
+    A probe trained on the *explicit* demographic label and tested on the *name* cue
+    alone recovers the name's race×gender identity. We report, per name group and model,
+    the share of network layers at which that recall beats 4-class chance (0.25) — a
+    layer-agnostic "how consistently decodable" score (embedding layer 0 excluded, its
+    recall being a raw-token artifact that inflates e.g. llama Black-man). We drop the
+    per-layer depth profile deliberately: the *depth* at which a group becomes decodable
+    is unstable and not of interest here — only *that* names encode identity, and *which*
+    groups, is. The breakdown shows a gender-first, race-second ordering: white-woman
+    names are the most linearly recoverable in every model, black-man names the least
+    (pooled: women 0.65 > men 0.40; white 0.61 > Black 0.44); llama's Black-man bar is
+    the lone exception.
     """
     import matplotlib.pyplot as plt
-    from matplotlib.colors import TwoSlopeNorm
     chance = 0.25
+    order = TRANSFER_ROW_ORDER  # women top, men bottom
     pivs = {m: pd.read_csv(PROBE / f"{m}_transfer_by_group.csv")
             .pivot(index="cue_group", columns="layer", values="label_to_name_recall")
-            .reindex(NAME_GROUP_ORDER) for m in models}
-    widths = [pivs[m].shape[1] for m in models]
-    fig, axes = plt.subplots(1, 3, figsize=(13.0, 3.0), sharey=True,
-                             gridspec_kw={"width_ratios": widths})
-    norm = TwoSlopeNorm(vmin=0.0, vcenter=chance, vmax=1.0)
-    im = None
-    for ax, m in zip(axes, models):
-        sm = pivs[m].T.rolling(3, center=True, min_periods=1).mean().T  # smooth over layers
-        im = ax.imshow(sm.values, aspect="auto", cmap="RdBu_r", norm=norm,
-                       extent=[0, 1, len(NAME_GROUP_ORDER) - 0.5, -0.5],
-                       interpolation="nearest")
-        ax.set_title(MODEL_LABEL[m], fontsize=12)
-        ax.set_xlabel("relative depth (layer / final)")
-        ax.set_xticks([0, 0.5, 1.0])
-        ax.set_yticks(range(len(NAME_GROUP_ORDER)))
-        ax.tick_params(length=0)
-    axes[0].set_yticklabels([NAME_GROUP_LABEL[g] for g in NAME_GROUP_ORDER])
-    cbar = fig.colorbar(im, ax=list(axes), fraction=0.028, pad=0.02)
-    cbar.set_label("identity recovered from name\n(label → name recall)", fontsize=9.5)
-    cbar.set_ticks([0, chance, 0.5, 1.0])
-    cbar.ax.axhline(chance, color=INK, lw=0.9)  # mark chance on the ramp
+            .reindex(order) for m in models}
+    # per-group decodability: share of layers above chance, excluding the embedding layer
+    summ = {m: {g: np.mean(pivs[m].loc[g].values[1:] > chance) for g in order}
+            for m in models}
+
+    fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    h = 0.8 / len(models)
+    for j, m in enumerate(models):
+        ys = [i + ((len(models) - 1) / 2 - j) * h for i in range(len(order))]
+        ax.barh(ys, [summ[m][g] for g in order], height=h, color=MODEL_COLOUR[m],
+                label=MODEL_LABEL[m], edgecolor="white", linewidth=0.5)
+        for yi, g in zip(ys, order):
+            ax.text(summ[m][g] + 0.012, yi, f"{summ[m][g]:.2f}", va="center",
+                    fontsize=7.5, color="#555")
+    ax.set_yticks(range(len(order)))
+    ax.set_yticklabels([NAME_GROUP_LABEL[g] for g in order])
+    ax.invert_yaxis()
+    ax.set_xlim(0, 1.0)
+    ax.set_xlabel("name → identity decodable\n(share of layers above chance)")
+    ax.legend(fontsize=8.5, frameon=False, loc="lower right", handlelength=1.1,
+              handletextpad=0.5, labelspacing=0.3)
+    fig.tight_layout()
     save_fig(fig, OUTDIR / "rq3_transfer_3up")
 
 
@@ -360,8 +377,8 @@ def threeup_refusal(models):
     # keep "other" in the segment set so the refused share is normalised over *all*
     # responses (matches the rates quoted in §4.4); it is a thin grey sliver at most.
     seg = ["committed", "committed_with_caveat", "other", "refused"]
-    seg_col = {"committed": "#2f7d4f", "committed_with_caveat": "#8cc79e",
-               "other": "#b8b8b8", "refused": "#C7372F"}
+    seg_col = {"committed": "#009E73", "committed_with_caveat": "#7FCBB4",
+               "other": "#BBBBBB", "refused": "#D55E00"}
     seg_lab = {"committed": "answered", "committed_with_caveat": "answered w/ caveat",
                "other": "unclear", "refused": "refused"}
     n = len(models)

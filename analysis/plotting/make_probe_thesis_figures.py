@@ -51,7 +51,8 @@ plt.rcParams.update({
 
 MODELS = ["qwen", "gemma", "llama"]
 MODEL_LABEL = {"qwen": "Qwen-3.6-27B", "gemma": "Gemma-3-12B", "llama": "Llama-3.1-8B"}
-MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#CC79A7"}  # Okabe-Ito
+MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2"}  # Okabe-Ito, matches CES
+MASTER = Path("results/consolidated/01_master_cue_effects.csv")  # luna stance-of-record
 
 # cue family -> (decodability subset name, colour, short label)
 FAM_SUBSET = {
@@ -60,9 +61,9 @@ FAM_SUBSET = {
     "implicit_political": "state",
     "implicit_demographic": "name",
 }
-FAM_COLOUR = {
-    "explicit_political": "#1F3A93", "explicit_demographic": "#C7372F",
-    "implicit_political": "#58A9DE", "implicit_demographic": "#F0821E",
+FAM_COLOUR = {  # Okabe-Ito, distinct from the model colours (fill=family, edge=model in fig_p1)
+    "explicit_political": "#D55E00", "explicit_demographic": "#CC79A7",
+    "implicit_political": "#56B4E9", "implicit_demographic": "#000000",
 }
 FAM_LABEL = {
     "explicit_political": "Explicit political", "explicit_demographic": "Explicit demographic",
@@ -85,25 +86,16 @@ def summary(tag, pdir: Path) -> dict:
 
 
 def stance_shifts(tag, sdir: Path) -> pd.DataFrame:
-    """Per cue group: written-stance shift vs baseline, from full_3x DeBERTa."""
-    df = pd.read_csv(sdir / f"bert_eval_{tag}.csv",
-                     usecols=["arm", "cue_condition", "cue_family", "cue_group", "bert_liberal_score"],
-                     low_memory=False)
-    df["bert_liberal_score"] = pd.to_numeric(df["bert_liberal_score"], errors="coerce")
-    base = df[(df.arm == "A") & (df.cue_condition == "baseline")]["bert_liberal_score"].mean()
+    """Per cue group: written-stance shift vs baseline, from the classifier of record.
 
-    def cue_mask(fam, grp):
-        if fam.startswith("explicit"):
-            return (df.arm == "A") & (df.cue_condition == f"{fam}_{grp}")
-        return (df.arm == "B") & (df.cue_family == fam) & (df.cue_group == grp)
-
-    rows = []
-    for fam in FAM_SUBSET:
-        groups = df[df.cue_family == fam]["cue_group"].unique()
-        for grp in groups:
-            rows.append({"cue_family": fam, "cue_group": grp,
-                         "stance_shift": df[cue_mask(fam, grp)]["bert_liberal_score"].mean() - base})
-    return pd.DataFrame(rows)
+    Reads the luna cue effect (model_shift) from the consolidated master so the ladder
+    and fig_p1 use the same stance ruler as the RQ3 body figures. `sdir` is unused
+    (kept for signature compatibility); the stale full_3x DeBERTa path is retired.
+    """
+    m = pd.read_csv(MASTER)
+    m = m[m.model == tag][["cue_family", "cue_group", "model_shift"]]
+    m = m[m.cue_family.isin(FAM_SUBSET)]
+    return m.rename(columns={"model_shift": "stance_shift"}).reset_index(drop=True)
 
 
 # NOTE: the internal political-axis projection (B2) is intentionally NOT shipped
@@ -148,8 +140,13 @@ def ladder_table(pdir: Path, sdir: Path, bdir: Path, out_dir: Path) -> pd.DataFr
     for tag in MODELS:
         s = summary(tag, pdir)
         dec = s["decodability_best"]["name"]
-        # full_3x mediation r, with and without the Republican leverage point
-        med = pd.read_csv(pdir / f"{tag}_mediation_full3x.csv")
+        # mediation r on the luna stance (merge master, not the stale stance_shift column),
+        # with and without the Republican leverage point
+        med = pd.read_csv(pdir / f"{tag}_mediation_full3x.csv").drop(columns=["stance_shift"])
+        mm = pd.read_csv(MASTER)
+        mm = mm[mm.model == tag][["cue_family", "cue_group", "model_shift"]]
+        med = med.merge(mm, on=["cue_family", "cue_group"], how="inner").rename(
+            columns={"model_shift": "stance_shift"})
         med_r = float(np.corrcoef(med["proj_shift"], med["stance_shift"])[0, 1])
         med_norep = med[~((med.cue_family == "explicit_political") & (med.cue_group == "republican"))]
         med_r_norep = float(np.corrcoef(med_norep["proj_shift"], med_norep["stance_shift"])[0, 1])
@@ -249,10 +246,10 @@ def fig_transfer(pdir: Path, out: Path, fmts) -> None:
     for i, tag in enumerate(MODELS):
         s = summary(tag, pdir)
         ax.barh(y[i] + h / 2, s["transfer_name_to_label_max"], height=h,
-                color="#F0821E", edgecolor="#222", linewidth=0.5,
+                color="#56B4E9", edgecolor="#222", linewidth=0.5,
                 label="train NAME → test label" if i == 0 else None)
         ax.barh(y[i] - h / 2, s["transfer_label_to_name_max"], height=h,
-                color="#C7372F", edgecolor="#222", linewidth=0.5,
+                color="#D55E00", edgecolor="#222", linewidth=0.5,
                 label="train label → test NAME" if i == 0 else None)
         for val, yy in [(s["transfer_name_to_label_max"], y[i] + h / 2),
                         (s["transfer_label_to_name_max"], y[i] - h / 2)]:
@@ -273,9 +270,10 @@ def fig_transfer(pdir: Path, out: Path, fmts) -> None:
 # --------------------------------------------------------------------------- #
 ATTR_ORDER = ["gender", "race", "political"]
 ATTR_LABEL = {"gender": "Gender", "race": "Race", "political": "Politics"}
-OUTCOME_ORDER = [("committed", "#3A6EA5", "Committed"),
-                 ("committed_with_caveat", "#9FB8CF", "Committed w/ caveat"),
-                 ("refused", "#B2182B", "Refused")]
+OUTCOME_ORDER = [("committed", "#009E73", "Committed"),
+                 ("committed_with_caveat", "#7FCBB4", "Committed w/ caveat"),
+                 ("refused", "#D55E00", "Refused")]
+CAVEAT_COLOUR = "#7FCBB4"  # light segment -> dark text label
 
 
 def fig_refusal(bdir: Path, out: Path, fmts) -> None:
@@ -293,7 +291,7 @@ def fig_refusal(bdir: Path, out: Path, fmts) -> None:
             for xi, (v, b) in enumerate(zip(vals, left)):
                 if v > 0.06:
                     ax.text(xi, b + v / 2, f"{round(v*100)}%", ha="center", va="center",
-                            fontsize=8.5, color="white" if colour != "#9FB8CF" else "#333")
+                            fontsize=8.5, color="white" if colour != CAVEAT_COLOUR else "#333")
             left += vals
         ax.set_xticks(x); ax.set_xticklabels([ATTR_LABEL[a] for a in ATTR_ORDER])
         ax.set_ylim(0, 1); ax.set_title(MODEL_LABEL[tag], fontsize=11, pad=6)

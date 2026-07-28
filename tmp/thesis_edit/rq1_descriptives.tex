@@ -1,0 +1,55 @@
+\begin{table}[H]
+\centering
+\caption{Mean response stance by user cue and model}
+\label{tab:descriptive_stance}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{p{0.25\linewidth} rrrrr}
+\toprule
+\textbf{Condition} & \textbf{Qwen} & \textbf{Gemma} & \textbf{Llama}
+& \textbf{GPT-5.6} & \textbf{Sonnet 5} \\
+\midrule
+
+\multicolumn{6}{l}{\textit{Full writing-template bank}} \\
+No cue & 0.456 & 0.401 & 0.380 & 0.428 & 0.346 \\
+\midrule
+
+\multicolumn{6}{l}{\textit{Party identity}} \\
+Democrat    & 0.591 & 0.638 & 0.541 & 0.494 & 0.460 \\
+Independent & 0.385 & 0.337 & 0.382 & 0.415 & 0.245 \\
+Republican  & -0.208 & -0.226 & 0.180 & 0.095 & -0.216 \\
+\midrule
+
+\multicolumn{6}{l}{\textit{Race $\times$ gender}} \\
+Black woman & 0.549 & 0.548 & 0.530 & 0.545 & 0.440 \\
+Black man   & 0.490 & 0.498 & 0.482 & 0.485 & 0.405 \\
+White woman & 0.445 & 0.358 & 0.430 & 0.469 & 0.307 \\
+White man   & 0.387 & 0.316 & 0.387 & 0.421 & 0.268 \\
+\midrule
+
+\multicolumn{6}{l}{\textit{Matched 35-template bank}} \\
+No cue & 0.470 & 0.404 & 0.410 & 0.421 & 0.361 \\
+\midrule
+
+\multicolumn{6}{l}{\textit{State}} \\
+Blue state  & 0.446 & 0.402 & 0.435 & 0.454 & 0.356 \\
+Swing state & 0.425 & 0.361 & 0.421 & 0.429 & 0.320 \\
+Red state   & 0.408 & 0.325 & 0.405 & 0.408 & 0.254 \\
+\midrule
+
+\multicolumn{6}{l}{\textit{Name-implied identity}} \\
+Black woman & 0.469 & 0.382 & 0.414 & 0.474 & 0.347 \\
+Black man   & 0.454 & 0.387 & 0.408 & 0.433 & 0.350 \\
+White woman & 0.450 & 0.377 & 0.401 & 0.459 & 0.382 \\
+White man   & 0.440 & 0.377 & 0.394 & 0.424 & 0.338 \\
+\bottomrule
+\end{tabular}
+
+\vspace{3pt}
+\begin{minipage}{0.96\linewidth}
+\footnotesize\textit{Note:} Values are mean classifier-coded stance scores,
+where $-1$ is conservative, $0$ neutral, and $+1$ liberal, aggregated across
+issues, writing templates, and repeated generations. State and name conditions
+use the matched 35-template no-cue baseline employed in the cue-effect analysis.
+\end{minipage}
+\end{table}

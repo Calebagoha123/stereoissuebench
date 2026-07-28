@@ -41,6 +41,30 @@ def krippendorff_interval(a, b):
     return 1 - Do / De
 
 
+def boot_ci(fn, *arrays, B=5000, seed=7, pct=(2.5, 97.5)):
+    """Percentile bootstrap CI for fn(*arrays), resampling item pairs w/ replacement.
+
+    Resamples paired rows (so both raters / pred+gold move together). Draws that
+    make a statistic undefined (e.g. a constant column -> nan kappa) are dropped.
+    """
+    rng = np.random.default_rng(seed)
+    arrays = [np.asarray(a) for a in arrays]
+    n = len(arrays[0])
+    stats = np.empty(B)
+    for i in range(B):
+        idx = rng.integers(0, n, n)
+        try:
+            stats[i] = fn(*[a[idx] for a in arrays])
+        except Exception:
+            stats[i] = np.nan
+    stats = stats[np.isfinite(stats)]
+    return np.percentile(stats, pct[0]), np.percentile(stats, pct[1])
+
+
+def ci_str(lo, hi):
+    return f"[{lo:.3f}, {hi:.3f}]"
+
+
 # ---- load ----------------------------------------------------------------
 c = pd.read_csv(f"{ROOT}/annotation/ratings_caleb.csv")[["item_id", "score", "unratable"]]
 h = pd.read_csv(f"{ROOT}/annotation/ratings_hl.csv")[["item_id", "score", "unratable"]]
@@ -64,15 +88,24 @@ cc, hc = collapse(m.caleb), collapse(m.hl)
 kap = cohen_kappa_score(cc, hc)
 agree3 = np.mean(cc == hc)
 
+# 95% bootstrap CIs (resample the n annotator pairs)
+ca, ha = m.caleb.to_numpy(), m.hl.to_numpy()
+pr_ci = boot_ci(lambda x, y: pearsonr(x, y)[0], ca, ha)
+sr_ci = boot_ci(lambda x, y: spearmanr(x, y)[0], ca, ha)
+icc_ci = boot_ci(icc_2_1, ca, ha)
+alpha_ci = boot_ci(krippendorff_interval, ca, ha)
+agree3_ci = boot_ci(lambda x, y: np.mean(collapse(x) == collapse(y)), ca, ha)
+kap_ci = boot_ci(lambda x, y: cohen_kappa_score(collapse(x), collapse(y)), ca, ha)
+
 print(f"=== Inter-annotator reliability (Caleb vs HL, n={n}) ===")
-print(f"  Pearson r        {pr:.3f}  (p={pp:.1e})")
-print(f"  Spearman rho     {sr:.3f}  (p={sp:.1e})")
-print(f"  ICC(2,1)         {icc:.3f}")
-print(f"  Krippendorff a   {alpha:.3f}  (interval)")
+print(f"  Pearson r        {pr:.3f}  95%CI {ci_str(*pr_ci)}  (p={pp:.1e})")
+print(f"  Spearman rho     {sr:.3f}  95%CI {ci_str(*sr_ci)}  (p={sp:.1e})")
+print(f"  ICC(2,1)         {icc:.3f}  95%CI {ci_str(*icc_ci)}")
+print(f"  Krippendorff a   {alpha:.3f}  95%CI {ci_str(*alpha_ci)}  (interval)")
 print(f"  Mean signed diff {diff.mean():+.2f}   (Caleb - HL)")
 print(f"  Mean abs diff    {diff.abs().mean():.2f}   (median {diff.abs().median():.1f})")
-print(f"  3-class agree    {agree3:.1%}")
-print(f"  Cohen's kappa    {kap:.3f}  (3-class, 40/60)")
+print(f"  3-class agree    {agree3:.1%}  95%CI {ci_str(*agree3_ci)}")
+print(f"  Cohen's kappa    {kap:.3f}  95%CI {ci_str(*kap_ci)}  (3-class, 40/60)")
 
 # ---- 2. DeBERTa vs gold --------------------------------------------------
 d = m.dropna(subset=["bert_pred_stance"]).copy()
@@ -85,13 +118,22 @@ acc = accuracy_score(gold3, bert3)
 mf1 = f1_score(gold3, bert3, labels=labels, average="macro")
 bkap = cohen_kappa_score(gold3, bert3, labels=labels)
 
+# 95% bootstrap CIs (resample the pred/gold pairs)
+dp, dg = d.bert_pred_stance.to_numpy(), d.gold.to_numpy()
+bpr_ci = boot_ci(lambda x, y: pearsonr(x, y)[0], dp, dg)
+bsr_ci = boot_ci(lambda x, y: spearmanr(x, y)[0], dp, dg)
+bmae_ci = boot_ci(lambda x, y: np.abs(x - y).mean(), dp, dg)
+acc_ci = boot_ci(lambda x, y: accuracy_score(collapse(y), collapse(x)), dp, dg)
+mf1_ci = boot_ci(lambda x, y: f1_score(collapse(y), collapse(x), labels=labels, average="macro"), dp, dg)
+bkap_ci = boot_ci(lambda x, y: cohen_kappa_score(collapse(y), collapse(x), labels=labels), dp, dg)
+
 print(f"\n=== DeBERTa vs gold (mean of annotators, n={len(d)}) ===")
-print(f"  Pearson r        {bpr:.3f}  (p={bpp:.1e})")
-print(f"  Spearman rho     {bsr:.3f}  (p={bsp:.1e})")
-print(f"  MAE (0-100)      {bmae:.2f}")
-print(f"  3-class acc      {acc:.1%}")
-print(f"  Macro-F1         {mf1:.3f}")
-print(f"  Cohen's kappa    {bkap:.3f}  (vs collapsed gold, 40/60)")
+print(f"  Pearson r        {bpr:.3f}  95%CI {ci_str(*bpr_ci)}  (p={bpp:.1e})")
+print(f"  Spearman rho     {bsr:.3f}  95%CI {ci_str(*bsr_ci)}  (p={bsp:.1e})")
+print(f"  MAE (0-100)      {bmae:.2f}  95%CI {ci_str(*bmae_ci)}")
+print(f"  3-class acc      {acc:.1%}  95%CI {ci_str(*acc_ci)}")
+print(f"  Macro-F1         {mf1:.3f}  95%CI {ci_str(*mf1_ci)}")
+print(f"  Cohen's kappa    {bkap:.3f}  95%CI {ci_str(*bkap_ci)}  (vs collapsed gold, 40/60)")
 print("  Confusion (rows=gold, cols=DeBERTa) order against/neutral/for:")
 cm = confusion_matrix(gold3, bert3, labels=labels)
 print(pd.DataFrame(cm, index=[f"gold_{l}" for l in labels],
@@ -106,13 +148,14 @@ for mdl, g in d.groupby("model"):
 
 # ---- save ----------------------------------------------------------------
 out = f"{ROOT}/analysis/07_validation/out/irr_deberta_metrics.csv"
+NA = (np.nan, np.nan)  # metrics without a bootstrap CI
 pd.DataFrame([
-    ("irr", "n", n), ("irr", "pearson_r", pr), ("irr", "spearman_rho", sr),
-    ("irr", "icc_2_1", icc), ("irr", "krippendorff_alpha", alpha),
-    ("irr", "mean_signed_diff", diff.mean()), ("irr", "mean_abs_diff", diff.abs().mean()),
-    ("irr", "agree_3class", agree3), ("irr", "cohen_kappa_3class", kap),
-    ("deberta", "n", len(d)), ("deberta", "pearson_r", bpr), ("deberta", "spearman_rho", bsr),
-    ("deberta", "mae", bmae), ("deberta", "acc_3class", acc),
-    ("deberta", "macro_f1", mf1), ("deberta", "cohen_kappa_3class", bkap),
-], columns=["block", "metric", "value"]).to_csv(out, index=False)
+    ("irr", "n", n, *NA), ("irr", "pearson_r", pr, *pr_ci), ("irr", "spearman_rho", sr, *sr_ci),
+    ("irr", "icc_2_1", icc, *icc_ci), ("irr", "krippendorff_alpha", alpha, *alpha_ci),
+    ("irr", "mean_signed_diff", diff.mean(), *NA), ("irr", "mean_abs_diff", diff.abs().mean(), *NA),
+    ("irr", "agree_3class", agree3, *agree3_ci), ("irr", "cohen_kappa_3class", kap, *kap_ci),
+    ("deberta", "n", len(d), *NA), ("deberta", "pearson_r", bpr, *bpr_ci), ("deberta", "spearman_rho", bsr, *bsr_ci),
+    ("deberta", "mae", bmae, *bmae_ci), ("deberta", "acc_3class", acc, *acc_ci),
+    ("deberta", "macro_f1", mf1, *mf1_ci), ("deberta", "cohen_kappa_3class", bkap, *bkap_ci),
+], columns=["block", "metric", "value", "ci_lo", "ci_hi"]).to_csv(out, index=False)
 print(f"\nwrote {out}")
