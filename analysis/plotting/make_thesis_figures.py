@@ -571,11 +571,12 @@ def fig_forest_panels(data, out: Path, fmts):
     figA.subplots_adjust(left=0.21, right=0.98, top=0.96, bottom=0.08)
     _save(figA, out, "fig1a_stance", fmts)
 
-    # The shift panel now stands alone in the thesis: restore its cue labels and
-    # use logos with neutral confidence intervals instead of a colour/shape key.
+    # The shift panel now stands alone in the thesis: cue labels restored, and
+    # Okabe-Ito colours + per-model marker shapes matching every other figure
+    # (the logo build remains available via THESIS_LOGOS=1).
     figB, axB = plt.subplots(figsize=(PANEL_W_A, PANEL_H))
     _draw_shift_panel(axB, data, offs, rows, bands, ylabels=True,
-                      logo_points=True, monochrome=True)
+                      logo_points=USE_LOGOS, monochrome=USE_LOGOS)
     figB.subplots_adjust(left=0.21, right=0.98, top=0.96, bottom=0.08)
     _save(figB, out, "fig1b_shift", fmts)
 
