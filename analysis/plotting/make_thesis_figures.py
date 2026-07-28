@@ -770,13 +770,15 @@ def fig_composition(data, out: Path, fmts, issues_csv: Path):
     # vector figure is scaled to the thesis text width.  Break at words only;
     # short labels remain on one line.
     display_labels = {
-        iss: textwrap.fill(label, width=34, break_long_words=False,
+        iss: textwrap.fill(label, width=24, break_long_words=False,
                            break_on_hyphens=False)
         for iss, label in labels.items()
     }
 
+    # Keep the physical canvas close to the rendered \linewidth so the fonts
+    # survive scaling: ~8.75in wide -> ~0.69 scale at a 6in text block.
     fig, axes = plt.subplots(len(issues), len(MODELS),
-                             figsize=(3.3 * len(MODELS), 0.40 * len(issues) + 1.4),
+                             figsize=(1.75 * len(MODELS), 0.42 * len(issues) + 1.5),
                              squeeze=False)
     for j, m in enumerate(MODELS):
         for i, iss in enumerate(issues):
@@ -788,25 +790,25 @@ def fig_composition(data, out: Path, fmts, issues_csv: Path):
                     (lib, neu, con), _pct_ints((lib, neu, con)),
                     (C_LIB, C_NEU, C_CON), ("white", "#444444", "white")):
                 ax.barh(0, frac, left=left, height=0.70, color=colour)
-                if frac >= 0.16:  # label only segments wide enough to hold it
+                if frac >= 0.22:  # label only segments wide enough to hold it
                     ax.text(left + frac / 2, 0, f"{pct}%", ha="center", va="center",
-                            fontsize=8, color=txtcol)
+                            fontsize=9, color=txtcol)
                 left += frac
             ax.set_xlim(0, 1); ax.set_ylim(-0.6, 0.6)
             ax.set_xticks([]); ax.set_yticks([])
             for sp in ax.spines.values():
                 sp.set_visible(False)
             if i == 0:
-                ax.set_title(MODEL_LABEL[m], fontsize=11, pad=8)
+                ax.set_title(MODEL_LABEL[m], fontsize=9.2, pad=8)
             if j == 0:
                 # Thumbs-up marks the "support/pro" side of the issue, coloured by
                 # which side that is (blue = liberal supports, red = conservative).
                 thumb_col = C_LIB if lib_sign[iss] > 0 else C_CON
-                ax.plot(-0.055, 0.0, marker=THUMB, markersize=9, color=thumb_col,
+                ax.plot(-0.07, 0.0, marker=THUMB, markersize=9, color=thumb_col,
                         ls="", transform=ax.get_yaxis_transform(), clip_on=False)
-                ax.text(-0.12, 0.0, display_labels[iss], rotation=0,
+                ax.text(-0.15, 0.0, display_labels[iss], rotation=0,
                         ha="right", va="center", multialignment="right",
-                        fontsize=8.5, fontweight="bold", linespacing=0.92,
+                        fontsize=10, fontweight="bold", linespacing=0.92,
                         transform=ax.get_yaxis_transform(), clip_on=False)
 
     handles = [plt.Line2D([], [], marker="s", ls="", ms=11, color=C_LIB, label="Liberal"),
@@ -822,8 +824,8 @@ def fig_composition(data, out: Path, fmts, issues_csv: Path):
                    label="conservative side supports the issue")]
     fig.legend(handles=thumb_handles, loc="lower center", ncol=2, frameon=False,
                fontsize=9, bbox_to_anchor=(0.5, -0.045))
-    fig.subplots_adjust(left=0.30, right=0.98, top=0.95, bottom=0.06,
-                        hspace=0.45, wspace=0.12)
+    fig.subplots_adjust(left=0.335, right=0.98, top=0.95, bottom=0.075,
+                        hspace=0.45, wspace=0.14)
     _save(fig, out, "fig3_composition", fmts)
 
 

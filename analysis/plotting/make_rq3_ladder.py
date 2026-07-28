@@ -34,7 +34,7 @@ OUTDIR = Path("figures/probe_thesis")
 # only (belief-vs-stance, relevance, direct-refusal), not the mechanistic ones.
 MODELS_ORDER = ["llama", "gemma", "qwen"]
 MODELS_BEHAV = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
-MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
+MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen-3.6-27B",
                "gpt56terra": "GPT-5.6", "sonnet5": "Sonnet 5"}
 
 # cue-family palette: Okabe-Ito, chosen distinct from the model colours (below) so

@@ -74,7 +74,8 @@ def shift_and_slope(df, ces, mode):
                          "shift": cval.mean() - bval.mean()})
     mt = pd.DataFrame(recs).merge(
         ces[["cue_family", "cue_group", "ces_shift_mean"]], on=["cue_family", "cue_group"])
-    # slopes
+    # slopes (also without the three explicit party cues, whose leverage carries
+    # the pooled fit; see directional_by_cue.py)
     out_slopes = {}
     for scope in ["pooled"] + MODELS:
         sub = mt if scope == "pooled" else mt[mt.model == scope]
@@ -82,7 +83,10 @@ def shift_and_slope(df, ces, mode):
         bo, _ = ols_through_origin(x, y)
         # equal-error Deming (delta=1) since variances aren't recomputed per variant
         bd, _ = deming(x, y, 1.0)
-        out_slopes[scope] = (bo, bd)
+        np_sub = sub[sub.cue_family != "explicit_political"]
+        bo_np, _ = ols_through_origin(np_sub["ces_shift_mean"].to_numpy(),
+                                      np_sub["shift"].to_numpy())
+        out_slopes[scope] = (bo, bd, bo_np)
     return mt, out_slopes
 
 
@@ -112,6 +116,7 @@ def main():
             "variant": name,
             "slope_pooled_OLSorigin": slopes["pooled"][0],
             "slope_pooled_Deming": slopes["pooled"][1],
+            "slope_pooled_no_party": slopes["pooled"][2],
             "slope_llama": slopes["llama"][0], "slope_gemma": slopes["gemma"][0],
             "slope_qwen": slopes["qwen"][0],
             "republican_shift": rep,

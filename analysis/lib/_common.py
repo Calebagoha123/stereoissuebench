@@ -57,7 +57,7 @@ EVAL_PREFIX, SCORE_COL, COLLAPSED_COL = _SCORER_CFG[SCORER]
 # single-generation, so rep-dependent checks (generation_variance) skip it; all
 # rep-agnostic RQ2 tables (model_shift, calibration, composition) include it.
 MODELS = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
-MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen3.6-27B",
+MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen-3.6-27B",
                "gpt56terra": "GPT-5.6 Terra", "sonnet5": "Claude Sonnet 5"}
 MODEL_COLOUR = {"llama": "#0072B2", "gemma": "#009E73", "qwen": "#E69F00",
                 "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}  # Okabe-Ito (matches CES/probe figures)
