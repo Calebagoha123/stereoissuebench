@@ -343,3 +343,106 @@ Compile sanity: 58 pages before these changes, 60 after — the two extra pages 
 - **A rule-based refusal detector** for the two frontier models. Rejected: inventing a
   second, unvalidated refusal instrument to cover 2 of 5 models is worse than stating the
   gap.
+
+---
+
+# Appendix: results-language conventions to follow
+
+Extracted from `~/Desktop/SDS/AAS/aas-summative/paper/AAS.pdf` §4 Results. The goal is
+that section's precision with the thesis's narrative voice — the sentence *forms* below,
+not its subject matter.
+
+## The nine moves that paper makes
+
+1. **Headers state the finding, not the method.** "The age-concentrated gender gap in
+   hostile sexism", "Masculine identity salience among men" — not "Regression results".
+2. **Canonical estimate sentence:** quantity in *units*, then a parenthetical carrying the
+   SE and p from *both* inference methods, then the ceteris-paribus clause.
+   > "the male–female gap in hostile sexism is 0.126 points smaller among 30–44 year olds
+   > than among 18–29 year olds (cluster-robust SE = 0.030, p < 0.001; wild-cluster
+   > bootstrap p < 0.001), all else equal."
+3. **Plain-language restatement immediately after,** flagged with "In other words":
+   > "In other words, there is support for the gender gap in hostile sexism being
+   > relatively concentrated among 18–29 year olds relative to 30–44 year olds."
+4. **Units always attached:** "0.126 points smaller", "a 0.036-point increase", "a
+   one-unit increase in X is associated with…".
+5. **Explicit NHST vocabulary where a test is the point:**
+   > "The null hypothesis of no association between masculine identity and hostile sexism
+   > among men can be rejected at the 5% significance level under both analytic and
+   > bootstrap inference."
+6. **Fragility is named, not buried, when two methods disagree** — then the interpretation
+   is downgraded to match:
+   > "significant under analytic inference (p < 0.01 and p < 0.05) but not under the wild
+   > cluster bootstrap. Both point estimates remain negative, but neither survives
+   > few-cluster corrected inference at conventional thresholds. The pattern is therefore
+   > consistent with a gap that is sharpest between the youngest cohort and the 30–44
+   > group, with more ambiguous comparisons to older generations."
+7. **Hypotheses are named and verdicts are explicit:** "The data is therefore consistent
+   with H3 at conventional thresholds."
+8. **Robustness as a paragraph of numbered consequences,** each ending in what it rules
+   out: "This suggests that selection bias on income non-response is unlikely."
+9. **Limitations inline, at the point of the claim:** "this argument cannot rule out
+   unobserved confounders."
+
+**Table notes** state the SE type, the reference categories, what is suppressed, and the
+star legend. **Figure captions** state the takeaway *and* what the error bars are.
+
+## One thing NOT to copy
+
+That paper is **observational**, so it says "is associated with" and leans on coefficient
+stability against unobserved confounders. The thesis is a **crossed factorial experiment
+with an assigned cue**, so the corresponding move is stronger: $\widehat{\Delta}_k$ is an
+average treatment effect and the ceteris-paribus clause is *by design*, not by
+adjustment. Do not import "is associated with" into RQ1 — it under-claims. Keep
+association language for RQ3, where the predicted opinion is post-treatment and nothing
+is identified (see item 10 above).
+
+Stars (`* p<0.05`) are a regression-table convention. `tab:predwrite` reports intervals
+instead, deliberately — every row there is p < 0.0002, so stars would be four identical
+triplets. If a regression table is added later, use the star legend there.
+
+## Templates instantiated on our actual numbers
+
+Drafting aids for the writing pass, not final prose.
+
+**RQ1, a party-label effect (experiment — note "by design"):**
+> Conditioning on the Republican label shifts Qwen's writing 0.65 points conservative on
+> the −1 to +1 stance scale (cluster-$t$ over 19 issues, 95% CI [−0.78, −0.52];
+> percentile bootstrap over the same clusters gives the same verdict). Because the cue is
+> assigned and the issue and template are held fixed by design, this is an average
+> treatment effect of the cue rather than an association.
+
+**RQ1, a name null (equivalence, where NHST cannot help):**
+> A non-significant estimate is not evidence of no effect, so the name nulls are tested
+> for equivalence rather than for significance. Against a smallest-effect-size of interest
+> set to the matching real CES group difference, 15 of 20 model × name cells are
+> statistically equivalent to zero, and 12 of 20 within half that bound. The null
+> hypothesis of *no* effect cannot be rejected; what can be asserted is the stronger
+> claim that any effect is smaller than the human difference it would have to mirror.
+
+**RQ3, transmission slope (fragility named, per move 6):**
+> A party label transmits $\beta = 0.57$ of its predicted shift into writing (95% CI
+> [0.48, 0.65], clustered bootstrap over 19 issues, BH $q < 0.0002$ for $\beta \neq 1$),
+> and a state only 0.07 [0.05, 0.10]. The contrast is 0.50 [0.42, 0.57]. In other words,
+> the models write a substantial fraction of what they predict from a stated party but
+> almost none of what they predict from a state. The comparison at the bottom of the
+> gradient is more fragile: the state and name slopes differ by 0.03 [−0.02, 0.09],
+> $p = 0.24$, so on transmission alone the two inferred cues cannot be separated. What
+> separates them is the prediction side, where the state draws a mean absolute predicted
+> shift of 0.332 [0.304, 0.359] against the name's 0.182 [0.153, 0.211].
+
+**RQ3, the claim that must now be scoped (per move 6):**
+> Whether under-writing also shows up as a shift toward neutral depends on the model. The
+> writing is neutral more often than the prediction in Llama (+0.210, 95% CI [+0.134,
+> +0.286]), Gemma (+0.149) and Sonnet 5 (+0.131); the difference is indistinguishable
+> from zero in Qwen (−0.031, [−0.127, +0.064]); and it reverses in GPT-5.6, whose
+> predictions are neutral far more often than its writing (−0.390, [−0.478, −0.303]).
+> The magnitude shortfall is therefore general across models while the neutral-composition
+> shift is not, and the two should not be run together.
+
+**Robustness paragraph (per move 8):**
+> Truncated responses score 0.08 to 0.23 points more liberal than completed ones, so
+> truncation is not ignorable in principle. The bias it implies for any cue effect is at
+> most 0.0027, however, because the cue-to-baseline difference in truncation rate is small
+> even where the rate itself is not, and all 70 cue effects keep their sign under that
+> bias. This suggests differential non-completion is not driving any reported effect.
