@@ -9,28 +9,31 @@ and emits the appendix table.
 
 Two distinct claims, deliberately kept apart because the data supports them unequally:
 
-  (1) UNDER-WRITING, within a cue type. Paired on issue: |predicted shift| minus
-      |written shift|, averaged within issue and then across the 19 issues, with a
-      t-interval on the 19 issue clusters. Strongly supported in every panel.
+  (1) UNDER-WRITING, within a cue type. The transmission slope beta of written shift on
+      predicted shift, tested against **beta = 1** -- one unit of predicted shift
+      becoming one unit of written shift. Estimated at the issue level with a fixed
+      effect per model, so beta is a within-model rate. Holds for all four cue types.
 
-  (2) THE TRANSMISSION GRADIENT, between cue types. The per-panel slope of written on
-      predicted (the beta quoted in the figure caption), with a bootstrap-over-issues
-      CI, plus the party-minus-state contrast. This is the "read but not written"
-      claim; with only 19 clusters it is far weaker than (1), and the point of
-      computing it is to find out whether it survives at all.
+  (2) THE TRANSMISSION GRADIENT, between cue types. Differences in beta across cue
+      types, with a clustered bootstrap over issues. Survives for party label and
+      race x gender against state; does NOT survive for state against name.
+
+Testing against 1 rather than differencing |predicted| and |written| is deliberate:
+beta is signed throughout, so it avoids the bias that absolute values introduce for
+quantities whose true value is near zero, and beta = 1 is the same reference the RQ2
+calibration slope uses. The absolute magnitude columns are retained as description --
+they are what separates the state cue from the name cue, since the slopes do not.
 
 Caveats that the numbers do not remove, and that the appendix note repeats:
 
   * x is a continuous 0-100 rescaling, y is a mean over three-category stance labels,
-    so part of every gap in (1) is a scale artifact rather than hedging. The
-    discretisation check (Appendix, robustness) is what speaks to that; this script
-    only attaches uncertainty to the gap as measured.
-  * |.| before averaging inflates quantities whose true value is near zero, since the
-    absolute value of noise is positive. This matters for the name panel, where both
-    sides are small: treat its gap as an upper bound. Party and state are far too large
-    to be affected.
-  * The 15-20 points a slope is fitted on are not independent (the same cue groups
-    recur across models), so the slope CI is a statement about issue sampling only.
+    so part of any shortfall below 1 is a scale artifact rather than hedging. The
+    discretisation check (Appendix, robustness) is what speaks to that.
+  * The two magnitude columns take |.| before averaging, which inflates a quantity
+    whose true value is near zero. Read the name row's magnitudes as upper bounds; the
+    beta column is unaffected.
+  * Uncertainty is issue sampling only. Model is a fixed effect, so nothing here
+    generalises beyond these five systems.
 
 Usage:  python3 analysis/06_probe/prediction_write_gap.py [--boot 10000] [--seed 20260730]
 Writes: results/probe_internal/prediction_write_gap.{csv,md,tex}
@@ -133,22 +136,47 @@ def gap_test(d: pd.DataFrame, fam: str) -> dict:
 
 
 def _panel_slope(g: pd.DataFrame, issues: np.ndarray | None = None) -> float:
-    """Slope of written on predicted for one panel, re-aggregated from issue level.
+    """Transmission slope for one cue type, with MODEL ABSORBED AS A FIXED EFFECT.
 
-    Aggregating to cue group x model *inside* the bootstrap keeps the estimand identical
-    to the descriptive beta while letting the resampling act on issues, which is the
-    level the clustering is at."""
+    Regress the written shift on the predicted shift at the issue level, including a
+    dummy per model (reference model dropped). The five models are chosen systems, not
+    a sample from a population of models, so they enter as fixed effects -- Week 8's
+    random-effects assumption alpha_i ~ N(0, sigma^2) requires the levels to be draws,
+    which these are not. An earlier version pooled the models into one slope, which
+    silently treated them as exchangeable units.
+
+    Absorbing model also removes between-model differences in overall responsiveness
+    from the slope, so beta is a *within-model* transmission rate: of a unit of
+    predicted shift, how much does that model write?"""
     if issues is not None:
-        # index-based take so a repeated issue contributes repeatedly
+        # index-based take so an issue drawn twice contributes twice (clustered bootstrap)
         g = pd.concat([g[g.issue_id == i] for i in issues], ignore_index=True)
-    agg = g.groupby(["model", "cue_group"])[["p_shift", "w_shift"]].mean()
-    if len(agg) < 3 or agg.p_shift.std() == 0:
+    if len(g) < 8 or g.p_shift.std() == 0:
         return np.nan
-    return stats.linregress(agg.p_shift, agg.w_shift).slope
+    # design matrix: intercept, predicted shift, model dummies (first model dropped)
+    models = sorted(g.model.unique())
+    X = [np.ones(len(g)), g.p_shift.to_numpy()]
+    for m in models[1:]:
+        X.append((g.model == m).to_numpy(float))
+    X = np.column_stack(X)
+    try:
+        beta, *_ = np.linalg.lstsq(X, g.w_shift.to_numpy(), rcond=None)
+    except np.linalg.LinAlgError:
+        return np.nan
+    return float(beta[1])          # coefficient on the predicted shift
 
 
 def slope_boot(d: pd.DataFrame, n_boot: int, rng: np.random.Generator):
-    """Claim (2): per-panel slope + bootstrap-over-issues CI, and the party-state contrast."""
+    """Transmission slope per cue type, tested against 1, plus between-type contrasts.
+
+    beta = 1 is the reference of interest, not beta = 0: "the model writes what it
+    predicts" means a unit of predicted shift becomes a unit of written shift. Testing
+    against 1 states under-writing directly and avoids the earlier |predicted| minus
+    |written| formulation, whose absolute values inflate any quantity whose true value
+    is near zero. It is also the same reference the RQ2 calibration slope uses.
+
+    Uncertainty is a clustered bootstrap over the 19 issues (Week 2's bootstrap CI with
+    the issue as the resampling unit, matching every other interval in the thesis)."""
     issues = np.array(sorted(d.issue_id.unique()))
     panels = {f: d[d.cue_family == f].copy() for f in FAMS}
     point = {f: _panel_slope(g) for f, g in panels.items()}
@@ -160,20 +188,55 @@ def slope_boot(d: pd.DataFrame, n_boot: int, rng: np.random.Generator):
     res = {}
     for f in FAMS:
         v = draws[f][~np.isnan(draws[f])]
-        res[f] = dict(slope=point[f], lo=np.percentile(v, 2.5), hi=np.percentile(v, 97.5))
-    # between-panel contrast: does the gradient survive issue resampling?
+        lo, hi = np.percentile(v, [2.5, 97.5])
+        # bootstrap two-sided p for H0: beta = 1, as the share of draws at least as far
+        # from 1 as the point estimate is, doubled (Week 3's bootstrap test logic)
+        p1 = 2 * min(np.mean(v >= 1.0), np.mean(v <= 1.0))
+        res[f] = dict(slope=point[f], lo=lo, hi=hi,
+                      excludes_one=bool(hi < 1.0 or lo > 1.0),
+                      p_vs_one=float(min(p1, 1.0)))
     contrasts = {}
     for a, b in [("explicit_political", "implicit_political"),
                  ("explicit_demographic", "implicit_political"),
                  ("implicit_political", "implicit_demographic")]:
         diff = draws[a] - draws[b]
         diff = diff[~np.isnan(diff)]
-        contrasts[(a, b)] = dict(diff=point[a] - point[b],
-                                 lo=np.percentile(diff, 2.5),
-                                 hi=np.percentile(diff, 97.5),
-                                 # share of draws with the sign reversed
-                                 p_sign=float(np.mean(diff <= 0)))
+        lo, hi = np.percentile(diff, [2.5, 97.5])
+        p0 = 2 * min(np.mean(diff >= 0), np.mean(diff <= 0))
+        contrasts[(a, b)] = dict(diff=point[a] - point[b], lo=lo, hi=hi,
+                                 p_vs_zero=float(min(p0, 1.0)))
     return res, contrasts
+
+
+def fmt_p(p: float, n_boot: int, tex: bool = False) -> str:
+    """Format a bootstrap p at the resolution the bootstrap actually has.
+
+    A two-sided bootstrap p over B draws cannot be smaller than 2/B, so printing
+    "0.0000" from 5,000 draws claims precision the method does not have. Report
+    "< 2/B" instead."""
+    floor = 2.0 / n_boot
+    if p < floor:
+        return rf"$<${floor:.4f}" if tex else f"<{floor:.4f}"
+    return f"{p:.4f}"
+
+
+def bh_adjust(pvals: list[float]) -> list[float]:
+    """Benjamini-Hochberg step-up adjusted p-values (q-values), monotone.
+
+    BH rather than the Holm-Bonferroni of Week 4 for the same reason as the RQ1 family:
+    with several genuinely small true effects, family-wise control spends too much power.
+    Applied here so this table's family is corrected on the same basis as RQ1's rather
+    than being the one uncorrected set of tests in the thesis."""
+    p = np.asarray(pvals, float)
+    m = len(p)
+    order = np.argsort(p)
+    q = np.empty(m)
+    running = 1.0
+    for rank in range(m - 1, -1, -1):          # step up from the largest p
+        i = order[rank]
+        running = min(running, p[i] * m / (rank + 1))
+        q[i] = running
+    return list(q)
 
 
 def main():
@@ -194,28 +257,42 @@ def main():
     gaps = pd.DataFrame(rows)
 
     slopes, contrasts = slope_boot(d, args.boot, rng)
-    gaps["slope"] = [slopes[f]["slope"] for f in FAMS]
-    gaps["slope_lo"] = [slopes[f]["lo"] for f in FAMS]
-    gaps["slope_hi"] = [slopes[f]["hi"] for f in FAMS]
+    for k in ("slope", "lo", "hi", "p_vs_one", "excludes_one"):
+        gaps["slope" if k == "slope" else f"slope_{k}"] = [slopes[f][k] for f in FAMS]
+
+    # One BH family for this table: the 4 slope-vs-1 tests plus the 3 between-type
+    # contrasts. Corrected together so this table is not the single uncorrected set of
+    # tests in the thesis; RQ1's 70-cell family is corrected separately.
+    fam_p = list(gaps["slope_p_vs_one"]) + [c["p_vs_zero"] for c in contrasts.values()]
+    fam_q = bh_adjust(fam_p)
+    gaps["slope_q_vs_one"] = fam_q[:len(FAMS)]
+    contrast_q = dict(zip(contrasts.keys(), fam_q[len(FAMS):]))
     gaps.to_csv(OUT / "prediction_write_gap.csv", index=False)
 
     # ---------------- markdown (working notes) ----------------
     md = ["## Predicted vs. written: inference at the issue level", "",
-          f"Bootstrap draws: {args.boot}, seed {args.seed}. "
-          f"Issue clusters: {gaps.n_clusters.iloc[0]}.", "",
-          "| Panel | obs | mean \\|predicted\\| | mean \\|written\\| | gap [95% CI] | t | p | slope β [95% CI] |",
-          "|---|--:|--:|--:|--:|--:|--:|--:|"]
+          f"Clustered bootstrap over issues: {args.boot} draws, seed {args.seed}, "
+          f"{gaps.n_clusters.iloc[0]} issue clusters. Model enters each slope as a fixed "
+          "effect, so beta is a within-model transmission rate.", "",
+          "`beta = 1` is the reference: a unit of predicted shift becoming a unit of "
+          "written shift. BH q-values are over this table's family of 7 tests.", "",
+          "| Cue type | obs | mean \\|predicted\\| | mean \\|written\\| | β [95% CI] | β≠1? | p | BH q |",
+          "|---|--:|--:|--:|--:|:--:|--:|--:|"]
     for _, r in gaps.iterrows():
         md.append(f"| {r.panel} | {r.n_paired_obs} "
                   f"| {r.abs_pred:.3f} [{r.abs_pred_lo:.3f}, {r.abs_pred_hi:.3f}] "
                   f"| {r.abs_writ:.3f} [{r.abs_writ_lo:.3f}, {r.abs_writ_hi:.3f}] "
-                  f"| {r.gap:.3f} [{r.gap_lo:.3f}, {r.gap_hi:.3f}] "
-                  f"| {r.t:.1f} | {r.p:.1e} | {r.slope:.2f} [{r.slope_lo:.2f}, {r.slope_hi:.2f}] |")
-    md += ["", "### Between-panel slope contrasts (the transmission gradient)", "",
-           "| Contrast | Δβ [95% CI] | share of draws with sign reversed |", "|---|--:|--:|"]
+                  f"| {r.slope:.2f} [{r.slope_lo:.2f}, {r.slope_hi:.2f}] "
+                  f"| {'yes' if r.slope_excludes_one else 'no'} "
+                  f"| {fmt_p(r.slope_p_vs_one, args.boot)} "
+                  f"| {fmt_p(r.slope_q_vs_one, args.boot)} |")
+    md += ["", "### Between-cue-type slope contrasts (the transmission gradient)", "",
+           "| Contrast | Δβ [95% CI] | p | BH q |", "|---|--:|--:|--:|"]
     for (a, b), c in contrasts.items():
         md.append(f"| {FAM_PLAIN[a]} − {FAM_PLAIN[b]} | {c['diff']:.2f} "
-                  f"[{c['lo']:.2f}, {c['hi']:.2f}] | {c['p_sign']:.3f} |")
+                  f"[{c['lo']:.2f}, {c['hi']:.2f}] "
+                  f"| {fmt_p(c['p_vs_zero'], args.boot)} "
+                  f"| {fmt_p(contrast_q[(a, b)], args.boot)} |")
     (OUT / "prediction_write_gap.md").write_text("\n".join(md) + "\n")
 
     # ---------------- LaTeX (appendix) ----------------
@@ -232,35 +309,37 @@ def main():
         (r"\textbf{Cue type} "
          r"& \shortstack{$|\widehat{\Delta}^{\text{pred}}|$ \\ mean [95\% CI]} "
          r"& \shortstack{$|\widehat{\Delta}^{\text{writ}}|$ \\ mean [95\% CI]} "
-         r"& \shortstack{\textbf{Difference} \\ mean [95\% CI]} "
-         r"& \shortstack{\textbf{Slope} $\beta$ \\ $[95\%$ CI$]$} \\"),
+         r"& \shortstack{\textbf{Transmission} $\beta$ \\ $[95\%$ CI$]$} "
+         r"& \shortstack{BH $q$ \\ ($\beta \neq 1$)} \\"),
         r"\midrule",
     ]
     for _, r in gaps.iterrows():
         tex.append(rf"{FAM_LABEL[r.cue_family]} & "
                    rf"{r.abs_pred:.3f} $[{r.abs_pred_lo:.3f},\,{r.abs_pred_hi:.3f}]$ & "
                    rf"{r.abs_writ:.3f} $[{r.abs_writ_lo:.3f},\,{r.abs_writ_hi:.3f}]$ & "
-                   rf"{r.gap:.3f} $[{r.gap_lo:.3f},\,{r.gap_hi:.3f}]$ & "
-                   rf"{r.slope:.2f} $[{r.slope_lo:.2f},\,{r.slope_hi:.2f}]$ \\")
+                   rf"{r.slope:.2f} $[{r.slope_lo:.2f},\,{r.slope_hi:.2f}]$ & "
+                   rf"{fmt_p(r.slope_q_vs_one, args.boot, tex=True)} \\")
     tex += [
         r"\bottomrule", r"\end{tabular}", "",
         r"\vspace{3pt}",
         r"\begin{minipage}{0.94\linewidth}",
         (r"\footnotesize\textit{Note:} Both quantities are differenced against the same "
-         r"issue's no-cue baseline. The middle column is a paired comparison of absolute "
-         rf"shift magnitudes, averaged within issue and then over the {gaps.n_clusters.iloc[0]} "
-         r"issues, with a $t$-interval on the issue clusters ($\mathrm{df}=18$); it tests "
-         r"whether a cue is written more weakly than it is predicted. The right-hand column "
-         r"is the descriptive slope of written on predicted shift plotted in "
-         r"Figure~\ref{fig:belief-stance}, with a bootstrap-over-issues confidence interval "
-         rf"({args.boot} draws). Two limits apply. The predicted shift is a continuous "
-         r"$0$--$100$ rescaling while the written shift derives from three-category stance "
-         r"labels, so part of every gap is a scale artifact rather than hedging (see the "
-         r"discretisation check, Appendix~\ref{robustness}); and because absolute values are "
-         r"taken before averaging, a panel whose true shifts are near zero has its gap "
-         r"inflated by noise, so the name row should be read as an upper bound. The slope "
-         r"is fitted on cue group $\times$ model means, which are not mutually independent, "
-         r"so its interval reflects issue sampling only."),
+         r"issue's no-cue baseline, so issue difficulty cancels. The two magnitude columns "
+         rf"are means of absolute shifts, averaged within issue and then over the "
+         rf"{gaps.n_clusters.iloc[0]} issues, with $t$-intervals on the issue clusters "
+         r"($\mathrm{df}=18$). $\beta$ is the transmission slope of written on predicted "
+         r"shift, estimated at the issue level with a fixed effect per model, so it is a "
+         r"within-model rate; the reference of interest is $\beta = 1$, one unit of "
+         r"predicted shift becoming one unit of written shift, and $q$ is the "
+         r"Benjamini--Hochberg adjusted $p$ for $\beta \neq 1$ over this table's family of "
+         rf"seven tests. Intervals are clustered bootstraps over issues ({args.boot} draws). "
+         r"Two limits remain. The predicted shift is a continuous $0$--$100$ rescaling while "
+         r"the written shift derives from three-category stance labels, so part of any "
+         r"shortfall is a scale artifact rather than hedging (see the discretisation check, "
+         r"Appendix~\ref{robustness}); and because the magnitude columns take absolute "
+         r"values before averaging, a cue whose true shifts are near zero has those columns "
+         r"inflated by noise, so the name row should be read as an upper bound. The "
+         r"$\beta$ column is unaffected by that second issue, as it is signed throughout."),
         r"\end{minipage}", r"\end{table}",
     ]
     (OUT / "prediction_write_gap.tex").write_text("\n".join(tex) + "\n")

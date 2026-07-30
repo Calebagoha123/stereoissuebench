@@ -17,7 +17,9 @@
 
 suppressMessages(library(ordinal))
 
-models <- c("llama", "gemma", "qwen")
+# All five models. The two frontier models are single-repeat, so they contribute fewer
+# rows, but the CLMM is rep-agnostic: nothing in the specification uses the repeat.
+models <- c("llama", "gemma", "qwen", "gpt56terra", "sonnet5")
 all_rows <- list()
 
 for (m in models) {

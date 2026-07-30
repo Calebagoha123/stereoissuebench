@@ -24,19 +24,29 @@ echo "[6/9] DiD variance propagation (CES design SE)"
 python3 analysis/05_robustness/did_variance.py
 
 echo "[7/9] refusal Manski bounds + generation variance + instance breakdown"
+# refusal_bounds reads the EARLIER judge-scored run (results/full/eval_*.csv), the only
+# local corpus retaining response text, so it covers the 3 open-weight models. The
+# corpus-of-record complement is finish_reason_flatness (all 5 models, no text needed).
 python3 analysis/05_robustness/refusal_bounds.py
+python3 analysis/05_robustness/finish_reason_flatness.py
 python3 analysis/05_robustness/generation_variance.py
 python3 analysis/05_robustness/instance_breakdown.py
 
 echo "[8/9] multiplicity (BH-FDR), leave-one-issue-out, permutation"
 python3 analysis/05_robustness/rq2_extras.py
 
-echo "[9/9] CLMM ordinal robustness (R; ~15 min for 3 models) + comparison"
+echo "[8b/9] interval-method agreement (cluster-t vs bootstrap)"
+python3 analysis/05_robustness/ci_method_agreement.py
+
+echo "[8c/9] cue x issue calibration under fixed- vs random-effect specifications (R)"
+Rscript analysis/04_calibration/cue_issue_mixed.R
+
+echo "[9/9] CLMM ordinal robustness (R; ~25 min for 5 models) + comparison"
 python3 - <<'PY'
 import sys; sys.path.insert(0, "analysis/lib")
-from _common import load_model, CUE_ORDER
+from _common import load_model, CUE_ORDER, MODELS
 keep = {"baseline"} | {f"{f}__{g}" for f, g in CUE_ORDER}
-for m in ("llama", "gemma", "qwen"):
+for m in MODELS:
     d = load_model(m)
     d["cue"] = d.apply(lambda r: "baseline" if r.cue_family == "baseline"
                        else f"{r.cue_family}__{r.cue_group}", axis=1)
