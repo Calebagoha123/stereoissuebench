@@ -303,22 +303,28 @@ def main():
         # four numeric columns each carrying a point estimate and a CI overruns the
         # 12pt text block at \small/7pt (71pt overfull); footnotesize + 4pt clears it
         # while keeping 3 d.p., which the written column needs (0.080 vs 0.061).
-        r"\footnotesize",
-        r"\setlength{\tabcolsep}{3pt}",
+        r"\small",
+        r"\setlength{\tabcolsep}{9pt}",
         r"\begin{tabular}{lcccc}", r"\toprule",
         (r"\textbf{Cue type} "
-         r"& \shortstack{$|\widehat{\Delta}^{\text{pred}}|$ \\ mean [95\% CI]} "
-         r"& \shortstack{$|\widehat{\Delta}^{\text{writ}}|$ \\ mean [95\% CI]} "
-         r"& \shortstack{\textbf{Transmission} $\beta$ \\ $[95\%$ CI$]$} "
-         r"& \shortstack{BH $q$ \\ ($\beta \neq 1$)} \\"),
+         r"& $|\widehat{\Delta}^{\text{pred}}|$ "
+         r"& $|\widehat{\Delta}^{\text{writ}}|$ "
+         r"& \textbf{Transmission} $\beta$ "
+         r"& BH $q$ ($\beta \neq 1$) \\"),
         r"\midrule",
     ]
-    for _, r in gaps.iterrows():
-        tex.append(rf"{FAM_LABEL[r.cue_family]} & "
-                   rf"{r.abs_pred:.3f} $[{r.abs_pred_lo:.3f},\,{r.abs_pred_hi:.3f}]$ & "
-                   rf"{r.abs_writ:.3f} $[{r.abs_writ_lo:.3f},\,{r.abs_writ_hi:.3f}]$ & "
-                   rf"{r.slope:.2f} $[{r.slope_lo:.2f},\,{r.slope_hi:.2f}]$ & "
-                   rf"{fmt_p(r.slope_q_vs_one, args.boot, tex=True)} \\")
+    # Point estimate on the cue's row, 95% interval on the row beneath it in brackets --
+    # the regression-table convention (cf. the AAS summative's estimate-over-SE layout).
+    # Putting both in one cell made five columns of "0.475 [0.441, 0.510]", which reads
+    # as a wall of digits.
+    for i, (_, r) in enumerate(gaps.iterrows()):
+        if i:
+            tex.append(r"\addlinespace[2pt]")
+        tex.append(rf"{FAM_LABEL[r.cue_family]} & {r.abs_pred:.3f} & {r.abs_writ:.3f} & "
+                   rf"{r.slope:.2f} & {fmt_p(r.slope_q_vs_one, args.boot, tex=True)} \\")
+        tex.append(rf" & \scriptsize $[{r.abs_pred_lo:.3f},\,{r.abs_pred_hi:.3f}]$ "
+                   rf"& \scriptsize $[{r.abs_writ_lo:.3f},\,{r.abs_writ_hi:.3f}]$ "
+                   rf"& \scriptsize $[{r.slope_lo:.2f},\,{r.slope_hi:.2f}]$ & \\")
     tex += [
         r"\bottomrule", r"\end{tabular}", "",
         r"\vspace{3pt}",
