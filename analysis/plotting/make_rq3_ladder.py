@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """RQ3 'ladder' figures (§4.4): the four-step chain as four standalone figures.
 
-  belief_vs_stance : belief shift vs written-stance shift, one point per cue group,
+  belief_vs_stance : predicted-opinion shift vs written-stance shift, one point per cue group,
       y=x reference -> models write toward belief but under-write it.
   relevance        : mean relevance rating per attribute (0-100) -> a name is
       rated near-useless for predicting opinion.
@@ -24,6 +24,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _markers import marker_ms, scatter_s  # equal-ink marker sizing (see _markers.py)
+import _style  # for TIMES: cmr10 has no unicode multiplication sign
+
 PROBE = Path("results/probe_internal")
 BELIEF = Path("results/full")
 MASTER = Path("results/consolidated/01_master_cue_effects.csv")
@@ -34,8 +39,15 @@ OUTDIR = Path("figures/probe_thesis")
 # only (belief-vs-stance, relevance, direct-refusal), not the mechanistic ones.
 MODELS_ORDER = ["llama", "gemma", "qwen"]
 MODELS_BEHAV = ["llama", "gemma", "qwen", "gpt56terra", "sonnet5"]
-MODEL_LABEL = {"llama": "Llama-3.1-8B", "gemma": "Gemma-3-12B", "qwen": "Qwen-3.6-27B",
-               "gpt56terra": "GPT-5.6", "sonnet5": "Sonnet 5"}
+MODEL_LABEL = {"qwen": "Qwen-3.6-27B", "gemma": "Gemma-3-12B", "llama": "Llama-3.1-8B",
+               "gpt56terra": "GPT-5.6 Terra", "sonnet5": "Claude Sonnet 5"}
+# Document-wide model vocabulary, identical to make_thesis_figures.py /
+# make_ces_dumbbell.py: Okabe-Ito colour + a redundant marker shape so model identity
+# survives greyscale printing. Do not diverge from it here -- a reader who has learnt
+# "blue triangle = Llama" from Figure 1 must not have to relearn it in §4.4.
+MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2",
+                "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}
+MODEL_MARKER = {"qwen": "o", "gemma": "s", "llama": "^", "gpt56terra": "D", "sonnet5": "v"}
 
 # cue-family palette: Okabe-Ito, chosen distinct from the model colours (below) so
 # fill=family / edge=model encodings never collide.
@@ -45,15 +57,29 @@ FAM_COLOUR = {
     "implicit_political": "#56B4E9",    # sky blue
     "implicit_demographic": "#000000",  # black (the focal name cue / null)
 }
+# Cue-type names, verbatim from the FOREST_BANDS vocabulary in make_thesis_figures.py
+# (Figure 1). The explicit/implicit 2x2 was dropped in favour of naming the four cue
+# types by what they are and ordering them by directness, so these figures must not
+# reintroduce the old wording. Data keys are unchanged.
 FAM_LABEL = {
-    "explicit_political": "Explicit political",
-    "explicit_demographic": "Explicit demographic",
-    "implicit_political": "Implicit political (state)",
-    "implicit_demographic": "Implicit demographic (name)",
+    "explicit_political": "Party label",
+    "explicit_demographic": "Race " + _style.TIMES + " gender",
+    "implicit_political": "State",
+    "implicit_demographic": "Name",
 }
 
 INK = "#1a1a1a"
 GRID = "#d9d9d9"
+
+
+def _darken(hex_colour: str, factor: float):
+    """Blend a hex colour toward black (factor 1.0 = unchanged), for using the marker
+    palette as small text without losing which hue is which. Mirrors the helper in
+    make_thesis_figures.py -- Qwen's orange and Sonnet's sky blue are both too light
+    to read as label text undarkened."""
+    import matplotlib.colors as mcolors
+    r, g, b = mcolors.to_rgb(hex_colour)
+    return (r * factor, g * factor, b * factor)
 
 SAVE_FMTS = ["png"]  # set from --fmt in main()
 
@@ -136,7 +162,7 @@ def a_belief_stance(ax, model):
     ax.text(0.03, 0.95, f"$r = {r:.2f}$", transform=ax.transAxes, fontsize=10,
             va="top", ha="left")
     ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
-    ax.set_xlabel("belief shift (probe, cued − baseline)")
+    ax.set_xlabel(PRED_LABEL)
     ax.set_ylabel("written-stance shift")
     ax.legend(fontsize=8, frameon=False, loc="lower right", handletextpad=0.3,
               borderpad=0.2, labelspacing=0.3)
@@ -155,7 +181,7 @@ def b_relevance(ax, model):
         ax.text(v + 1.5, i, f"{v:.0f}", va="center", fontsize=8.5, color=INK)
     ax.set_yticks(range(len(m))); ax.set_yticklabels(labels)
     ax.set_xlim(0, 100)
-    ax.set_xlabel("mean relevance for predicting opinion (0–100)")
+    ax.set_xlabel("mean relevance for predicting opinion (0-100)")
     ax.spines["left"].set_visible(False)
 
 
@@ -165,8 +191,8 @@ def c_transfer(ax, model):
     chance = float(summ.get("transfer_chance", 0.25))
     label_to_name = float(summ.get("transfer_label_to_name_max", tr["label_to_name"].max()))
     within = 1.0  # within-family decodability ceiling (summary decodability_best)
-    bars = [("within-family\n(race×gender)", within, "#7A7A7A"),
-            ("cross-cue transfer\n(label → name)", label_to_name, "#0072B2")]
+    bars = [("within-family\n(race $\\times$ gender)", within, "#7A7A7A"),
+            ("cross-cue transfer\n(label $\\rightarrow$ name)", label_to_name, "#0072B2")]
     x = range(len(bars))
     ax.bar(x, [b[1] for b in bars], color=[b[2] for b in bars], width=0.6)
     for i, (_, v, _) in enumerate(bars):
@@ -203,11 +229,88 @@ def d_refusal(ax, model):
     ax.spines["left"].set_visible(False)
 
 
+#: axis wording for the elicited opinion-prediction quantity. Deliberately *not*
+#: "belief": the probe records a number the model emits when asked to predict a
+#: group's opinion, and calling that a belief imports a mental state the measurement
+#: cannot license. "Predicted opinion" pairs with "written stance" on the other axis
+#: -- both are model outputs, one about the user and one for the user.
+PRED_LABEL = r"predicted-opinion shift (cued $-$ baseline)"
+STANCE_LABEL = r"written-stance shift (cued $-$ baseline)"
+
+
+def facet_belief_by_cue(models):
+    """Predicted opinion vs written stance, one panel per *cue type*, colour = model.
+
+    Faceting choice. The earlier version put models in panels and cue types in colour,
+    which repeated the same diagonal shape five times and buried the finding: the state
+    cue's dissociation was three dots inside a cloud. Panelling by cue type instead
+    makes each panel a claim about one cue -- the party label spans the diagonal, state
+    collapses to a flat band at y = 0 with x spread over [-0.5, +0.5], name collapses to
+    the origin -- and turns the model comparison into a cheap within-panel one. The cost
+    is that per-model r, fitted over all 14 groups at once, belongs to no panel: it is
+    reported in the text rather than on the figure.
+
+    Panel order follows FOREST_BANDS (Figure 1): party label, race x gender, state,
+    name, i.e. by decreasing directness.
+
+    2x2 rather than 1x4 so each panel gets roughly twice the linear size at the same
+    \\linewidth, keeping the figure upright (no sidewaysfigure needed)."""
+    import matplotlib.pyplot as plt
+    fams = ["explicit_political", "explicit_demographic",
+            "implicit_political", "implicit_demographic"]
+    data = {m: belief_vs_stance(m) for m in models}
+    lim = 0.9
+    fig, axes = plt.subplots(2, 2, figsize=(9.4, 9.6), sharex=True, sharey=True)
+    for ax, fam in zip(axes.ravel(), fams):
+        # The attenuation region is the wedge between y = x and y = 0, in *both*
+        # signed quadrants: under-writing means a shallower slope than the diagonal,
+        # not "below the diagonal" (a Republican cue is written less negatively, so it
+        # sits *above* it). Shading both wedges states the asymmetry correctly.
+        ax.fill([0, lim, lim], [0, 0, lim], color="#f0f0f0", zorder=0, lw=0)
+        ax.fill([0, -lim, -lim], [0, 0, -lim], color="#f0f0f0", zorder=0, lw=0)
+        ax.plot([-lim, lim], [-lim, lim], "--", color="#9a9a9a", lw=1.0, zorder=1)
+        ax.axhline(0, color=GRID, lw=0.8, zorder=0)
+        ax.axvline(0, color=GRID, lw=0.8, zorder=0)
+        for m in models:
+            g = data[m][data[m].cue_family == fam]
+            ax.scatter(g["belief_cont"], g["stance_shift"], marker=MODEL_MARKER[m],
+                       s=scatter_s(MODEL_MARKER[m], 8.6), color=MODEL_COLOUR[m],
+                       edgecolor="white", linewidth=0.6, zorder=3)
+        ax.set_title(FAM_LABEL[fam], fontsize=12.5, color=INK, pad=7)
+        ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
+    # y=x sits on the panel diagonal, which in axes-fraction coordinates runs (0,0) ->
+    # (1,1): the label therefore goes at (a, a + eps), a small perpendicular nudge off
+    # the line, not at an arbitrary height above it.
+    _a = 0.74
+    axes[0, 0].text(_a, _a + 0.022, "$y=x$", transform=axes[0, 0].transAxes,
+                    fontsize=9.5, color="#8a8a8a", rotation=45, rotation_mode="anchor",
+                    ha="center", va="bottom")
+    for ax in axes[1, :]:
+        ax.set_xlabel(PRED_LABEL, fontsize=11)
+    for ax in axes[:, 0]:
+        ax.set_ylabel(STANCE_LABEL, fontsize=11)
+    # No r on the figure. Per model it is a 14-group quantity that belongs to no panel;
+    # per cue type within a model it is fitted on 3-4 points and pinned near 1 even for
+    # the name cue (0.72-0.98), which would advertise a strong relationship exactly
+    # where the finding is that nothing transmits. The five per-model values stay in the
+    # text; what the panels carry is the transmission slope, which is the on-claim
+    # statistic (see the caption).
+    handles = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="",
+                          ms=marker_ms(MODEL_MARKER[m], 7.0), color=MODEL_COLOUR[m],
+                          mec="white", mew=0.7, label=MODEL_LABEL[m])
+               for m in models]
+    fig.legend(handles, [h.get_label() for h in handles], loc="lower center",
+               ncol=5, frameon=False, fontsize=10.5, bbox_to_anchor=(0.5, -0.004),
+               handletextpad=0.5, columnspacing=1.8)
+    fig.tight_layout(rect=(0, 0.055, 1, 1), h_pad=2.6)
+    save_fig(fig, OUTDIR / "rq3_belief_vs_stance_3up")
+
+
 def threeup_belief(models):
     """Belief vs stance, all behavioural models side by side (shared axes, one legend).
 
-    Open-weight models plus the two hosted frontier models; the frontier panels are
-    marked with a rule under the title since they carry the behavioural arm only."""
+    Superseded by facet_belief_by_cue (panels = cue type); kept behind
+    ``--facet models`` for comparison."""
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
     from scipy import stats
@@ -226,7 +329,7 @@ def threeup_belief(models):
         ax.text(0.05, 0.95, f"$r = {r:.2f}$", transform=ax.transAxes, fontsize=11, va="top")
         ax.set_title(MODEL_LABEL[m], fontsize=12)
         ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_aspect("equal")
-        ax.set_xlabel("belief shift (cued − baseline)")
+        ax.set_xlabel(PRED_LABEL, fontsize=10)
     axes[0].set_ylabel("written-stance shift")
     axes[-1].text(0.62, 0.72, "$y=x$", transform=axes[-1].transAxes, fontsize=9,
                   color="#7a7a7a", rotation=45, rotation_mode="anchor")
@@ -237,7 +340,7 @@ def threeup_belief(models):
     fig.legend(handles, labels, loc="lower center", ncol=4, frameon=False,
                fontsize=9.5, bbox_to_anchor=(0.5, -0.02))
     fig.tight_layout(rect=(0, 0.06, 1, 1))
-    save_fig(fig, OUTDIR / "rq3_belief_vs_stance_3up")
+    save_fig(fig, OUTDIR / "rq3_belief_vs_stance_bymodel")
 
 
 def threeup_relevance(models):
@@ -258,7 +361,7 @@ def threeup_relevance(models):
             ax.text(v + 2, i, f"{v:.0f}", va="center", fontsize=9, color=INK)
         ax.set_yticks(range(len(order))); ax.set_yticklabels(order)
         ax.set_xlim(0, 100); ax.set_title(MODEL_LABEL[m], fontsize=12)
-        ax.set_xlabel("mean relevance (0–100)")
+        ax.set_xlabel("mean relevance (0-100)")
         ax.spines["left"].set_visible(False)
     fig.tight_layout()
     save_fig(fig, OUTDIR / "rq3_relevance_3up")
@@ -298,7 +401,7 @@ def threeup_mediation(models):
         ax.text(0.04, 0.95, f"$r = {r:.2f}$", transform=ax.transAxes, fontsize=11, va="top")
         ax.set_title(MODEL_LABEL[m], fontsize=12)
         ax.set_xlim(-2.6, 2.6)
-        ax.set_xlabel("internal political-axis shift\n(standardised, cued − baseline)")
+        ax.set_xlabel(r"internal political-axis shift" "\n" r"(standardised, cued $-$ baseline)")
         ax.spines[["top", "right"]].set_visible(False)
     axes[0].set_ylabel("written-stance shift")
     handles = [mpatches.Patch(color=FAM_COLOUR[f]) for f in
@@ -319,8 +422,6 @@ NAME_GROUP_ORDER = ["black_man", "black_woman", "white_man", "white_woman"]
 # rows ordered by pooled decodability (women top, men bottom) so the gendered
 # gradient reads top-to-bottom; see threeup_transfer docstring.
 TRANSFER_ROW_ORDER = ["white_woman", "black_woman", "white_man", "black_man"]
-# Okabe-Ito model palette, matched to the CES dumbbell / other thesis figures.
-MODEL_COLOUR = {"llama": "#0072B2", "gemma": "#009E73", "qwen": "#E69F00"}
 
 
 def threeup_transfer(models):
@@ -348,7 +449,7 @@ def threeup_transfer(models):
     summ = {m: {g: np.mean(pivs[m].loc[g].values[1:] > chance) for g in order}
             for m in models}
 
-    fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    fig, ax = plt.subplots(figsize=(8.6, 4.8))
     h = 0.8 / len(models)
     for j, m in enumerate(models):
         ys = [i + ((len(models) - 1) / 2 - j) * h for i in range(len(order))]
@@ -356,14 +457,20 @@ def threeup_transfer(models):
                 label=MODEL_LABEL[m], edgecolor="white", linewidth=0.5)
         for yi, g in zip(ys, order):
             ax.text(summ[m][g] + 0.012, yi, f"{summ[m][g]:.2f}", va="center",
-                    fontsize=7.5, color="#555")
+                    fontsize=9, color="#555")
     ax.set_yticks(range(len(order)))
-    ax.set_yticklabels([NAME_GROUP_LABEL[g] for g in order])
+    ax.set_yticklabels([NAME_GROUP_LABEL[g] for g in order], fontsize=11.5)
     ax.invert_yaxis()
     ax.set_xlim(0, 1.0)
-    ax.set_xlabel("name → identity decodable\n(share of layers above chance)")
-    ax.legend(fontsize=8.5, frameon=False, loc="lower right", handlelength=1.1,
-              handletextpad=0.5, labelspacing=0.3)
+    ax.set_xlabel(r"name $\rightarrow$ identity decodable" "\n" r"(share of layers above chance)",
+                  fontsize=11)
+    # marker + colour in the legend so this figure's model key matches every other
+    # one in the thesis, even though the marks themselves are bars
+    handles = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="",
+                          ms=marker_ms(MODEL_MARKER[m], 6.6), color=MODEL_COLOUR[m],
+                          mec="white", mew=0.6, label=MODEL_LABEL[m]) for m in models]
+    ax.legend(handles=handles, fontsize=10, frameon=False, loc="lower right",
+              handlelength=1.1, handletextpad=0.5, labelspacing=0.35)
     fig.tight_layout()
     save_fig(fig, OUTDIR / "rq3_transfer_3up")
 
@@ -377,26 +484,53 @@ def threeup_refusal(models):
     # keep "other" in the segment set so the refused share is normalised over *all*
     # responses (matches the rates quoted in §4.4); it is a thin grey sliver at most.
     seg = ["committed", "committed_with_caveat", "other", "refused"]
-    seg_col = {"committed": "#009E73", "committed_with_caveat": "#7FCBB4",
-               "other": "#BBBBBB", "refused": "#D55E00"}
+    # A neutral grey ramp for the answered grades plus Okabe-Ito vermillion for the
+    # refusal. The earlier green/light-green pair collided with the document's model
+    # vocabulary (#009E73 *is* Gemma), which reads as a model encoding in a figure
+    # whose panels are already models. Greys carry the ordered "how fully answered"
+    # scale, and the one saturated colour is reserved for the quantity of interest.
+    seg_col = {"committed": "#3d3d3d", "committed_with_caveat": "#9c9c9c",
+               "other": "#dedede", "refused": "#D55E00"}
     seg_lab = {"committed": "answered", "committed_with_caveat": "answered w/ caveat",
                "other": "unclear", "refused": "refused"}
-    n = len(models)
-    fig, axes = plt.subplots(1, n, figsize=(2.9 * n + 0.6, 3.4), sharey=True)
-    for ax, m in zip(axes, models):
+    # Panel by *attribute*, rows by model -- same reasoning as facet_belief_by_cue: the
+    # claim is "of the three inferences, the political one is the one refused", so the
+    # attribute earns the panel and the model becomes a cheap within-panel comparison.
+    # Also 3 panels rather than 5, so the figure is no longer a letterbox at \linewidth.
+    props = {}
+    for m in models:
         d = _load_direct_labels(m)
         ct = pd.crosstab(d.attribute, d.label).reindex(index=order, columns=seg, fill_value=0)
-        prop = ct.div(ct.sum(axis=1), axis=0)[seg]
-        prop.index = [disp[a] for a in prop.index]
-        prop.iloc[::-1].plot.barh(stacked=True, ax=ax, width=0.62, legend=False,
-                                  color=[seg_col[s] for s in seg])
-        ax.set_xlim(0, 1); ax.set_title(MODEL_LABEL[m], fontsize=12)
-        ax.set_xlabel("share of direct-probe responses"); ax.set_ylabel("")
+        props[m] = ct.div(ct.sum(axis=1), axis=0)[seg]
+    rows = list(models)[::-1]           # first model at the top of each panel
+    fig, axes = plt.subplots(1, len(order), figsize=(11.4, 4.6), sharey=True)
+    for ax, attr in zip(axes, order):
+        left = np.zeros(len(rows))
+        ys = np.arange(len(rows))
+        for s in seg:
+            vals = np.array([props[m].loc[attr, s] for m in rows])
+            ax.barh(ys, vals, left=left, height=0.62, color=seg_col[s],
+                    edgecolor="white", linewidth=0.5, zorder=2)
+            left += vals
+        # the refused share is the quantity of interest: print it on the bar
+        for y, m in zip(ys, rows):
+            r = props[m].loc[attr, "refused"]
+            ax.text(1.012, y, f"{r:.2f}", va="center", fontsize=9,
+                    color="#8a4a10" if r > 0.5 else "#777")
+        ax.set_xlim(0, 1); ax.set_ylim(-0.6, len(rows) - 0.4)
+        ax.set_title(disp[attr], fontsize=13, color=INK, pad=8)
+        ax.set_xlabel("share of direct-probe responses", fontsize=10.5)
+        ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
         ax.spines["left"].set_visible(False)
+        ax.tick_params(axis="y", length=0)
+    axes[0].set_yticks(np.arange(len(rows)))
+    axes[0].set_yticklabels([MODEL_LABEL[m] for m in rows], fontsize=11)
+    for lab, m in zip(axes[0].get_yticklabels(), rows):
+        lab.set_color(_darken(MODEL_COLOUR[m], 0.70))   # match the document model key
     handles = [mpatches.Patch(color=seg_col[s]) for s in seg]
     fig.legend(handles, [seg_lab[s] for s in seg], loc="lower center", ncol=4,
-               frameon=False, fontsize=9.5, bbox_to_anchor=(0.5, -0.02))
-    fig.tight_layout(rect=(0, 0.07, 1, 1))
+               frameon=False, fontsize=10.5, bbox_to_anchor=(0.5, -0.012))
+    fig.tight_layout(rect=(0, 0.09, 1, 1), w_pad=2.2)
     save_fig(fig, OUTDIR / "rq3_direct_refusal_3up")
 
 
@@ -409,6 +543,9 @@ def main():
                     help="emit the two 3-model side-by-side figures (belief, relevance)")
     ap.add_argument("--fmt", default="both", choices=["png", "pdf", "both"],
                     help="output format(s); pdf is vector for LaTeX")
+    ap.add_argument("--facet", default="cue", choices=["cue", "models", "both"],
+                    help="belief-vs-stance panelling: by cue type (default, shipped) "
+                         "or the old by-model version; 'both' emits each")
     args = ap.parse_args()
     m = args.model
     global SAVE_FMTS
@@ -423,16 +560,26 @@ def main():
         "xtick.color": "#444", "ytick.color": "#444",
         "pdf.fonttype": 42, "ps.fonttype": 42,   # embed TrueType for LaTeX
     })
+    import sys as _s2, pathlib as _p2
+    _s2.path.insert(0, str(_p2.Path(__file__).resolve().parent))
+    import _style
+    _style.apply(plt)  # Computer Modern, to match the thesis document
     OUTDIR.mkdir(parents=True, exist_ok=True)
 
     if args.threeup:
         # behavioural arm: all five models (open-weight + frontier)
-        threeup_belief(MODELS_BEHAV)
-        threeup_relevance(MODELS_BEHAV)
+        if args.facet in ("cue", "both"):
+            facet_belief_by_cue(MODELS_BEHAV)
+        if args.facet in ("models", "both"):
+            threeup_belief(MODELS_BEHAV)
         threeup_refusal(MODELS_BEHAV)
         # mechanistic arm: open-weight models only (frontier expose no internals)
-        threeup_mediation(MODELS_ORDER)
         threeup_transfer(MODELS_ORDER)
+        # Demoted to the appendix (relevance: rank-identical to the prediction shift in
+        # all five models; mediation: cue-presence offset + Republican leverage, see
+        # ladder_summary.md). Still built, no longer shipped in §4.4.
+        threeup_relevance(MODELS_BEHAV)
+        threeup_mediation(MODELS_ORDER)
         return
 
     # four standalone figures, each with its own thesis caption
