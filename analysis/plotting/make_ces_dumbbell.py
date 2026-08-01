@@ -647,7 +647,9 @@ def write_slope_table(slopes: dict, shift_table: Path, out: Path) -> None:
     summary the dumbbell trades away, per model AND pooled, in two columns —
     all cues vs. party labels removed — so the "party labels carry the calibration"
     result is visible for every model, not just the pool. Deming slopes; the all-cues
-    column matches the figure's panel β exactly (frozen rq2_regression.csv)."""
+    column comes from the frozen rq2_regression.csv. (The dumbbell panels used to
+    print this β in their headers and no longer do, so the table is now the only
+    place the slope appears.)"""
     order = ["qwen", "gemma", "llama", "gpt56terra", "sonnet5", "pooled"]
     label = {**MODEL_LABEL, "pooled": "All models (pooled)"}
     npd = _noparty_deming(shift_table)
@@ -660,9 +662,11 @@ def write_slope_table(slopes: dict, shift_table: Path, out: Path) -> None:
     for name, allc, nop in rows:
         md.append(f"| {name} | {cell(allc)} | {cell(nop)} |")
     note = ("\n\nDeming (errors-in-variables) calibration slope; 95% CIs are cue-clustered "
-            "bootstrap. β = 1 is perfect calibration; β < 1 means the model reproduces only "
-            "that fraction of the real CES subgroup gap (flattening). The all-cues column "
-            "matches each panel's header β in the figure. The gap between the two columns is "
+            "bootstrap. NOTE: the all-cues column is high-leverage (Democrat + Republican "
+            "carry 42.5% of it) and its CIs are too wide to decide anything; the "
+            "party-removed column is the informative one. "
+            "β = 1 is perfect calibration; β < 1 means the model reproduces only "
+            "that fraction of the real CES subgroup gap (flattening). The gap between the two columns is "
             "the share of calibration carried by the three party-label cues — pooled, the "
             f"slope falls {rows[-1][1][0]:.2f} → {rows[-1][2][0]:.2f} once they are removed.")
     (out / "calibration_slope_table.md").write_text("\n".join(md) + note + "\n")
@@ -699,7 +703,11 @@ def write_slope_table(slopes: dict, shift_table: Path, out: Path) -> None:
          r"shifts flatten the corresponding CES subgroup differences, and "
          r"$\beta>1$ that they exaggerate them. The "
          r"right-hand column re-estimates each slope after excluding the Democrat, "
-         r"Independent, and Republican cues."),
+         r"Independent, and Republican cues. The left-hand column is dominated by "
+         r"those cues: the Democrat and Republican points carry $42.5\%$ of the "
+         r"leverage in the 14-cue regression, so it is reported to show where the "
+         r"apparent calibration comes from rather than as an estimate in its own "
+         r"right."),
         r"\end{minipage}",
         r"\end{table}",
     ]
