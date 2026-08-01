@@ -455,6 +455,15 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
     d = d[(d.cue_family == "explicit_political") & (d.model.isin(MODELS))]
     lvl, sign = _party_issue_support(results_dir, issues_csv)
 
+    # Row thumbs-up, same vocabulary as fig3_composition and the composition-delta
+    # figures: it marks which side supporting the proposition is. This axis is a
+    # SUPPORT share, not a liberal score, so the thumb is what tells the reader
+    # whether further right on a given row means more liberal or more conservative.
+    # Imported rather than redefined so the glyph and the two stance colours stay
+    # defined in exactly one place.
+    import make_thesis_figures as _MT
+    THUMB, C_LIB, C_CON = _MT.THUMB, _MT.C_LIB, _MT.C_CON
+
     # CES side: ces_lib_share is the LIBERAL share, so flip it on the issues where
     # supporting the proposition is the conservative position. Keyed on
     # (cue_group, issue) -- the anchor is the SUBGROUP's own position and differs
@@ -549,9 +558,16 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
                 color="#C9C9CE", lw=0.8, clip_on=False, zorder=1)
         if j == 0:
             ax.set_yticks(range(len(order)))
-            ax.set_yticklabels([_tw.fill(name[iss], 30, break_long_words=False)
-                                for iss in order], fontsize=8.8, linespacing=1.05,
-                               color="#222222")
+            ax.set_yticklabels([])
+            for i, iss in enumerate(order):
+                ax.plot(-0.035, i, marker=THUMB, markersize=8.0, ls="",
+                        color=C_LIB if sign.get(iss, 1) > 0 else C_CON,
+                        transform=ax.get_yaxis_transform(), clip_on=False)
+                ax.text(-0.055, i,
+                        _tw.fill(name[iss], 30, break_long_words=False),
+                        ha="right", va="center", multialignment="right",
+                        fontsize=8.8, linespacing=1.05, color="#222222",
+                        transform=ax.get_yaxis_transform(), clip_on=False)
         else:
             ax.set_yticks([])
 
@@ -565,6 +581,15 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
                            mec="white", mew=0.7, label=MODEL_LABEL[m]) for m in MODELS]
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.045),
                ncol=6, frameon=False, fontsize=9.5, columnspacing=1.3,
+               handletextpad=0.4, labelcolor="#333333")
+    # Second row: what the row thumbs-up means. Kept off the marker legend so the
+    # six position markers stay on one line.
+    fig.legend(handles=[plt.Line2D([], [], marker=THUMB, ls="", ms=9.0,
+                                   color=C_LIB, label="liberal side supports the issue"),
+                        plt.Line2D([], [], marker=THUMB, ls="", ms=9.0,
+                                   color=C_CON, label="conservative side supports the issue")],
+               loc="lower center", bbox_to_anchor=(0.5, -0.078), ncol=2,
+               frameon=False, fontsize=8.8, columnspacing=1.8,
                handletextpad=0.4, labelcolor="#333333")
     # The drop rule (commit < COMMIT_MIN) is explained in the LaTeX caption rather
     # than on the figure, per the no-on-figure-annotation style.
