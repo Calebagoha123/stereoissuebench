@@ -101,7 +101,6 @@ def _theme() -> None:
         {
             "figure.dpi": 180,
             "savefig.dpi": 260,
-            "font.family": "DejaVu Sans",
             "font.size": 10,
             "axes.spines.top": False,
             "axes.spines.right": False,
@@ -109,6 +108,10 @@ def _theme() -> None:
             "axes.spines.bottom": False,
         }
     )
+    import sys as _s2, pathlib as _p2
+    _s2.path.insert(0, str(_p2.Path(__file__).resolve().parent))
+    import _style
+    _style.apply(plt)  # Computer Modern, to match the thesis document
 
 
 def _parse_prompt_id(pid: pd.Series) -> pd.DataFrame:
@@ -192,6 +195,16 @@ def _pct(frac: float) -> int:
     return int(round(100 * frac))
 
 
+# Row geometry, named so the issue label and thumbs-up can be centred on the bars
+# rather than on a hand-tuned offset. barh() takes y as the bar CENTRE, so the
+# faint baseline bar spans [BASE_Y - BASE_H/2, BASE_Y + BASE_H/2] and the solid
+# cued bar [CUE_Y - CUE_H/2, CUE_Y + CUE_H/2]; ROW_MID is the midpoint of the pair.
+BASE_Y, BASE_H = 0.26, 0.22
+CUE_Y, CUE_H = -0.12, 0.48
+ROW_MID = ((BASE_Y + BASE_H / 2) + (CUE_Y - CUE_H / 2)) / 2
+YLIM = (-0.48, 0.48)
+
+
 def draw_stack(ax, y: float, fracs: tuple[float, float, float], height: float, alpha: float, labels=None) -> None:
     left = 0.0
     colours = [C_LIB, C_NEU, C_CON]
@@ -250,17 +263,17 @@ def plot_cue(
                 rec.delta_conservative_pp,
             )
             # Faint matched baseline above, solid cued composition below.
-            draw_stack(ax, 0.26, base, 0.22, 0.32)
+            draw_stack(ax, BASE_Y, base, BASE_H, 0.32)
             draw_stack(
                 ax,
-                -0.12,
+                CUE_Y,
                 cue,
-                0.48,
+                CUE_H,
                 1.0,
                 labels=[delta_label(d, label_threshold) for d in deltas],
             )
             ax.set_xlim(0, 1)
-            ax.set_ylim(-0.48, 0.48)
+            ax.set_ylim(*YLIM)
             ax.set_xticks([])
             ax.set_yticks([])
             for spine in ax.spines.values():
@@ -268,25 +281,30 @@ def plot_cue(
             if i == 0:
                 ax.set_title(MODEL_LABEL[model], fontsize=10.5, pad=10, fontweight="bold")
             if j == 0:
+                # x in axes coords, y in DATA coords, so the label and thumb centre
+                # on the bar pair (ROW_MID). They were previously placed at y =
+                # -0.02 in axes coords, i.e. just below the axes floor, which put
+                # them about half a row low.
+                rowtr = ax.get_yaxis_transform()
                 thumb_col = C_LIB if liberal_sign[issue] > 0 else C_CON
                 ax.plot(
                     -0.075,
-                    -0.02,
+                    ROW_MID,
                     marker=THUMB,
                     markersize=8.5,
                     color=thumb_col,
                     ls="",
-                    transform=ax.transAxes,
+                    transform=rowtr,
                     clip_on=False,
                 )
                 ax.text(
                     -0.12,
-                    -0.02,
+                    ROW_MID,
                     labels[issue],
                     ha="right",
                     va="center",
                     fontsize=8.3,
-                    transform=ax.transAxes,
+                    transform=rowtr,
                     clip_on=False,
                     color=TXT,
                 )
