@@ -15,12 +15,15 @@ responses classified Liberal by 14 percentage points for that issue/model.
 from __future__ import annotations
 
 import argparse
+import textwrap
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 from matplotlib.path import Path as MplPath
 import numpy as np
 import pandas as pd
@@ -61,6 +64,19 @@ C_LIB = "#3A6EA5"
 C_NEU = "#DBDBDB"
 C_CON = "#B2182B"
 TXT = "#222222"
+
+# Okabe-Ito model palette, same assignment as make_thesis_figures.py, so a reader
+# who has learned that Qwen is orange in Fig 1 reads these column headers without
+# relearning anything.
+MODEL_COLOUR = {"qwen": "#E69F00", "gemma": "#009E73", "llama": "#0072B2",
+                "gpt56terra": "#CC79A7", "sonnet5": "#56B4E9"}
+
+
+def _darken(hex_colour: str, factor: float) -> tuple[float, float, float]:
+    """Blend a hex colour toward black (factor 1.0 = unchanged), for using a marker
+    palette as small text without losing which hue is which."""
+    r, g, b = mcolors.to_rgb(hex_colour)
+    return (r * factor, g * factor, b * factor)
 
 
 def _thumb_marker():
@@ -205,32 +221,47 @@ ROW_MID = ((BASE_Y + BASE_H / 2) + (CUE_Y - CUE_H / 2)) / 2
 YLIM = (-0.48, 0.48)
 
 
+# A segment narrower than this cannot hold "+14%" at the label size. Matches
+# LABEL_MIN in fig3_composition; the three shares sum to 1, so at least one segment
+# of every bar always clears it.
+LABEL_MIN = 0.10
+
+
 def draw_stack(ax, y: float, fracs: tuple[float, float, float], height: float, alpha: float, labels=None) -> None:
     left = 0.0
     colours = [C_LIB, C_NEU, C_CON]
-    txt_cols = ["white", "#333333", "white"]
+    # Same three text colours as fig3_composition. No bold: the figures are set in
+    # Computer Modern, which has no bold face (see _style), so weight is a no-op.
+    txt_cols = ["white", "#4A4A4A", "white"]
     for idx, (frac, colour, txt_col) in enumerate(zip(fracs, colours, txt_cols)):
         ax.barh(y, frac, left=left, height=height, color=colour, alpha=alpha, edgecolor="none")
         if labels is not None:
             text = labels[idx]
-            if text and frac >= 0.105:
+            if text and frac >= LABEL_MIN:
                 ax.text(
                     left + frac / 2,
                     y,
                     text,
                     ha="center",
                     va="center",
-                    fontsize=7.1,
+                    fontsize=7.6,
                     color=txt_col,
-                    fontweight="bold",
                 )
         left += frac
 
 
 def delta_label(delta_pp: float, threshold: float) -> str:
+    """Change in percentage points for one stance class, as it appears inside the bar.
+
+    Every segment wide enough to hold text gets a label, including the ones the cue
+    did not move: with a suppression threshold, an issue where nothing happened drew
+    a bar with no numbers at all, which reads as missing data rather than as no
+    change. A move that rounds to nothing prints as a plain '0%', without a sign it
+    has not earned."""
     if abs(delta_pp) < threshold:
         return ""
-    return f"{delta_pp:+.0f}%"
+    rounded = round(delta_pp)
+    return "0%" if rounded == 0 else f"{rounded:+.0f}%"
 
 
 def plot_cue(
@@ -247,9 +278,15 @@ def plot_cue(
     fig, axes = plt.subplots(
         len(issues),
         len(MODELS),
-        figsize=(3.25 * len(MODELS), 0.42 * len(issues) + 2.0),
+        figsize=(3.12 * len(MODELS), 0.42 * len(issues) + 2.0),
         squeeze=False,
     )
+    # Wrapped like fig3_composition, which lets the label gutter be narrow enough
+    # that the bars start at the same place in both figures.
+    display_labels = {
+        issue: textwrap.fill(label, width=26, break_long_words=False, break_on_hyphens=False)
+        for issue, label in labels.items()
+    }
     for j, model in enumerate(MODELS):
         table = comp_by_model[model].set_index("issue_id")
         for i, issue in enumerate(issues):
@@ -279,7 +316,33 @@ def plot_cue(
             for spine in ax.spines.values():
                 spine.set_visible(False)
             if i == 0:
-                ax.set_title(MODEL_LABEL[model], fontsize=10.5, pad=10, fontweight="bold")
+                # Header in the model's own colour over a hairline rule in the
+                # undarkened hue, as in fig3_composition: the text is darkened ~28%
+                # toward black because the Okabe-Ito orange and sky blue read at
+                # marker size but not as 10.5pt type on white. Offsets are in points
+                # rather than axes fractions because a row here is barely 0.3in tall,
+                # so an axes-relative offset would shrink with the row.
+                rule = mtransforms.offset_copy(ax.transAxes, fig=fig, y=6, units="points")
+                text = mtransforms.offset_copy(ax.transAxes, fig=fig, y=9, units="points")
+                ax.plot(
+                    [0.0, 1.0],
+                    [1.0, 1.0],
+                    transform=rule,
+                    color=MODEL_COLOUR[model],
+                    lw=1.3,
+                    clip_on=False,
+                    zorder=1,
+                )
+                ax.text(
+                    0.5,
+                    1.0,
+                    MODEL_LABEL[model],
+                    transform=text,
+                    ha="center",
+                    va="bottom",
+                    fontsize=10.5,
+                    color=_darken(MODEL_COLOUR[model], 0.72),
+                )
             if j == 0:
                 # x in axes coords, y in DATA coords, so the label and thumb centre
                 # on the bar pair (ROW_MID). They were previously placed at y =
@@ -288,7 +351,7 @@ def plot_cue(
                 rowtr = ax.get_yaxis_transform()
                 thumb_col = C_LIB if liberal_sign[issue] > 0 else C_CON
                 ax.plot(
-                    -0.075,
+                    -0.035,
                     ROW_MID,
                     marker=THUMB,
                     markersize=8.5,
@@ -298,37 +361,41 @@ def plot_cue(
                     clip_on=False,
                 )
                 ax.text(
-                    -0.12,
+                    -0.075,
                     ROW_MID,
-                    labels[issue],
+                    display_labels[issue],
                     ha="right",
                     va="center",
-                    fontsize=8.3,
+                    multialignment="right",
+                    fontsize=8.8,
+                    linespacing=0.95,
                     transform=rowtr,
                     clip_on=False,
                     color=TXT,
                 )
 
+    # One row of handles at fig3_composition's sizes and colours, with the faint
+    # upper bar the only entry this figure adds to that vocabulary.
     handles = [
-        plt.Line2D([], [], marker="s", ls="", ms=11, color=C_LIB, label="Liberal"),
-        plt.Line2D([], [], marker="s", ls="", ms=11, color=C_NEU, label="Neutral"),
-        plt.Line2D([], [], marker="s", ls="", ms=11, color=C_CON, label="Conservative"),
+        plt.Line2D([], [], marker="s", ls="", ms=10, color=C_LIB, label="Liberal"),
+        plt.Line2D([], [], marker="s", ls="", ms=10, color=C_NEU, label="Neutral"),
+        plt.Line2D([], [], marker="s", ls="", ms=10, color=C_CON, label="Conservative"),
         plt.Line2D([], [], color="#777777", lw=5, alpha=0.32, label="matched baseline (faint upper bar)"),
-    ]
-    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False, fontsize=9.4, bbox_to_anchor=(0.5, -0.015))
-    thumb_handles = [
-        plt.Line2D([], [], marker=THUMB, ls="", ms=9.5, color=C_LIB, label="liberal side supports the issue"),
-        plt.Line2D([], [], marker=THUMB, ls="", ms=9.5, color=C_CON, label="conservative side supports the issue"),
+        plt.Line2D([], [], marker=THUMB, ls="", ms=9, color=C_LIB, label="liberal side supports the issue"),
+        plt.Line2D([], [], marker=THUMB, ls="", ms=9, color=C_CON, label="conservative side supports the issue"),
     ]
     fig.legend(
-        handles=thumb_handles,
+        handles=handles,
         loc="lower center",
-        ncol=2,
+        ncol=6,
         frameon=False,
-        fontsize=8.6,
-        bbox_to_anchor=(0.5, -0.048),
+        fontsize=9.5,
+        bbox_to_anchor=(0.5, 0.0),
+        columnspacing=1.8,
+        handletextpad=0.5,
+        labelcolor="#333333",
     )
-    fig.subplots_adjust(left=0.30, right=0.985, top=0.965, bottom=0.075, hspace=0.42, wspace=0.10)
+    fig.subplots_adjust(left=0.125, right=0.995, top=0.955, bottom=0.075, hspace=0.42, wspace=0.05)
     stem = f"composition_delta_{cue_family}_{cue_group}"
     for ext in ("png", "pdf"):
         fig.savefig(out_dir / f"{stem}.{ext}", bbox_inches="tight")
@@ -340,7 +407,8 @@ def main() -> int:
     parser.add_argument("--results-dir", default="results/full_3x")
     parser.add_argument("--issues-csv", default="data/input/issues_experiment.csv")
     parser.add_argument("--figures-dir", default="figures/cue_composition_delta")
-    parser.add_argument("--label-threshold", type=float, default=5.0)
+    # 0 = label every segment wide enough to hold text, so no bar comes out blank.
+    parser.add_argument("--label-threshold", type=float, default=0.0)
     args = parser.parse_args()
 
     _theme()
