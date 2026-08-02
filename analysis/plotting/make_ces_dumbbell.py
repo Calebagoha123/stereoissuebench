@@ -350,6 +350,32 @@ PARTY_ORDER = [("democrat", "Democrat"),
                ("independent", "Independent"),
                ("republican", "Republican")]
 
+# The same levels view for the other three cue families, reported in the appendix.
+# Panels run most- to least-liberal target within each family, as in PARTY_ORDER,
+# and every figure keeps the row order of the party figure (by the real
+# Democrat--Republican gap) so the four can be read against one another.
+#
+# What these add over the party figure is the check that the unanimity finding is
+# not a party-cue artefact. What they cannot show is a cue *causing* it: the state
+# and name cues barely move the writing (\S RQ1), so their levels sit essentially
+# on the model's own baseline. That is the point worth making from them -- the
+# saturation belongs to the default, and personalisation does not undo it -- and
+# _extremity_summary() prints the numbers the appendix text needs to say so.
+LEVEL_FIGURES = [
+    ("explicit_demographic",
+     [("black_woman", "Black woman"), ("black_man", "Black man"),
+      ("white_woman", "White woman"), ("white_man", "White man")],
+     "fig_ces_demographic_levels"),
+    ("implicit_political",
+     [("blue_state", "Blue state"), ("swing_state", "Swing state"),
+      ("red_state", "Red state")],
+     "fig_ces_state_levels"),
+    ("implicit_demographic",
+     [("black_woman", "Black-woman name"), ("black_man", "Black-man name"),
+      ("white_woman", "White-woman name"), ("white_man", "White-man name")],
+     "fig_ces_name_levels"),
+]
+
 
 def _wilson(p: float, n: int, z: float = 1.96) -> tuple[float, float]:
     """Wilson score interval for a proportion. Unlike the normal (Wald) interval it
@@ -366,8 +392,9 @@ def _wilson(p: float, n: int, z: float = 1.96) -> tuple[float, float]:
             float(np.clip((centre + halfw) / denom, 0.0, 1.0)))
 
 
-def _party_issue_support(results_dir: Path, issues_csv: Path):
-    """Per issue x party-cue x model share of SUPPORT for the proposition, with a
+def _cue_issue_support(results_dir: Path, issues_csv: Path, cue_family: str,
+                       panels: list[tuple[str, str]]):
+    """Per issue x cue x model share of SUPPORT for the proposition, with a
     95% CI clustered on writing template.
 
     Why support and not the liberal score: the liberal/conservative axis inverts
@@ -406,10 +433,10 @@ def _party_issue_support(results_dir: Path, issues_csv: Path):
     sign = _M.load_liberal_sign(issues_csv)
     data = _M.load(results_dir)
     rows = []
-    for grp, _ in PARTY_ORDER:
+    for grp, _ in panels:
         for m in MODELS:
             df = data[m]
-            sub = df[_M.cue_mask(df, "explicit_political", grp)]
+            sub = df[_M.cue_mask(df, cue_family, grp)]
             for iss, chunk in sub.groupby("issue_id"):
                 if iss not in sign:
                     continue
@@ -429,9 +456,45 @@ def _party_issue_support(results_dir: Path, issues_csv: Path):
     return pd.DataFrame(rows), sign
 
 
-def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
-                     out: Path, fmts) -> None:
-    """Support for each proposition under each party cue, model vs. that subgroup's
+def _extremity_summary(lvl: pd.DataFrame, ces: dict, panels, stem: str) -> None:
+    """Print the numbers the levels figures are read for, so the appendix text does
+    not have to be eyeballed off the panels.
+
+    The quantities are the ones §RQ2 uses for the party figure: how far model and
+    target sit from an even split, how often the model is the more extreme of the
+    two, and what happens on the issues where the real subgroup is genuinely
+    divided, which is where writing a group as unanimous costs the most."""
+    rows = []
+    for grp, title in panels:
+        sub = lvl[(lvl.cue_group == grp) & (lvl.commit >= COMMIT_MIN)]
+        if not len(sub):
+            continue
+        model = sub.support.to_numpy(float)
+        target = np.array([ces[(grp, i)] for i in sub.ces_variable], float)
+        divided = (target >= 0.35) & (target <= 0.65)
+        rows.append({
+            "panel": title,
+            "cells": len(sub),
+            "model_dist_from_even_pp": 100 * np.abs(model - 0.5).mean(),
+            "ces_dist_from_even_pp": 100 * np.abs(target - 0.5).mean(),
+            "model_more_extreme": f"{int((np.abs(model - 0.5) > np.abs(target - 0.5)).sum())}/{len(sub)}",
+            "mean_abs_gap_pp": 100 * np.abs(model - target).mean(),
+            "divided_cells": int(divided.sum()),
+            "divided_saturated": (f"{int(((model[divided] <= 0.05) | (model[divided] >= 0.95)).sum())}"
+                                  f"/{int(divided.sum())}" if divided.any() else "-"),
+            "divided_abs_gap_pp": 100 * np.abs(model - target)[divided].mean() if divided.any() else np.nan,
+        })
+    if rows:
+        out = pd.DataFrame(rows).set_index("panel").round(1)
+        print(f"  {stem} extremity summary:")
+        print(out.to_string().replace("\n", "\n    ").rjust(4))
+
+
+def fig_cue_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
+                   out: Path, fmts, cue_family: str = "explicit_political",
+                   panels: list[tuple[str, str]] | None = None,
+                   stem: str = "fig_ces_party_levels") -> None:
+    """Support for each proposition under each cue, model vs. that subgroup's
     real CES support — the view the shift dumbbell cannot show.
 
     The dumbbell compares *shifts*, which assumes the model starts where the US
@@ -451,9 +514,14 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
     marker in a row is therefore itself informative — that model mostly refused the
     proposition under that cue.
     """
+    panels = PARTY_ORDER if panels is None else panels
     d = pd.read_csv(detail_csv)
-    d = d[(d.cue_family == "explicit_political") & (d.model.isin(MODELS))]
-    lvl, sign = _party_issue_support(results_dir, issues_csv)
+    # Row order comes from the party figure and is shared by all four, so the
+    # ordering column has to be read before the family filter drops the party rows.
+    order = (d[d.model.isin(MODELS)].groupby("ces_variable").dem_rep_gap.first()
+             .sort_values(ascending=False).index.tolist())
+    d = d[(d.cue_family == cue_family) & (d.model.isin(MODELS))]
+    lvl, sign = _cue_issue_support(results_dir, issues_csv, cue_family, panels)
 
     # Row thumbs-up, same vocabulary as fig3_composition and the composition-delta
     # figures: it marks which side supporting the proposition is. This axis is a
@@ -479,11 +547,14 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
     ces_n = d.groupby(["cue_group", "ces_variable"]).ces_n.first()
     ces_ci = {k: _wilson(ces[k], int(ces_n[k])) for k in ces}
     name = d.groupby("ces_variable").issue.first()
-    order = (d.groupby("ces_variable").dem_rep_gap.first()
-             .sort_values(ascending=False).index.tolist())
     yof = {iss: i for i, iss in enumerate(order)}
 
-    fig, axes = plt.subplots(1, len(PARTY_ORDER), figsize=(14.6, 7.3),
+    # Width grows with the panel count so a panel is the same 4.1in of support axis
+    # in every figure, and the label gutter stays a fixed 2.26in rather than a fixed
+    # fraction (which would widen it on the four-panel figures for no reason).
+    gutter, panel_w = 2.26, 4.11
+    fig_w = gutter + panel_w * len(panels)
+    fig, axes = plt.subplots(1, len(panels), figsize=(fig_w, 7.3),
                              gridspec_kw={"wspace": 0.05}, squeeze=False)
     n_drop = 0
     # One line per issue: no per-model dodge, so a row is a single strip of the
@@ -491,7 +562,7 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
     # which is the point). Whiskers are therefore co-linear and can overlap; drawing
     # them widest-first keeps the tighter, more informative ones on top.
 
-    for j, (grp, title) in enumerate(PARTY_ORDER):
+    for j, (grp, title) in enumerate(panels):
         ax = axes[0][j]
         sub = lvl[lvl.cue_group == grp]
         for i in range(len(order)):
@@ -593,13 +664,14 @@ def fig_party_levels(detail_csv: Path, results_dir: Path, issues_csv: Path,
                handletextpad=0.4, labelcolor="#333333")
     # The drop rule (commit < COMMIT_MIN) is explained in the LaTeX caption rather
     # than on the figure, per the no-on-figure-annotation style.
-    print(f"  fig_ces_party_levels: dropped {n_drop} hedged model x issue x cue "
+    print(f"  {stem}: dropped {n_drop} hedged model x issue x cue "
           f"cells (commit < {COMMIT_MIN:.2f})")
-    fig.subplots_adjust(left=0.155, right=0.99, top=0.945, bottom=0.10)
+    fig.subplots_adjust(left=gutter / fig_w, right=0.99, top=0.945, bottom=0.10)
 
     for ext in fmts:
-        fig.savefig(out / f"fig_ces_party_levels.{ext}", bbox_inches="tight")
+        fig.savefig(out / f"{stem}.{ext}", bbox_inches="tight")
     plt.close(fig)
+    _extremity_summary(lvl, ces, panels, stem)
 
 
 def _noparty_deming(shift_table: Path) -> dict:
@@ -733,10 +805,16 @@ def main() -> int:
     df = df[df.model.isin(MODELS)].copy()
     fig_dumbbell(df, fd, fmts)
     fig_levels(Path(args.detail), fd, fmts)
-    fig_party_levels(Path(args.detail), Path(args.results_dir),
-                     Path(args.issues_csv), fd, fmts)
+    fig_cue_levels(Path(args.detail), Path(args.results_dir),
+                   Path(args.issues_csv), fd, fmts)
+    # Same view for the other three families (appendix).
+    for cue_family, panels, stem in LEVEL_FIGURES:
+        fig_cue_levels(Path(args.detail), Path(args.results_dir),
+                       Path(args.issues_csv), fd, fmts,
+                       cue_family=cue_family, panels=panels, stem=stem)
     write_slope_table(load_slopes(Path(args.slopes)), Path(args.shift_table), fd)
-    print(f"\nWrote fig_ces_dumbbell + fig_ces_levels + fig_ces_party_levels "
+    stems = ["fig_ces_party_levels"] + [s for _, _, s in LEVEL_FIGURES]
+    print(f"\nWrote fig_ces_dumbbell + fig_ces_levels + {' + '.join(stems)} "
           f"+ calibration_slope_table.{{md,tex}} to {fd}")
     return 0
 
