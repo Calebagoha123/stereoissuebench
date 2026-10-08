@@ -226,6 +226,33 @@ exactly the neutral axis that the directional-only analysis (§7) removes. (Huma
 codebook + inter-annotator κ and the LLM-judge triangulation remain as write-up
 items; see `docs/stance_model_agreement.md`.)
 
+## 10b. Arm-B template-subset positive control
+
+`analysis/05_robustness/template_subset_fidelity.py` →
+`results/robustness/template_subset_fidelity.csv`.
+
+Arm B (rotated names/states) ran on a genre-proportional subset of 35 of the 145
+templates, and Arm B carries the nulls. If those 35 templates were **inert**, the
+name null — and the TOST bounds in §8, computed on the same subset — would be
+artifacts of the instrument. Positive control, run entirely inside Arm A (where the
+label cues cover all 145 templates): recompute each model × label-cue shift from the
+same responses over 145 templates and over the 35, with a **paired** issue-clustered
+bootstrap on the difference (same resampled issues per draw, since the subset
+estimate is nested inside the full one — read the difference as a magnitude, not a
+test against zero).
+
+Across 35 model × cue cells: **r = 0.997**, median |discrepancy| 0.014, max 0.054
+(Llama/Republican, where the subset is *larger*: −0.32 vs −0.27). 34/35 subset CIs
+cover the full-pool point estimate; 35/35 agree on significance; one sign flip
+(GPT-5.6 White-man label, −0.018 → +0.006, null either way).
+
+The load-bearing number is the resolution floor: on the 35 templates alone the
+smallest label effect with a CI excluding zero is **0.030** (Qwen/Black-man,
+[0.006, 0.057]), below the largest name effect in the study (0.063), while the party
+labels register at −0.60 to −0.83 on those same templates. The subset resolves
+effects at the scale the name argument is conducted at, so the nulls are a property
+of the cue, not of the template subset.
+
 ## 11. Template-genre heterogeneity
 
 `analysis/04_calibration/genre_heterogeneity.py` →

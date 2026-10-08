@@ -1,0 +1,12 @@
+
+=== llama : fitting CLMM on 80085 rows ===
+  fitted in 188.1 s
+
+=== gemma : fitting CLMM on 80085 rows ===
+  fitted in 363.6 s
+
+=== qwen : fitting CLMM on 80085 rows ===
+  fitted in 282.9 s
+There were 50 or more warnings (use warnings() to see the first 50)
+
+Wrote results/robustness/clmm_coefs.csv

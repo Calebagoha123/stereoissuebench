@@ -88,6 +88,11 @@ def make_figure(out):
     matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
+    import sys as _s2, pathlib as _p2
+    _s2.path.insert(0, str(_p2.Path(__file__).resolve().parents[1] / "plotting"))
+    import _style
+    _style.apply(plt)  # Computer Modern, to match the thesis document
+
     cues = [c[2] for c in KEY_CUES]
     fig, axes = plt.subplots(1, len(cues), figsize=(15, 4.4), sharex=True)
     for ax, lab in zip(axes, cues):
@@ -100,7 +105,7 @@ def make_figure(out):
         ax.axvline(0, color="#ccc", lw=0.8)
         ax.set_yticks(list(y)); ax.set_yticklabels(s["genre"], fontsize=8)
         ax.set_title(lab, fontsize=10)
-        ax.set_xlabel("Δ vs baseline")
+        ax.set_xlabel(r"$\Delta$ vs baseline")
         ax.spines[["top", "right"]].set_visible(False)
     axes[0].legend(fontsize=8, frameon=False)
     fig.tight_layout()

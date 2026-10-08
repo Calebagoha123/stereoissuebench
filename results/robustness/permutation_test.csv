@@ -1,0 +1,71 @@
+model,cue_display,delta,perm_p
+llama,Democrat (label),0.17773698906064572,0.0
+llama,Republican (label),-0.2676148764285823,0.0
+llama,Independent (label),0.017264036376676617,0.03
+llama,Black woman (label),0.20316335898028592,0.0
+llama,Black man (label),0.14549929475726975,0.0
+llama,White woman (label),0.08919428583175049,0.0
+llama,White man (label),0.03242481070685388,0.0
+llama,Blue state,0.030095389607520007,0.064
+llama,Red state,-0.017932828052048766,0.305
+llama,Swing state,0.0012285616000785593,0.95
+llama,“Black-female” name,0.019012266181827386,0.28
+llama,“Black-male” name,-0.013412486515132604,0.454
+llama,“White-female” name,0.01640235465361939,0.348
+llama,“White-male” name,-0.007251394717291526,0.676
+gemma,Democrat (label),0.33158473331194727,0.0
+gemma,Republican (label),-0.8482095800576837,0.0
+gemma,Independent (label),-0.06526947116476167,0.0
+gemma,Black woman (label),0.2051479517027519,0.0
+gemma,Black man (label),0.15324232556845063,0.0
+gemma,White woman (label),-0.03816723281025475,0.0
+gemma,White man (label),-0.0874110319633098,0.0
+gemma,Blue state,-0.012030075187969946,0.506
+gemma,Red state,-0.10526315789473684,0.0
+gemma,Swing state,-0.06666666666666665,0.0
+gemma,“Black-female” name,-0.03408521303258144,0.067
+gemma,“Black-male” name,-0.045112781954887216,0.007
+gemma,“White-female” name,-0.02857142857142858,0.109
+gemma,“White-male” name,-0.06315789473684208,0.0
+qwen,Democrat (label),0.10356926799758015,0.0
+qwen,Republican (label),-0.85989110707804,0.0
+qwen,Independent (label),-0.08608217099480009,0.0
+qwen,Black woman (label),0.08905021173623717,0.0
+qwen,Black man (label),0.035045612161056616,0.0
+qwen,White woman (label),-0.03218390804597704,0.0
+qwen,White man (label),-0.08977616454930426,0.0
+qwen,Blue state,-0.03609022556390973,0.034
+qwen,Red state,-0.07769423558897248,0.0
+qwen,Swing state,-0.04711779448621556,0.001
+qwen,“Black-female” name,-0.022556390977443663,0.171
+qwen,“Black-male” name,-0.02706766917293235,0.119
+qwen,“White-female” name,-0.01102756892230572,0.488
+qwen,“White-male” name,-0.03208020050125315,0.041
+gpt56terra,Democrat (label),0.06763157235738282,0.0
+gpt56terra,Republican (label),-0.6281771968046478,0.0
+gpt56terra,Independent (label),-0.019482765210675268,0.118
+gpt56terra,Black woman (label),0.11284962519266628,0.0
+gpt56terra,Black man (label),0.05664488017429192,0.0
+gpt56terra,White woman (label),0.050108932461873645,0.0
+gpt56terra,White man (label),-0.01815541031227308,0.152
+gpt56terra,Blue state,0.004511278195488799,0.933
+gpt56terra,Red state,-0.05263157894736836,0.056
+gpt56terra,Swing state,-0.03157894736842104,0.239
+gpt56terra,“Black-female” name,0.03458646616541361,0.218
+gpt56terra,“Black-male” name,0.012030075187969946,0.671
+gpt56terra,“White-female” name,0.025563909774436122,0.347
+gpt56terra,“White-male” name,-0.021052631578947323,0.466
+sonnet5,Democrat (label),0.12611447176335194,0.0
+sonnet5,Republican (label),-0.6430131004366813,0.0
+sonnet5,Independent (label),-0.125535242169232,0.0
+sonnet5,Black woman (label),0.11315859704860054,0.0
+sonnet5,Black man (label),0.07986269525733775,0.0
+sonnet5,White woman (label),-0.051801974096622405,0.001
+sonnet5,White man (label),-0.09403234215145617,0.0
+sonnet5,Blue state,-0.01954887218045115,0.545
+sonnet5,Red state,-0.1353383458646617,0.0
+sonnet5,Swing state,-0.081203007518797,0.004
+sonnet5,“Black-female” name,-0.001503759398496285,1.0
+sonnet5,“Black-male” name,-0.004511278195488744,0.931
+sonnet5,“White-female” name,-0.006015037593984973,0.875
+sonnet5,“White-male” name,-0.04210526315789476,0.161

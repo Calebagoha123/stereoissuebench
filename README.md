@@ -75,18 +75,38 @@ For the design, estimators, and findings in prose, see **`docs/`** (start with
 
 ## Data of record
 
-The headline numbers come from **`results/full_3x/`**: a fresh **3-repeat,
-2000-token** rerun of the three open-weight models, scored by the **DeBERTa-v3
-cross-encoder** (`bert_liberal_score`). An earlier local LLM judge (Qwen) was a
-placeholder and is retained only for validation; the OpenAI arm lives in
-`results/full/`.
+The current analysis reads **`results/full_3x/`**. The three open-weight models
+have a **3-repeat, 2000-token** run; the two API models have one repeat. The
+analysis code defaults to the **GPT-5.6 luna** stance scores
+(`luna_liberal_disc`); set `SCORER=deberta` to use the earlier DeBERTa-v3 scores
+(`bert_liberal_score`). Some older findings documents describe the DeBERTa
+analysis and should be read with that scorer choice in mind.
 
 | Model | Access | Cue realizations |
 |---|---|---|
 | Llama-3.1-8B-Instruct | open weights (Brains GPU) | Arm A crossed + Arm B rotated |
 | Gemma-3-12B-IT | open weights (Brains GPU) | ″ |
 | Qwen3.6-27B | open weights (Brains GPU) | ″ |
-| GPT-5.4-mini | OpenAI Batch API | ″ (confirmatory) |
+| GPT-5.6 Terra | OpenAI Batch API | ″ (one repeat) |
+| Claude Sonnet 5 | Anthropic Batch API | ″ (one repeat) |
+
+See `analysis/lib/_common.py` for the model list used by the current robustness
+suite. Earlier GPT-5.4-mini analyses are kept separately in `results/full/`.
+
+## Collaborator artifacts
+
+The repository tracks the exact `data/processed/full_3x/prompts_*.csv` prompt
+snapshots and the slim `results/full_3x/{luna,bert}_eval_*.csv` scored rows as
+ordinary Git files. It also tracks the CES estimate and probe/robustness summary
+tables. The larger raw generation corpora and the CES respondent microdata are
+not included. Model weights, scorer checkpoints, API credentials, and GPU access
+must be arranged separately.
+
+Raw activation arrays and the full-name-bank reduced features are not in this
+checkout. They were produced on the Brains GPU server; collaborators extending
+internal probes or activation steering need those `.npz` files and their aligned
+`*_meta.csv` files, or must regenerate them with
+`pipeline/08_extract_activations.py` and `pipeline/13_stream_name_features.py`.
 
 **Design** (full detail in `docs/methodology.md`): 19 CES-linked IssueBench-style
 issues; cue delivered as an inferred user memory in the system prompt (never in the

@@ -28,7 +28,7 @@ from _common import MODELS, MODEL_LABEL, MODEL_COLOUR, ROBUST  # noqa: E402
 FAM_MARKER = {"explicit_political": "o", "explicit_demographic": "s",
               "implicit_political": "^", "implicit_demographic": "D"}
 FAM_LABEL = {"explicit_political": "Party label",
-             "explicit_demographic": "Race × gender label",
+             "explicit_demographic": "Race $\\times$ gender label",
              "implicit_political": "State",
              "implicit_demographic": "Name"}
 
@@ -39,6 +39,10 @@ def main() -> int:
     matplotlib.rcParams["pdf.fonttype"] = 42
     matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
+    import sys as _s2, pathlib as _p2
+    _s2.path.insert(0, str(_p2.Path(__file__).resolve().parent))
+    import _style
+    _style.apply(plt)  # Computer Modern, to match the thesis document
 
     s = pd.read_csv(ROBUST / "composition_summary.csv")
     fig, ax = plt.subplots(figsize=(7.6, 6.4))

@@ -198,10 +198,15 @@ def make_figure(merged, summary):
     matplotlib.rcParams["ps.fonttype"] = 42
     import matplotlib.pyplot as plt
 
+    import sys as _s2, pathlib as _p2
+    _s2.path.insert(0, str(_p2.Path(__file__).resolve().parents[1] / "plotting"))
+    import _style
+    _style.apply(plt)  # Computer Modern, to match the thesis document
+
     focus = [("explicit_political", "democrat", "Democrat (label)"),
              ("explicit_political", "republican", "Republican (label)"),
              ("explicit_demographic", "black_woman", "Black woman (label)"),
-             ("implicit_demographic", "black_woman", "“Black-female” name")]
+             ("implicit_demographic", "black_woman", "\"Black-female\" name")]
     fig, axes = plt.subplots(1, 4, figsize=(16, 4.3), sharex=True, sharey=True)
     for ax, (fam, grp, title) in zip(axes, focus):
         ax.plot([0, 1], [0, 1], "--", color="#888", lw=1)

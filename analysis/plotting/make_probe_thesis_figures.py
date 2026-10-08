@@ -44,10 +44,14 @@ import pandas as pd
 plt.rcParams.update({
     "figure.dpi": 150,
     "font.size": 11,
-    "font.family": "DejaVu Sans",
     "axes.spines.top": False,
     "axes.spines.right": False,
 })
+
+import sys as _s2, pathlib as _p2
+_s2.path.insert(0, str(_p2.Path(__file__).resolve().parent))
+import _style
+_style.apply(plt)  # Computer Modern, to match the thesis document
 
 MODELS = ["qwen", "gemma", "llama"]
 MODEL_LABEL = {"qwen": "Qwen-3.6-27B", "gemma": "Gemma-3-12B", "llama": "Llama-3.1-8B"}
@@ -214,7 +218,7 @@ def fig_legibility_use(pdir: Path, sdir: Path, out: Path, fmts) -> None:
 
     ax.set_xlabel(r"Internal legibility  (probe selectivity: decodable group signal)",
                   fontsize=11.5)
-    ax.set_ylabel(r"Behavioural use  (|written-stance shift|, cued − baseline)", fontsize=11.5)
+    ax.set_ylabel(r"Behavioural use  (|written-stance shift|, cued $-$ baseline)", fontsize=11.5)
     ax.set_ylim(bottom=-0.015)
     # the read-but-unused cluster is bottom-right: most legible, least used
     ax.annotate("most legible,\nleast used", xy=(0.758, 0.02), xytext=(0.70, 0.135),
@@ -247,10 +251,10 @@ def fig_transfer(pdir: Path, out: Path, fmts) -> None:
         s = summary(tag, pdir)
         ax.barh(y[i] + h / 2, s["transfer_name_to_label_max"], height=h,
                 color="#56B4E9", edgecolor="#222", linewidth=0.5,
-                label="train NAME → test label" if i == 0 else None)
+                label=r"train NAME $\rightarrow$ test label" if i == 0 else None)
         ax.barh(y[i] - h / 2, s["transfer_label_to_name_max"], height=h,
                 color="#D55E00", edgecolor="#222", linewidth=0.5,
-                label="train label → test NAME" if i == 0 else None)
+                label=r"train label $\rightarrow$ test NAME" if i == 0 else None)
         for val, yy in [(s["transfer_name_to_label_max"], y[i] + h / 2),
                         (s["transfer_label_to_name_max"], y[i] - h / 2)]:
             ax.text(val + 0.01, yy, f"{val:.2f}", va="center", fontsize=9)
@@ -259,7 +263,7 @@ def fig_transfer(pdir: Path, out: Path, fmts) -> None:
     ax.set_yticks(y)
     ax.set_yticklabels([MODEL_LABEL[m] for m in MODELS])
     ax.set_xlim(0, 1.05)
-    ax.set_xlabel("Cross-cue transfer accuracy (race × gender, max over layers)", fontsize=11.5)
+    ax.set_xlabel(r"Cross-cue transfer accuracy (race $\times$ gender, max over layers)", fontsize=11.5)
     ax.legend(loc="lower right", frameon=False, fontsize=9.5)
     fig.tight_layout()
     _save(fig, out, "fig_p2_transfer", fmts)

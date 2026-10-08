@@ -1,0 +1,5 @@
+"spec","slope","se","lo","hi","note"
+"CURRENT (1|issue)+(1|cue)+(1|model)",0.14620784508124,0.0418498569680423,0.064182125423877,0.228233564738603,"as reported in the appendix; check for boundary variance components"
+"model FIXED, (1|issue)+(1|cue)",0.146207797892472,0.0418498581480992,0.0641820759221974,0.228233519862746,"model as fixed effect; cue still random"
+"model+cue FIXED, (1|issue)  [PRINCIPLED]",0.123235790363646,0.0425661003836464,0.0398062336116995,0.206665347115594,"only issue is plausibly a sample; cue and model are designed factors"
+"all FIXED, OLS (naive SE)",0.11911279237924,0.0425099970995647,0.0357931980640932,0.202432386694387,"reference only; SE ignores within-issue correlation"

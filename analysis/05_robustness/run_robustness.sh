@@ -32,6 +32,9 @@ python3 analysis/05_robustness/finish_reason_flatness.py
 python3 analysis/05_robustness/generation_variance.py
 python3 analysis/05_robustness/instance_breakdown.py
 
+echo "[7b/9] Arm-B template-subset positive control (35 vs 145 templates)"
+python3 analysis/05_robustness/template_subset_fidelity.py
+
 echo "[8/9] multiplicity (BH-FDR), leave-one-issue-out, permutation"
 python3 analysis/05_robustness/rq2_extras.py
 

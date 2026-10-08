@@ -42,6 +42,7 @@ import textwrap
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -49,7 +50,6 @@ import pandas as pd
 plt.rcParams.update({
     "figure.dpi": 150,
     "font.size": 11,
-    "font.family": "DejaVu Sans",
     "axes.spines.top": False,
     "axes.spines.right": False,
 })
@@ -69,7 +69,12 @@ MODEL_MARKER = {"qwen": "o", "gemma": "s", "llama": "^", "gpt56terra": "D", "son
 
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import EVAL_PREFIX, SCORE_COL  # classifier-of-record switch (SCORER env)
+import _style
+from _markers import marker_ms, scatter_s  # equal-ink marker sizing (see _markers.py)
+
+_style.apply(plt)  # Computer Modern, to match the thesis document
 
 SCORE = SCORE_COL
 
@@ -149,7 +154,8 @@ class _HandlerLogoShape(HandlerBase):
 
     def create_artists(self, legend, orig, xd, yd, width, height, fontsize, trans):
         ln = plt.Line2D([width * 0.30 - xd], [height / 2.0 - yd], marker=self.marker,
-                        ls="", color="#444444", mec="white", mew=0.5, markersize=7)
+                        ls="", color="#444444", mec="white", mew=0.5,
+                        markersize=marker_ms(self.marker, 6.6))
         ln.set_transform(trans)
         oi = OffsetImage(_logo(self.model), zoom=self.target_px / _logo(self.model).shape[0])
         oi.set_offset((width * 0.74 - xd, height / 2.0 - yd))
@@ -296,7 +302,7 @@ FOREST_BANDS = [
         ("explicit_political", "democrat", "Democrat"),
         ("explicit_political", "independent", "Independent"),
         ("explicit_political", "republican", "Republican")]),
-    ("RACE ×\nGENDER", [
+    ("RACE " + _style.TIMES + "\nGENDER", [
         ("explicit_demographic", "black_woman", "Black woman"),
         ("explicit_demographic", "black_man", "Black man"),
         ("explicit_demographic", "white_woman", "White woman"),
@@ -345,7 +351,8 @@ def _forest_point(ax, x, xerr, edge, y, colour, marker):
     ``xerr=None`` draws the marker bare. The left (absolute stance) panel uses
     this deliberately: see ``_draw_forest_block``."""
     if abs(x) <= edge:
-        ax.errorbar(x, y, xerr=xerr, fmt=marker, ms=6.5, color=colour, ecolor=colour,
+        ax.errorbar(x, y, xerr=xerr, fmt=marker, ms=marker_ms(marker, 6.0),
+                    color=colour, ecolor=colour,
                     elinewidth=1.3, capsize=0, zorder=3, mec="white", mew=0.7)
     else:  # off-scale: clamp to the edge, mark with a star, drop the CI
         ax.plot(np.copysign(edge, x), y, marker="*", ms=13, color=colour,
@@ -364,7 +371,8 @@ def _model_legend(ax, models, extra_handles=None, **legend_kw):
     if USE_LOGOS:
         return logo_legend(ax, models, extra_handles=extra_handles, **legend_kw)
     handles = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", color=MODEL_COLOUR[m],
-                          label=MODEL_LABEL[m], mec="white", mew=0.7) for m in models]
+                          ms=marker_ms(MODEL_MARKER[m], 6.6), label=MODEL_LABEL[m],
+                          mec="white", mew=0.7) for m in models]
     if extra_handles:
         handles += extra_handles
     return ax.legend(handles=handles, **legend_kw)
@@ -442,7 +450,8 @@ def _draw_stance_panel(ax, data, base_lvl, offs, rows, bands, ylabels=True, lege
                     lw=1.1, ls="--", alpha=0.8, zorder=2)
     ax.set_xlim(-STANCE_EDGE, STANCE_EDGE)
     _frame_rows(ax, rows, bands, ylabels)
-    _direction_tags(ax, "←  liberal", "conservative  →")
+    _direction_tags(ax, _style.ARROW_L + "  liberal",
+                    "conservative  " + _style.ARROW_R)
     # No CI is named here: the cheapest signal that this panel makes no claim.
     ax.set_xlabel(r"Model stance  ($\bar{Y}_k$)", fontsize=11.5)
     if legend:
@@ -486,7 +495,8 @@ def _draw_shift_panel(ax, data, offs, rows, bands, ylabels=True, legend=True,
     ax.axvline(0, color="#222222", lw=1.5, zorder=2)  # the null
     ax.set_xlim(-SHIFT_EDGE * 1.06, SHIFT_EDGE * 1.06)
     _frame_rows(ax, rows, bands, ylabels)
-    _direction_tags(ax, "←  more liberal", "more conservative  →")
+    _direction_tags(ax, _style.ARROW_L + "  more liberal",
+                    "more conservative  " + _style.ARROW_R)
     ax.set_xlabel(r"Shift vs. no-cue baseline  ($\hat{\Delta}_k$), 95% CI", fontsize=11.5)
     if legend:
         off_marker = "$*$" if logo_points else "*"
@@ -599,7 +609,7 @@ FAM_COLOUR = {
 }
 FAM_MARKER_LABEL = {
     "explicit_political": "Party labels",
-    "explicit_demographic": "Race × gender",
+    "explicit_demographic": "Race " + _style.TIMES + " gender",
     "implicit_political": "Location",
     "implicit_demographic": "Name",
 }
@@ -641,7 +651,7 @@ def fig_calibration(data, ces_table: Path, out: Path, fmts, robust_dir: Path):
             sh, se = shift_ci(df, cue_mask(df, fam, grp), base_mask(df))  # 95% half-width
             ax.errorbar(x, sh, xerr=xerr, yerr=se, fmt="none", ecolor=FAM_COLOUR[fam],
                         elinewidth=0.9, alpha=0.4, zorder=2, capsize=0)
-            ax.scatter(x, sh, marker=MODEL_MARKER[m], s=70,
+            ax.scatter(x, sh, marker=MODEL_MARKER[m], s=scatter_s(MODEL_MARKER[m], 8.4),
                        color=FAM_COLOUR[fam], edgecolor="white", linewidth=0.6,
                        zorder=3, alpha=0.9)
             xs_all.append(x); ys_all.append(sh)
@@ -696,7 +706,8 @@ def fig_calibration(data, ces_table: Path, out: Path, fmts, robust_dir: Path):
                                  fontsize=9.5, handlelength=2.6, handletextpad=0.6,
                                  labelspacing=0.7)
     else:
-        mh = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="", color="#444444",
+        mh = [plt.Line2D([], [], marker=MODEL_MARKER[m], ls="",
+                         ms=marker_ms(MODEL_MARKER[m], 7.6), color="#444444",
                          mec="white", mew=0.5, label=MODEL_LABEL[m]) for m in MODELS]
         leg1 = ax.legend(handles=mh, loc="upper left", frameon=False, fontsize=9.5)
     ax.add_artist(leg1)
@@ -733,6 +744,13 @@ def load_liberal_sign(issues_csv: Path) -> dict[str, int]:
     return dict(zip(iss["ces_variable"], iss["liberal_sign"].astype(int)))
 
 
+def _darken(hex_colour: str, factor: float) -> tuple[float, float, float]:
+    """Blend a hex colour toward black (factor 1.0 = unchanged), for using a marker
+    palette as small text without losing which hue is which."""
+    r, g, b = mcolors.to_rgb(hex_colour)
+    return (r * factor, g * factor, b * factor)
+
+
 def _pct_ints(fracs):
     """Round fractions to integer percents that sum to exactly 100
     (largest-remainder), so the three labels in a stack never read 99/101%."""
@@ -767,66 +785,87 @@ def fig_composition(data, out: Path, fmts, issues_csv: Path):
                     key=lambda iss: np.mean([comp[m][iss][2] - comp[m][iss][0] for m in MODELS]),
                     reverse=True)
 
-    # Wrapping the few long issue names keeps the label gutter compact when the
-    # vector figure is scaled to the thesis text width.  Break at words only;
-    # short labels remain on one line.
+    # Wrapping the few long issue names keeps the label gutter compact.  Break at
+    # words only; short labels remain on one line.
     display_labels = {
-        iss: textwrap.fill(label, width=24, break_long_words=False,
+        iss: textwrap.fill(label, width=26, break_long_words=False,
                            break_on_hyphens=False)
         for iss, label in labels.items()
     }
 
-    # Keep the physical canvas close to the rendered \linewidth so the fonts
-    # survive scaling: ~8.75in wide -> ~0.69 scale at a 6in text block.
-    fig, axes = plt.subplots(len(issues), len(MODELS),
-                             figsize=(1.75 * len(MODELS), 0.42 * len(issues) + 1.5),
+    # Landscape canvas (placed sideways in the thesis): one axes per MODEL, with the
+    # 19 issues as bars inside it, rather than a subplot per cell. The rows then
+    # align by construction across columns and the bars get ~2.3in of width each, so
+    # the percentage labels fit inside the segments that carry the story.
+    # Canvas sized like the cue-composition-delta figures (~3.1in of width per model
+    # column) so each bar runs long and thin rather than stubby: ~2.6in of bar
+    # against 0.2in of thickness. Height stays modest for the same reason.
+    fig, axes = plt.subplots(1, len(MODELS), figsize=(3.12 * len(MODELS), 7.4),
+                             sharey=True, gridspec_kw={"wspace": 0.05},
                              squeeze=False)
+    # A segment narrower than this cannot hold "44%" at the label size; those are
+    # small enough to read off the neighbouring labels (the three sum to 100).
+    LABEL_MIN = 0.10
+
     for j, m in enumerate(MODELS):
+        ax = axes[0][j]
         for i, iss in enumerate(issues):
-            ax = axes[i][j]
             con, neu, lib = comp[m][iss]
             # Liberal on the LEFT, conservative on the RIGHT.
             left = 0.0
             for frac, pct, colour, txtcol in zip(
                     (lib, neu, con), _pct_ints((lib, neu, con)),
-                    (C_LIB, C_NEU, C_CON), ("white", "#444444", "white")):
-                ax.barh(0, frac, left=left, height=0.70, color=colour)
-                if frac >= 0.22:  # label only segments wide enough to hold it
-                    ax.text(left + frac / 2, 0, f"{pct}%", ha="center", va="center",
-                            fontsize=9, color=txtcol)
+                    (C_LIB, C_NEU, C_CON), ("white", "#4A4A4A", "white")):
+                ax.barh(i, frac, left=left, height=0.60, color=colour, zorder=2)
+                if frac >= LABEL_MIN:
+                    ax.text(left + frac / 2, i, f"{pct}%", ha="center", va="center",
+                            fontsize=8.0, color=txtcol, zorder=3)
                 left += frac
-            ax.set_xlim(0, 1); ax.set_ylim(-0.6, 0.6)
-            ax.set_xticks([]); ax.set_yticks([])
-            for sp in ax.spines.values():
-                sp.set_visible(False)
-            if i == 0:
-                ax.set_title(MODEL_LABEL[m], fontsize=9.2, pad=8)
-            if j == 0:
+        ax.set_xlim(0, 1)
+        ax.set_ylim(len(issues) - 0.5, -0.5)
+        # No x axis: every bar runs the full width and every segment wide enough to
+        # matter carries its own percentage, so ticks and a spine would only repeat
+        # what the bar ends already say.
+        ax.set_xticks([])
+        ax.tick_params(axis="y", length=0)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        # Header in the model's own colour, so this figure keys to the same identity
+        # vocabulary as Fig 1/2. Darkened ~28% toward black for text contrast: the
+        # Okabe-Ito orange and sky blue are legible as 8pt markers but not as 10pt
+        # type on white. The hairline under it carries the undarkened colour.
+        ax.text(0.5, 1.018, MODEL_LABEL[m], transform=ax.transAxes, ha="center",
+                va="bottom", fontsize=10.5, color=_darken(MODEL_COLOUR[m], 0.72),
+                fontweight="medium")
+        ax.plot([0.0, 1.0], [1.010, 1.010], transform=ax.transAxes,
+                color=MODEL_COLOUR[m], lw=1.3, clip_on=False, zorder=1)
+        if j == 0:
+            ax.set_yticks(range(len(issues)))
+            ax.set_yticklabels([])
+            for i, iss in enumerate(issues):
                 # Thumbs-up marks the "support/pro" side of the issue, coloured by
                 # which side that is (blue = liberal supports, red = conservative).
                 thumb_col = C_LIB if lib_sign[iss] > 0 else C_CON
-                ax.plot(-0.07, 0.0, marker=THUMB, markersize=9, color=thumb_col,
+                ax.plot(-0.035, i, marker=THUMB, markersize=8.5, color=thumb_col,
                         ls="", transform=ax.get_yaxis_transform(), clip_on=False)
-                ax.text(-0.15, 0.0, display_labels[iss], rotation=0,
-                        ha="right", va="center", multialignment="right",
-                        fontsize=10, fontweight="bold", linespacing=0.92,
-                        transform=ax.get_yaxis_transform(), clip_on=False)
+                ax.text(-0.075, i, display_labels[iss], ha="right", va="center",
+                        multialignment="right", fontsize=8.8, linespacing=0.95,
+                        color="#222222", transform=ax.get_yaxis_transform(),
+                        clip_on=False)
 
-    handles = [plt.Line2D([], [], marker="s", ls="", ms=11, color=C_LIB, label="Liberal"),
-               plt.Line2D([], [], marker="s", ls="", ms=11, color=C_NEU, label="Neutral"),
-               plt.Line2D([], [], marker="s", ls="", ms=11, color=C_CON, label="Conservative")]
-    fig.legend(handles=handles, loc="lower center", ncol=3, frameon=False,
-               fontsize=10.5, bbox_to_anchor=(0.5, -0.01))
-    # Second row: what the coloured thumbs-up on each issue means.
-    thumb_handles = [
-        plt.Line2D([], [], marker=THUMB, ls="", ms=10, color=C_LIB,
-                   label="liberal side supports the issue"),
-        plt.Line2D([], [], marker=THUMB, ls="", ms=10, color=C_CON,
-                   label="conservative side supports the issue")]
-    fig.legend(handles=thumb_handles, loc="lower center", ncol=2, frameon=False,
-               fontsize=9, bbox_to_anchor=(0.5, -0.045))
-    fig.subplots_adjust(left=0.335, right=0.98, top=0.95, bottom=0.075,
-                        hspace=0.45, wspace=0.14)
+    handles = [plt.Line2D([], [], marker="s", ls="", ms=10, color=C_LIB, label="Liberal"),
+               plt.Line2D([], [], marker="s", ls="", ms=10, color=C_NEU, label="Neutral"),
+               plt.Line2D([], [], marker="s", ls="", ms=10, color=C_CON, label="Conservative"),
+               # What the coloured thumbs-up on each issue label means.
+               plt.Line2D([], [], marker=THUMB, ls="", ms=9, color=C_LIB,
+                          label="liberal side supports the issue"),
+               plt.Line2D([], [], marker=THUMB, ls="", ms=9, color=C_CON,
+                          label="conservative side supports the issue")]
+    fig.legend(handles=handles, loc="lower center", ncol=5, frameon=False,
+               fontsize=9.5, bbox_to_anchor=(0.5, 0.0), columnspacing=1.8,
+               handletextpad=0.5, labelcolor="#333333")
+    # Bottom margin only has to clear the legend now that the x axis is gone.
+    fig.subplots_adjust(left=0.125, right=0.995, top=0.955, bottom=0.075)
     _save(fig, out, "fig3_composition", fmts)
 
 

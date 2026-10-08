@@ -8,8 +8,13 @@ unchanged to name prompts, where no demographic word appears.
 
 Three series per model:
   ceiling    the explicit-label probe on its own task -- what a working probe scores
-  transfer   label -> name, the claim
-  control    the same probe trained on shuffled labels, then transferred [PENDING]
+  transfer   label -> name, the claim; shaded 95% cluster-bootstrap band over issues
+  control    the same probe trained on shuffled labels, then transferred; shaded
+             2.5-97.5 percentile band over permutations
+
+Both shaded bands answer different questions -- the control's is a null, the
+transfer's is estimation error -- but they share the visual grammar so the reader
+can see at a glance that the two do not meet.
 
 Balanced accuracy throughout, not per-class recall: a four-class probe that collapses
 onto a single class gives that class recall 1.0 and would be scored as a hit by any
@@ -52,7 +57,7 @@ CEIL_C = "0.72"      # ceiling: the probe on its own task
 CTRL_C = "0.40"      # shuffled-label control
 
 
-def panel(ax, tr, dec, ctrl, tag, show_ylabel):
+def panel(ax, tr, dec, ctrl, ci, tag, show_ylabel):
     tr = tr[tr.layer > 0].sort_values("layer")
     ceil = dec[(dec.subset == "explicit_demographic") & (dec.layer > 0)].sort_values("layer")
     chance = float(tr.chance.iloc[0])
@@ -66,6 +71,20 @@ def panel(ax, tr, dec, ctrl, tag, show_ylabel):
                         alpha=0.18, lw=0)
         ax.plot(c.layer, c.control_mean, color=CTRL_C, lw=1.1, ls=(0, (5, 2)),
                 label="Shuffled labels (control)")
+    if ci is not None:
+        # Same visual grammar as the control band, so the reader compares a band
+        # with a band rather than a line with a band.
+        #
+        # The bootstrap refits the probe, and lbfgs is not bit-identical across runs,
+        # so its point estimate can differ from the stored curve by a few of the 1140
+        # name items (median 0, worst case 0.017). The band is the bootstrap's
+        # *widths* hung on the curve of record, which keeps the line centred instead
+        # of leaving it clipping the edge of its own interval at one or two layers.
+        b = ci[ci.layer > 0].sort_values("layer").merge(
+            tr[["layer", "label_to_name"]], on="layer", suffixes=("_boot", ""))
+        lo = b.label_to_name - (b.label_to_name_boot - b.boot_lo)
+        hi = b.label_to_name + (b.boot_hi - b.label_to_name_boot)
+        ax.fill_between(b.layer, lo, hi, color=colour, alpha=0.20, lw=0)
     ax.plot(tr.layer, tr.label_to_name, color=colour, lw=1.8,
             label=r"Transfer: label $\rightarrow$ name")
     ax.axhline(chance, color="0.55", lw=0.8, ls=":", zorder=0)
@@ -76,11 +95,6 @@ def panel(ax, tr, dec, ctrl, tag, show_ylabel):
         ax.set_ylabel("Balanced accuracy")
     ax.set_ylim(0, 1.02)
     ax.set_xlim(0, tr.layer.max())
-    ax.text(tr.layer.max() * 0.98, chance + 0.015, "chance", ha="right",
-            va="bottom", fontsize=8, color="0.45")
-    m = tr.label_to_name.mean()
-    ax.text(0.03, 0.90, f"mean {m:.2f}", transform=ax.transAxes, fontsize=9,
-            color=colour, ha="left", va="top")
 
 
 def main() -> None:
@@ -92,14 +106,27 @@ def main() -> None:
     res, out = Path(a.results), Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    fig, axes = plt.subplots(1, 3, figsize=(9.2, 2.9), constrained_layout=True)
+    fig, axes = plt.subplots(1, 3, figsize=(7.6, 3.4), constrained_layout=True)
     for ax, tag in zip(axes, MODELS):
-        cpath = res / f"{tag}_transfer_control.csv"
-        panel(ax,
-              pd.read_csv(res / f"{tag}_cross_cue_transfer.csv"),
-              pd.read_csv(res / f"{tag}_decodability_by_layer.csv"),
-              pd.read_csv(cpath) if cpath.exists() else None,
-              tag, show_ylabel=(ax is axes[0]))
+        # The 562-name run supersedes the 12-name one: it carries the transfer curve,
+        # its control and its bootstrap in a single file, all on the same name set.
+        nb = res / f"{tag}_transfer_namebank.csv"
+        if nb.exists():
+            d = pd.read_csv(nb)
+            # Band the name-clustered interval, not the issue-clustered one: the
+            # question this figure answers is whether the result is about names as a
+            # class or about particular strings. Drop the issue columns first, or the
+            # rename collides with them and yields two boot_lo.
+            ci = (d.drop(columns=["boot_lo", "boot_hi"])
+                   .rename(columns={"nameboot_lo": "boot_lo", "nameboot_hi": "boot_hi"}))
+            tr, ctrl = d, d
+        else:
+            cpath, bpath = res / f"{tag}_transfer_control.csv", res / f"{tag}_transfer_ci.csv"
+            tr = pd.read_csv(res / f"{tag}_cross_cue_transfer.csv")
+            ctrl = pd.read_csv(cpath) if cpath.exists() else None
+            ci = pd.read_csv(bpath) if bpath.exists() else None
+        panel(ax, tr, pd.read_csv(res / f"{tag}_decodability_by_layer.csv"),
+              ctrl, ci, tag, show_ylabel=(ax is axes[0]))
 
     # The transfer line is model-coloured, so its legend key must not adopt any one
     # model's hue: draw the shared key as three short segments, one per model.
@@ -113,7 +140,7 @@ def main() -> None:
     labels = ["Explicit label, own task (ceiling)", "Shuffled labels (control)",
               r"Transfer: label $\rightarrow$ name"]
     fig.legend(handles, labels, loc="lower center", ncol=3, frameon=False,
-               bbox_to_anchor=(0.5, -0.10), fontsize=9.5,
+               bbox_to_anchor=(0.5, -0.13), fontsize=9.5,
                handler_map={tuple: HandlerTuple(ndivide=None, pad=0.4)})
 
     for ext in ("pdf", "png"):

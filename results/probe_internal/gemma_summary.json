@@ -1,0 +1,34 @@
+{
+  "tag": "gemma",
+  "best_political_axis_layer": 47,
+  "decodability_best": {
+    "state": {
+      "layer": 40,
+      "bal_acc": 1.0,
+      "control_acc": 0.3532163742690058,
+      "selectivity": 0.6467836257309942
+    },
+    "name": {
+      "layer": 34,
+      "bal_acc": 1.0,
+      "control_acc": 0.24035087719298245,
+      "selectivity": 0.7596491228070176
+    },
+    "explicit_political": {
+      "layer": 29,
+      "bal_acc": 1.0,
+      "control_acc": 0.32982456140350874,
+      "selectivity": 0.6701754385964913
+    },
+    "explicit_demographic": {
+      "layer": 35,
+      "bal_acc": 1.0,
+      "control_acc": 0.25,
+      "selectivity": 0.75
+    }
+  },
+  "transfer_label_to_name_max": 0.4894736842105263,
+  "transfer_name_to_label_max": 0.9131578947368421,
+  "transfer_chance": 0.25,
+  "mediation_r_proj_vs_stance": 0.736201509260702
+}

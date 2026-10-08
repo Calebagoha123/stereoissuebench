@@ -1,0 +1,19 @@
+block,category,n_unweighted,weighted_pct
+Party (pid3),Democrat,5624,30.8
+Party (pid3),Republican,4533,28.7
+Party (pid3),Independent,4996,28.4
+Party (pid3),Other,713,4.3
+Party (pid3),Not sure,1134,7.8
+Race (race),White,10515,65.4
+Race (race),Black,2214,12.7
+Race (race),Other/multiple,4271,21.9
+Gender (gender4),Man,7866,47.4
+Gender (gender4),Woman,8920,51.3
+Gender (gender4),Non-binary/other,214,1.2
+Race x Gender (used),White man,5004,40.9
+Race x Gender (used),White woman,5374,42.8
+Race x Gender (used),Black man,996,7.3
+Race x Gender (used),Black woman,1198,9.0
+State partisan class,Blue state,6775,39.9
+State partisan class,Swing state,3381,20.1
+State partisan class,Red state,6844,40.1

@@ -1,0 +1,34 @@
+{
+  "tag": "llama",
+  "best_political_axis_layer": 32,
+  "decodability_best": {
+    "state": {
+      "layer": 31,
+      "bal_acc": 1.0,
+      "control_acc": 0.3649122807017544,
+      "selectivity": 0.6350877192982456
+    },
+    "explicit_demographic": {
+      "layer": 14,
+      "bal_acc": 1.0,
+      "control_acc": 0.24210526315789477,
+      "selectivity": 0.7578947368421052
+    },
+    "name": {
+      "layer": 26,
+      "bal_acc": 1.0,
+      "control_acc": 0.24210526315789474,
+      "selectivity": 0.7578947368421053
+    },
+    "explicit_political": {
+      "layer": 25,
+      "bal_acc": 1.0,
+      "control_acc": 0.3859649122807018,
+      "selectivity": 0.6140350877192982
+    }
+  },
+  "transfer_label_to_name_max": 0.6877192982456141,
+  "transfer_name_to_label_max": 1.0,
+  "transfer_chance": 0.25,
+  "mediation_r_proj_vs_stance": 0.8185978012019007
+}

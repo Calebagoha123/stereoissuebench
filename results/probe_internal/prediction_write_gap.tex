@@ -1,0 +1,29 @@
+\begin{table}[H]
+\centering
+\caption{Predicted versus written shift, by cue type}
+\label{tab:predwrite}
+\small
+\setlength{\tabcolsep}{9pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Cue type} & $|\widehat{\Delta}^{\text{pred}}|$ & $|\widehat{\Delta}^{\text{writ}}|$ & \textbf{Transmission} $\beta$ & BH $q$ ($\beta \neq 1$) \\
+\midrule
+Party label & 0.475 & 0.300 & 0.57 & $<$0.0002 \\
+ & \scriptsize $[0.441,\,0.510]$ & \scriptsize $[0.250,\,0.349]$ & \scriptsize $[0.48,\,0.65]$ & \\
+\addlinespace[2pt]
+Race $\times$ gender & 0.292 & 0.097 & 0.21 & $<$0.0002 \\
+ & \scriptsize $[0.250,\,0.334]$ & \scriptsize $[0.073,\,0.121]$ & \scriptsize $[0.18,\,0.24]$ & \\
+\addlinespace[2pt]
+State & 0.332 & 0.080 & 0.07 & $<$0.0002 \\
+ & \scriptsize $[0.304,\,0.359]$ & \scriptsize $[0.063,\,0.098]$ & \scriptsize $[0.05,\,0.10]$ & \\
+\addlinespace[2pt]
+Name & 0.182 & 0.061 & 0.04 & $<$0.0002 \\
+ & \scriptsize $[0.153,\,0.211]$ & \scriptsize $[0.051,\,0.071]$ & \scriptsize $[-0.03,\,0.10]$ & \\
+\bottomrule
+\end{tabular}
+
+\vspace{3pt}
+\begin{minipage}{0.94\linewidth}
+\footnotesize\textit{Note:} Both quantities are differenced against the same issue's no-cue baseline, so issue difficulty cancels. The two magnitude columns are means of absolute shifts, averaged within issue and then over the 19 issues, with $t$-intervals on the issue clusters ($\mathrm{df}=18$). $\beta$ is the transmission slope of written on predicted shift, estimated at the issue level with a fixed effect per model, so it is a within-model rate; the reference of interest is $\beta = 1$, one unit of predicted shift becoming one unit of written shift, and $q$ is the Benjamini--Hochberg adjusted $p$ for $\beta \neq 1$ over this table's family of seven tests. Intervals are clustered bootstraps over issues (10000 draws). Two limits remain. The predicted shift is a continuous $0$--$100$ rescaling while the written shift derives from three-category stance labels, so part of any shortfall is a scale artifact rather than hedging (see the discretisation check, Appendix~\ref{robustness}); and because the magnitude columns take absolute values before averaging, a cue whose true shifts are near zero has those columns inflated by noise, so the name row should be read as an upper bound. The $\beta$ column is unaffected by that second issue, as it is signed throughout.
+\end{minipage}
+\end{table}

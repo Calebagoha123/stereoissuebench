@@ -1,0 +1,34 @@
+{
+  "tag": "qwen",
+  "best_political_axis_layer": 63,
+  "decodability_best": {
+    "state": {
+      "layer": 4,
+      "bal_acc": 0.9964912280701754,
+      "control_acc": 0.34970760233918124,
+      "selectivity": 0.6467836257309942
+    },
+    "name": {
+      "layer": 56,
+      "bal_acc": 1.0,
+      "control_acc": 0.23684210526315788,
+      "selectivity": 0.7631578947368421
+    },
+    "explicit_demographic": {
+      "layer": 32,
+      "bal_acc": 1.0,
+      "control_acc": 0.2710526315789474,
+      "selectivity": 0.7289473684210526
+    },
+    "explicit_political": {
+      "layer": 36,
+      "bal_acc": 1.0,
+      "control_acc": 0.3473684210526316,
+      "selectivity": 0.6526315789473685
+    }
+  },
+  "transfer_label_to_name_max": 0.6324561403508772,
+  "transfer_name_to_label_max": 0.9342105263157895,
+  "transfer_chance": 0.25,
+  "mediation_r_proj_vs_stance": 0.921018648261931
+}
